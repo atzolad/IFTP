@@ -5,10 +5,10 @@ package student
 // 	hello int
 // }
 
-// // func (myDb *myDatabase) AddUser(user user) {
-// // 	"INSERT INTO users(id, name, email) VALUES( ?, ?, ?)"
+// // func (myDb *myDatabase) AddStudent(student student) {
+// // 	"INSERT INTO students(id, name, email) VALUES( ?, ?, ?)"
 // // }
 
-// // func (myDb *myDatabase) SoftDeleteUser(user user) {
-// // 	"UPDATE users(id, name, email, active) VALUES( ?, ?, ?, ?)"
+// // func (myDb *myDatabase) SoftDeleteStudent(student student) {
+// // 	"UPDATE students(id, name, email, active) VALUES( ?, ?, ?, ?)"
 // // }

@@ -12,8 +12,8 @@ func main() {
 	// User endpoints
 	router.GET("/students", student.GetStudents)
 	router.POST("/students", student.AddStudent)
+	router.PATCH("/students/:id", student.UpdateStudent)
 	router.DELETE("/students/:id", student.SoftDeleteStudent)
-	//router.PATCH("/users", student.UpdateUser)
 
 	// Class endpoints
 	// router.GET("/classes", getClasses)
