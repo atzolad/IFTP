@@ -4,6 +4,7 @@ import (
 	"IFTP/db"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -63,42 +64,32 @@ func AddStudent(myDb *db.MyDatabase) gin.HandlerFunc {
 	}
 }
 
-// // Update Student updates the student details based on the JSON received in the request body.
-// func UpdateStudent(c *gin.Context) {
-// 	id := c.Param("id")
-// 	integerID, err := strconv.Atoi(id)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 	}
+// Update Student updates the student details based on the JSON received in the request body.
+func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		integerID, err := strconv.Atoi(id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
 
-// 	var updatedStudent Student
+		var updatedStudent Student
 
-// 	// Call BindJSON to bind the received JSON to updatedStudent
-// 	if err := c.BindJSON(&updatedStudent); err != nil {
-// 		return
-// 	}
+		// Call BindJSON to bind the received JSON to updatedStudent
+		if err := c.BindJSON(&updatedStudent); err != nil {
+			return
+		}
 
-// 	// myDb.UpdateStudent
-
-// 	for i, student := range students {
-// 		if student.ID == integerID {
-// 			originalStudent := students[i]
-// 			if student.Name != "" {
-// 				students[i].Name = updatedStudent.Name
-// 			}
-// 			if student.Email != "" {
-// 				students[i].Email = updatedStudent.Email
-// 			}
-
-// 			students[i].Paid = updatedStudent.Paid
-// 			students[i].Active = updatedStudent.Active
-// 			c.Header("content-type", "application/json")
-// 			c.JSON(http.StatusOK, students[i])
-// 			fmt.Printf("Successfully updated student: %v with %v", originalStudent, updatedStudent)
-// 			return
-// 		}
-// 	}
-// }
+		if err := UpdatedStudentDB(myDb, integerID, updatedStudent); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		updatedStudent.ID = integerID
+		c.Header("content-type", "application/json")
+		c.JSON(http.StatusOK, updatedStudent)
+		fmt.Printf("Successfully updated student id: %v \n", integerID)
+	}
+}
 
 // // SoftDeleteStudent changes the Active status of the student to false, rather than permanently deleting.
 // func SoftDeleteStudent(c *gin.Context) {

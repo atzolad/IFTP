@@ -36,11 +36,11 @@ func main() {
 	// Create an instance of myDatabase containing the connection pool.
 	myDb := &db.MyDatabase{Db: sqldb}
 
-	// User endpoints
+	// User endpoints- make sure to pass the database instance to each function.
 	router.GET("/students", student.GetStudents(myDb))
 	router.POST("/students", student.AddStudent(myDb))
-	// router.PATCH("/students/:id", student.UpdateStudent)
-	// router.DELETE("/students/:id", student.SoftDeleteStudent)
+	// router.PATCH("/students/:id", student.UpdateStudent(myDb))
+	// router.DELETE("/students/:id", student.SoftDeleteStudent(myDb))
 
 	// Class endpoints
 	router.GET("/classes", class.GetClasses)

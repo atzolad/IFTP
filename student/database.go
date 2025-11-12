@@ -2,6 +2,7 @@ package student
 
 import (
 	"IFTP/db"
+	"fmt"
 )
 
 func RetrieveStudents(myDb *db.MyDatabase) ([]Student, error) {
@@ -37,6 +38,28 @@ func InsertStudent(myDb *db.MyDatabase, s *Student) error {
 	).Scan(&s.ID)
 
 	return err
+}
+
+func UpdatedStudentDB(myDb *db.MyDatabase, id int, s *Student) error {
+	result, err := myDb.Db.Exec(
+		"UPDATE students SET name = $1, email = $2, paid = $3, active = $4 , WHERE id = $5",
+		s.Name, s.Email, s.Paid, s.Active, id,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Check if any row was actually updated
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("student with id %d not found", id)
+	}
+
+	return nil
 }
 
 // // func (myDb *myDatabase) SoftDeleteStudent(student student) {
