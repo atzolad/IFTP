@@ -17,9 +17,6 @@ func main() {
 	router := gin.Default()
 	connStr := os.Getenv("CONN_STR")
 
-	// connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-	// <host>, <port>, <user>, <password>, <dbname>)
-
 	// Initialise the connection pool.
 	sqldb, err := sql.Open("pgx", connStr)
 	if err != nil {
@@ -39,7 +36,7 @@ func main() {
 	// User endpoints- make sure to pass the database instance to each function.
 	router.GET("/students", student.GetStudents(myDb))
 	router.POST("/students", student.AddStudent(myDb))
-	// router.PATCH("/students/:id", student.UpdateStudent(myDb))
+	router.PATCH("/students/:id", student.UpdateStudent(myDb))
 	// router.DELETE("/students/:id", student.SoftDeleteStudent(myDb))
 
 	// Class endpoints

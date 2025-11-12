@@ -13,14 +13,13 @@ type Student struct {
 	ID     int    `json:"id"`
 	Name   string `json:"name"`
 	Email  string `json:"email"`
-	Paid   bool   `json:"paid"`
 	Active bool   `json:"active"`
 }
 
 // var students = []Student{
-// 	{Name: "Alex Zolad", Email: "atzolad@gmail.com", Paid: false, Active: true},
-// 	{Name: "Megan Chang", Email: "meganchang10@gmail.com", Paid: false, Active: true},
-// 	{Name: "Sarah Vaughan", Email: "Sarahvaughan@gmail.com", Paid: false, Active: true},
+// 	{Name: "Alex Zolad", Email: "atzolad@gmail.com", Active: true},
+// 	{Name: "Megan Chang", Email: "meganchang10@gmail.com", Active: true},
+// 	{Name: "Sarah Vaughan", Email: "Sarahvaughan@gmail.com", Active: true},
 // }
 
 // GetStudents responds with the list of all users as JSON.
@@ -80,7 +79,7 @@ func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {
 			return
 		}
 
-		if err := UpdatedStudentDB(myDb, integerID, updatedStudent); err != nil {
+		if err := UpdateStudentDB(myDb, integerID, &updatedStudent); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -97,12 +96,12 @@ func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {
 
 // 	// myDb.SoftDeleteStudent
 
-// 	for i, student := range students {
+// 	for _, student := range students {
 // 		if student.ID == id {
-// 			students[i].Active = false
+// 			student.Active = false
 // 			c.Header("content-type", "application/json")
-// 			c.JSON(http.StatusOK, students[i])
-// 			fmt.Printf("Successfully deleted student: %v", students[i])
+// 			c.JSON(http.StatusOK, student)
+// 			fmt.Printf("Successfully deleted student: %v", student)
 // 			return
 // 		}
 // 	}
