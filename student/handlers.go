@@ -74,21 +74,23 @@ func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		var updatedStudent Student
+		var updateStudent Student
 
 		// Call BindJSON to bind the received JSON to updatedStudent
-		if err := c.BindJSON(&updatedStudent); err != nil {
+		if err := c.BindJSON(&updateStudent); err != nil {
 			return
 		}
 
-		if err := UpdateStudentDB(myDb, integerID, &updatedStudent); err != nil {
+		returnedStudent, err := UpdateStudentDB(myDb, integerID, &updateStudent)
+
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		updatedStudent.ID = integerID
+
 		c.Header("content-type", "application/json")
-		c.JSON(http.StatusOK, updatedStudent)
-		fmt.Printf("Successfully updated student id: %v \n", integerID)
+		c.JSON(http.StatusOK, returnedStudent)
+		fmt.Printf("Successfully updated student: %v \n", returnedStudent.Name)
 	}
 }
 
