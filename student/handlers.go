@@ -27,6 +27,8 @@ func GetStudents(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		students, err := RetrieveStudents(myDb)
+		fmt.Println("yes!!")
+		fmt.Println(students)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -90,19 +92,23 @@ func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {
 	}
 }
 
-// // SoftDeleteStudent changes the Active status of the student to false, rather than permanently deleting.
-// func SoftDeleteStudent(c *gin.Context) {
-// 	id := c.Param("id")
+// SoftDeleteStudent changes the Active status of the student to false, rather than permanently deleting.
+func SoftDeleteStudent(myDb *db.MyDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
 
-// 	// myDb.SoftDeleteStudent
+		integerID, err := strconv.Atoi(id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid student id"})
+		}
 
-// 	for _, student := range students {
-// 		if student.ID == id {
-// 			student.Active = false
-// 			c.Header("content-type", "application/json")
-// 			c.JSON(http.StatusOK, student)
-// 			fmt.Printf("Successfully deleted student: %v", student)
-// 			return
-// 		}
-// 	}
-// }
+		deletedStudent, err := SoftDeleteStudentDB(myDb, integerID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("student %v deleted successfully", deletedStudent)})
+		fmt.Printf("Successfully soft deleted student %v with id: %v \n", deletedStudent, integerID)
+	}
+}

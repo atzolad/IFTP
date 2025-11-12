@@ -11,14 +11,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	// Load env vars from .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: no .env file found")
+	}
+
 	router := gin.Default()
 	connStr := os.Getenv("CONN_STR")
-
+	fmt.Println("Connecting with:", connStr)
 	// Initialise the connection pool.
 	sqldb, err := sql.Open("pgx", connStr)
+
 	if err != nil {
 		log.Fatal(err)
 	}
