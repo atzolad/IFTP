@@ -27,8 +27,6 @@ func GetStudents(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		students, err := RetrieveStudents(myDb)
-		fmt.Println("yes!!")
-		fmt.Println(students)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

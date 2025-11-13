@@ -45,13 +45,13 @@ func main() {
 	router.GET("/students", student.GetStudents(myDb))
 	router.POST("/students", student.AddStudent(myDb))
 	router.PATCH("/students/:id", student.UpdateStudent(myDb))
-	// router.DELETE("/students/:id", student.SoftDeleteStudent(myDb))
+	router.DELETE("/students/:id", student.SoftDeleteStudent(myDb))
 
 	// Class endpoints
-	router.GET("/classes", class.GetClasses)
-	router.POST("/classes", class.AddClass)
-	router.PATCH("/classes/:id", class.UpdateClass)
-	router.DELETE("/classes/:id", class.SoftDeleteclass)
+	router.GET("/classes", class.GetClasses(myDb))
+	router.POST("/classes", class.AddClass(myDb))
+	router.PATCH("/classes/:id", class.UpdateClass(myDb))
+	router.DELETE("/classes/:id", class.SoftDeleteClass(myDb))
 
 	router.Run()
 }

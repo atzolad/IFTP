@@ -1,1 +1,125 @@
 package class
+
+import (
+	"IFTP/db"
+	"database/sql"
+	"fmt"
+	"strings"
+)
+
+func RetrieveClasses(myDb *db.MyDatabase) ([]Class, error) {
+	rows, err := myDb.Db.Query(
+		"SELECT id, name, teacher, day, time, active FROM lectures WHERE active = true")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// A Classes slice to hold the data from the returned rows
+	var classes []Class
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var class Class
+		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.Day, &class.Time, &class.Active); err != nil {
+			return nil, err
+		}
+		classes = append(classes, class)
+	}
+	if err = rows.Err(); err != nil {
+		return classes, err
+	}
+	return classes, nil
+}
+
+func InsertClass(myDb *db.MyDatabase, c *Class) error {
+	err := myDb.Db.QueryRow(
+		"INSERT INTO lectures (name, teacher, day, time) VALUES($1, $2, $3, $4) RETURNING id",
+		c.Name, c.Teacher, c.Day, c.Time).Scan(&c.ID)
+
+	return err
+}
+
+func UpdateClassDB(myDb *db.MyDatabase, id int, c *Class) (*Class, error) {
+	updates := []string{}
+	args := []any{}
+	argCount := 1
+
+	if c.Name != "" {
+		updates = append(updates, fmt.Sprintf("name=$%d", argCount))
+		args = append(args, c.Name)
+		argCount++
+	}
+
+	if c.Teacher != "" {
+		updates = append(updates, fmt.Sprintf("teacher=$%d", argCount))
+		args = append(args, c.Teacher)
+		argCount++
+	}
+
+	if c.Day != "" {
+		updates = append(updates, fmt.Sprintf("day=$%d", argCount))
+		args = append(args, c.Day)
+		argCount++
+	}
+
+	if c.Time != "" {
+		updates = append(updates, fmt.Sprintf("time=$%d", argCount))
+		args = append(args, c.Time)
+		argCount++
+	}
+
+	if len(updates) == 0 {
+		return nil, fmt.Errorf("no fields to update")
+	}
+
+	args = append(args, id)
+	// RETURNING gives you the updated row within one request to the DB
+	query := fmt.Sprintf("UPDATE lectures SET %s WHERE id=$%d AND active=true RETURNING id, name, teacher, day, time, active",
+		strings.Join(updates, ", "), argCount)
+
+	var updated Class
+	err := myDb.Db.QueryRow(query, args...).Scan(&updated.ID, &updated.Name, &updated.Teacher, &updated.Day, &updated.Time, &updated.Active)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("active student with id %d not found", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &updated, nil
+}
+
+func SoftDeleteClassDB(myDb *db.MyDatabase, id int) (string, error) {
+
+	var name string
+
+	err := myDb.Db.QueryRow(
+		"SELECT name FROM lectures WHERE id=$1 AND active=true", id,
+	).Scan(&name)
+
+	if err == sql.ErrNoRows {
+		return "", fmt.Errorf("class with id %d not found", id)
+	}
+
+	result, err := myDb.Db.Exec(
+		"UPDATE lectures SET active = false WHERE id = $1",
+		id)
+
+	if err != nil {
+		return "", err
+	}
+
+	// Check if any row was actually updated
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return "", err
+	}
+
+	if rowsAffected == 0 {
+		return "", fmt.Errorf("class with id %d not found", id)
+	}
+
+	return name, nil
+}
