@@ -4,52 +4,98 @@ import (
 	"IFTP/db"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Roster struct {
-	ID          int    `json:"id"`
-	Student_ID  string `json:"student_id"`
-	Class_ID    string `json:"class_id"`
-	Enrolled_At string `json:"enrolled_at"`
-	Active      bool   `json:"active"`
+//	type Roster struct {
+//		ID                int    `json:"id"`
+//		Lecture_Date      string `json:"date"`
+//		Student_ID        string `json:"student_id"`
+//		Lecture_ID        string `json:"class_id"`
+//		Registration_date string `json:"registration_date"`
+//		Active            bool   `json:"active"`
+//	}
+type enrollmentRequest struct {
+	StudentID  int      `json:"student_id"`
+	ClassID    int      `json:"class_id"`
+	ClassDates []string `json:"class_dates"`
 }
 
-// GetRoster responds with the overall enrolled class lists
-func GetRoster(myDb *db.MyDatabase) gin.HandlerFunc {
+// // GetRoster responds with the overall enrolled class lists
+// func GetRoster(myDb *db.MyDatabase) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+
+// 		fullRoster, err := GetRoster(myDb)
+// 		if err != nil {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 			return
+// 		}
+
+// 		c.Header("content-type", "application/json")
+// 		c.JSON(http.StatusOK, fullRoster)
+// 		fmt.Printf("Successfully retrieved roster \n")
+// 	}
+// }
+
+// JoinClass adds the student info in the body of the request to the class from the url.
+func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		fullRoster, err := GetRoster(myDb)
+		var newEnrollmentRequest enrollmentRequest
+
+		// Call BindJSON to bind the received JSON to
+		// newEnrollment.
+		if err := c.BindJSON(&newEnrollmentRequest); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Retrieve the class id from the url and assign the integer value to the newEnrollmentRequest struct
+		classID := c.Param("id")
+		intClassID, err := strconv.Atoi(classID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+		newEnrollmentRequest.ClassID = intClassID
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.Header("content-type", "application/json")
-		c.JSON(http.StatusOK, fullRoster)
-		fmt.Printf("Successfully retrieved roster \n")
+		convertedDates, err := convertStrDT(newEnrollmentRequest.ClassDates)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		for _, date := range convertedDates {
+
+			if err := dbEnroll(myDb, newEnrollmentRequest.ClassID, date, newEnrollmentRequest.StudentID); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+		}
+		c.JSON(http.StatusCreated, newEnrollmentRequest)
+		fmt.Printf("Successfully enrolled student: %v into class id %v for dates: %v ",
+			newEnrollmentRequest.StudentID, newEnrollmentRequest.ClassID, newEnrollmentRequest.ClassDates)
 	}
 }
 
-// JoinClass adds the student to the class from the request.
-func JoinClass(myDb *db.MyDatabase) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var newEnrollment Roster
+func convertStrDT(dates []string) ([]time.Time, error) {
+	convertedDates := make([]time.Time, len(dates))
 
-		// Call BindJSON to bind the received JSON to
-		// newStudent.
-		if err := c.BindJSON(&newEnrollment); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+	for i, date := range dates {
+
+		// Validate that the date provided is in the correct format
+		parsedDate, err := time.Parse("2006-01-02", date)
+		if err != nil {
+			return nil, fmt.Errorf("error occured during datetime conversion : %v", err)
 		}
-
-		if err := JoinClass(myDb, &newEnrollment); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusCreated, newEnrollment)
-		fmt.Printf("Successfully created new student: %v", newEnrollment)
+		convertedDates[i] = parsedDate
 	}
+	return convertedDates, nil
 }
