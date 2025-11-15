@@ -9,7 +9,7 @@ import (
 
 func RetrieveClasses(myDb *db.MyDatabase) ([]Class, error) {
 	rows, err := myDb.Db.Query(
-		"SELECT id, name, teacher, day, time, active FROM lectures WHERE active = true")
+		"SELECT id, name, teacher, day, time, active FROM classes WHERE active = true")
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func RetrieveClasses(myDb *db.MyDatabase) ([]Class, error) {
 
 func InsertClass(myDb *db.MyDatabase, c *Class) error {
 	err := myDb.Db.QueryRow(
-		"INSERT INTO lectures (name, teacher, day, time) VALUES($1, $2, $3, $4) RETURNING id",
+		"INSERT INTO classes (name, teacher, day, time) VALUES($1, $2, $3, $4) RETURNING id",
 		c.Name, c.Teacher, c.Day, c.Time).Scan(&c.ID)
 
 	return err
@@ -75,7 +75,7 @@ func UpdateClassDB(myDb *db.MyDatabase, id int, c *Class) (*Class, error) {
 
 	args = append(args, id)
 	// RETURNING gives you the updated row within one request to the DB
-	query := fmt.Sprintf("UPDATE lectures SET %s WHERE id=$%d AND active=true RETURNING id, name, teacher, day, time, active",
+	query := fmt.Sprintf("UPDATE classes SET %s WHERE id=$%d AND active=true RETURNING id, name, teacher, day, time, active",
 		strings.Join(updates, ", "), argCount)
 
 	var updated Class
@@ -96,7 +96,7 @@ func SoftDeleteClassDB(myDb *db.MyDatabase, id int) (string, error) {
 	var name string
 
 	err := myDb.Db.QueryRow(
-		"SELECT name FROM lectures WHERE id=$1 AND active=true", id,
+		"SELECT name FROM classes WHERE id=$1 AND active=true", id,
 	).Scan(&name)
 
 	if err == sql.ErrNoRows {
@@ -104,7 +104,7 @@ func SoftDeleteClassDB(myDb *db.MyDatabase, id int) (string, error) {
 	}
 
 	result, err := myDb.Db.Exec(
-		"UPDATE lectures SET active = false WHERE id = $1",
+		"UPDATE classes SET active = false WHERE id = $1",
 		id)
 
 	if err != nil {

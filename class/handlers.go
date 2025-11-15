@@ -68,7 +68,7 @@ func AddClass(myDb *db.MyDatabase) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, newClass)
-		fmt.Printf("Successfully created new student: %v", newClass)
+		fmt.Printf("Successfully created new class: %v", newClass)
 	}
 }
 
@@ -116,7 +116,7 @@ func SoftDeleteClass(myDb *db.MyDatabase) gin.HandlerFunc {
 
 		integerID, err := strconv.Atoi(id)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid student id"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class id"})
 		}
 
 		deletedClass, err := SoftDeleteClassDB(myDb, integerID)
@@ -125,7 +125,7 @@ func SoftDeleteClass(myDb *db.MyDatabase) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("student %v deleted successfully", deletedClass)})
-		fmt.Printf("Successfully soft deleted student %v with id: %v \n", deletedClass, integerID)
+		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("class %v deleted successfully", deletedClass)})
+		fmt.Printf("Successfully soft deleted class %v with id: %v \n", deletedClass, integerID)
 	}
 }
