@@ -1,6 +1,7 @@
 package main
 
 import (
+	"IFTP/class/timeutils"
 	"fmt"
 	"time"
 
@@ -57,7 +58,7 @@ import (
 // 	router.Run()
 // }
 
-// FirstMonday returns the day of the first Monday in the given month.
+// FirstDay returns the day of the first Monday in the given month.
 func FirstDay(weekday time.Weekday, year int, month time.Month) int {
 	t := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
 	return (8-int(t.Weekday()))%7 + int(weekday)
@@ -68,9 +69,38 @@ func FirstDay(weekday time.Weekday, year int, month time.Month) int {
 // 'Friday': 3
 // 'saturday':4
 
+func FindMonthlyDates(starting_date time.Time) error {
+	// Set the starting date
+	//Check all the days after that- increment by 7 if the month is the same, add it , if not do not
+
+	// // set the starting date (in any way you wish) - replace with starting_date- if input is a string
+	// start, err := time.Parse("2006-1-2", starting_date)
+	// if err != nil {
+	// 	return fmt.Errorf("error parsing starting date for monthly day / date aggregation: %v", err)
+	// }
+	// handle error
+
+	// set d to starting date and keep adding 7 days to it as long as month doesn't change
+	for d := starting_date; d.Month() == starting_date.Month(); d = d.AddDate(0, 0, 7) {
+		date := d.String()
+		fmt.Println(date)
+	}
+	return nil
+}
+
 func main() {
-	// date, _ := time.Parse("2006-1-2", "2025-12-1")
-	// roster.FindMonthlyDates(time.Date(year, month, 1))
+	month := time.November
+	monday := time.Monday
+	tuesday := time.Tuesday
+	daysSlice := []time.Weekday{monday, tuesday}
+	datesMap := timeutils.CreateDatesMap(daysSlice, 2025, month)
+	for day, dates := range datesMap {
+		fmt.Printf("Day: %v /n", day)
+		for _, date := range dates {
+			fmt.Printf("Date: %v", date)
+		}
+		fmt.Println()
+	}
 
 	// if datesMap['friday'].exists()
 	// else {
@@ -78,6 +108,6 @@ func main() {
 	// 	datesMap['friday'] = friday
 	// }
 
-	fmt.Println(FirstDay(time.Friday, 2025, 12))
+	// fmt.Println(FirstDay(time.Friday, 2025, 12))
 
 }
