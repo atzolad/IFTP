@@ -54,20 +54,22 @@ func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
 		}
 
 		// Retrieve the class id from the url and assign the integer value to the newEnrollmentRequest struct
-		classID := c.Param("id")
+		classID := c.Param("class_id")
+		fmt.Println(classID)
 		intClassID, err := strconv.Atoi(classID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 		newEnrollmentRequest.ClassID = intClassID
 
 		convertedDates, err := convertStrDT(newEnrollmentRequest.ClassDates)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 
 		for _, date := range convertedDates {
-
 			if err := dbEnroll(myDb, newEnrollmentRequest.ClassID, date, newEnrollmentRequest.StudentID); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
