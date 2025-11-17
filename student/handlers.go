@@ -38,7 +38,7 @@ func GetStudents(myDb *db.MyDatabase) gin.HandlerFunc {
 	}
 }
 
-// AddStudent adds an user from JSON received in the request body.
+// AddStudent adds a user from JSON received in the request body.
 func AddStudent(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var newStudent Student
@@ -55,9 +55,6 @@ func AddStudent(myDb *db.MyDatabase) gin.HandlerFunc {
 			return
 		}
 
-		// // Add the new student to the slice.
-		// students = append(students, newStudent)
-		// c.Header("content-type", "application/json")
 		c.JSON(http.StatusCreated, newStudent)
 		fmt.Printf("Successfully created new student: %v", newStudent)
 	}

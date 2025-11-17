@@ -40,7 +40,7 @@ type enrollmentRequest struct {
 // 	}
 // }
 
-// JoinClass adds the student info in the body of the request to the class from the url.
+// Enroll adds the student info in the body of the request to the class from the url.
 func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -60,11 +60,6 @@ func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 		newEnrollmentRequest.ClassID = intClassID
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
 
 		convertedDates, err := convertStrDT(newEnrollmentRequest.ClassDates)
 		if err != nil {
