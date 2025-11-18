@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-func RetrieveClasses(myDb *db.MyDatabase) ([]Class, error) {
+func GetClassesDB(myDb *db.MyDatabase) ([]Class, error) {
 	rows, err := myDb.Db.Query(
-		"SELECT id, name, teacher, day, time, active FROM classes WHERE active = true")
+		"SELECT id, name, teacher, day, time, month, description, capacity, dates FROM classes")
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,8 @@ func RetrieveClasses(myDb *db.MyDatabase) ([]Class, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var class Class
-		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.Day, &class.Time, &class.Active); err != nil {
+		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.Day, &class.Time, &class.Month,
+			&class.Description, &class.Capacity, &class.Dates); err != nil {
 			return nil, err
 		}
 		classes = append(classes, class)

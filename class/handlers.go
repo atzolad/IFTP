@@ -11,12 +11,15 @@ import (
 )
 
 type Class struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Teacher string `json:"teacher"`
-	Day     string `json:"day"`
-	Time    string `json:"time"`
-	Active  bool   `json:"active"`
+	ID          int      `json:"id"`
+	Name        string   `json:"name"`
+	Teacher     string   `json:"teacher"`
+	Day         string   `json:"day"`
+	Time        string   `json:"time"`
+	Month       string   `json:"month"`
+	Description string   `json:"description"`
+	Capacity    string   `json:"capacity"`
+	Dates       []string `json:"dates"`
 }
 
 // var classes = []class{
@@ -30,7 +33,7 @@ type Class struct {
 func GetClasses(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		classes, err := RetrieveClasses(myDb)
+		classes, err := GetClassesDB(myDb)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
