@@ -15,3 +15,9 @@ func dbEnroll(myDb *db.MyDatabase, classID int, classDate time.Time, studentID i
 
 	return err
 }
+
+// Should have a function to view the roster for a specific class date- as input needs the class id and the date. We want to see the student names and emails. 
+
+
+
+//Should have a function to view the roster for a specific class for the month- needs the class id. 

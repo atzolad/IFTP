@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,8 @@ func main() {
 	}
 
 	router := gin.Default()
+	// Load all the html templates from the templates directory.
+	router.LoadHTMLGlob("templates/*")
 	connStr := os.Getenv("CONN_STR")
 	fmt.Println("Connecting with:", connStr)
 	// Initialise the connection pool.
@@ -42,6 +45,12 @@ func main() {
 	// Create an instance of myDatabase containing the connection pool.
 	myDb := &db.MyDatabase{Db: sqldb}
 
+	// Render the main index.
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"title": "IFTP Main Page",
+		})
+	})
 	// Studentendpoints- make sure to pass the database instance to each function.
 	router.GET("/students", student.GetStudents(myDb))
 	router.POST("/students", student.AddStudent(myDb))
@@ -50,7 +59,7 @@ func main() {
 
 	// Class endpoints
 	router.GET("/classes", class.GetClasses(myDb))
-	router.POST("/classes", class.AddClass(myDb))
+	router.POST("/classes", class.CreateClass(myDb))
 	router.PATCH("/classes/:id", class.UpdateClass(myDb))
 	router.DELETE("/classes/:id", class.SoftDeleteClass(myDb))
 

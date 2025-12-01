@@ -41,6 +41,7 @@ type enrollmentRequest struct {
 // }
 
 // Enroll adds the student info in the body of the request to the class from the url.
+// TODO(): figure out how we want to require full month of classes for students
 func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

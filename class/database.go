@@ -21,8 +21,8 @@ func GetClassesDB(myDb *db.MyDatabase) ([]Class, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var class Class
-		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.Day, &class.Time, &class.Month,
-			&class.Description, &class.Capacity, &class.Dates); err != nil {
+		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.Day, &class.Time,
+			&class.Description); err != nil {
 			return nil, err
 		}
 		classes = append(classes, class)
@@ -33,7 +33,7 @@ func GetClassesDB(myDb *db.MyDatabase) ([]Class, error) {
 	return classes, nil
 }
 
-func InsertClass(myDb *db.MyDatabase, c *Class) error {
+func DbCreateClass(myDb *db.MyDatabase, c *Class) error {
 	err := myDb.Db.QueryRow(
 		"INSERT INTO classes (name, teacher, day, time) VALUES($1, $2, $3, $4) RETURNING id",
 		c.Name, c.Teacher, c.Day, c.Time).Scan(&c.ID)
@@ -76,11 +76,11 @@ func UpdateClassDB(myDb *db.MyDatabase, id int, c *Class) (*Class, error) {
 
 	args = append(args, id)
 	// RETURNING gives you the updated row within one request to the DB
-	query := fmt.Sprintf("UPDATE classes SET %s WHERE id=$%d AND active=true RETURNING id, name, teacher, day, time, active",
+	query := fmt.Sprintf("UPDATE classes SET %s WHERE id=$%d RETURNING id, name, teacher, day, time",
 		strings.Join(updates, ", "), argCount)
 
 	var updated Class
-	err := myDb.Db.QueryRow(query, args...).Scan(&updated.ID, &updated.Name, &updated.Teacher, &updated.Day, &updated.Time, &updated.Active)
+	err := myDb.Db.QueryRow(query, args...).Scan(&updated.ID, &updated.Name, &updated.Teacher, &updated.Day, &updated.Time)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("active student with id %d not found", id)
@@ -92,6 +92,7 @@ func UpdateClassDB(myDb *db.MyDatabase, id int, c *Class) (*Class, error) {
 	return &updated, nil
 }
 
+// TODO: standard is to just call this delete not softDelete. Add comment about soft delete
 func SoftDeleteClassDB(myDb *db.MyDatabase, id int) (string, error) {
 
 	var name string

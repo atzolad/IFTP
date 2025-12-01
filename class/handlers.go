@@ -11,15 +11,12 @@ import (
 )
 
 type Class struct {
-	ID          int      `json:"id"`
-	Name        string   `json:"name"`
-	Teacher     string   `json:"teacher"`
-	Day         string   `json:"day"`
-	Time        string   `json:"time"`
-	Month       string   `json:"month"`
-	Description string   `json:"description"`
-	Capacity    string   `json:"capacity"`
-	Dates       []string `json:"dates"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Teacher     string `json:"teacher"`
+	Day         string `json:"day"`
+	Time        string `json:"time"`
+	Description string `json:"description"`
 }
 
 // var classes = []class{
@@ -30,6 +27,39 @@ type Class struct {
 // }
 
 // GetClasses responds with the list of all classes as JSON.
+// Nit: ListClasses
+func ListClassDatesForMonth(myDb *db.MyDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		classes, err := GetClassesDB(myDb)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.Header("content-type", "application/json")
+		c.JSON(http.StatusOK, classes)
+		fmt.Printf("Successfully retrieved class list \n")
+	}
+}
+
+func ApproveClassDates(myDb *db.MyDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		classes, err := GetClassesDB(myDb)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.Header("content-type", "application/json")
+		c.JSON(http.StatusOK, classes)
+		fmt.Printf("Successfully retrieved class list \n")
+	}
+}
+
+// GetClasses responds with the list of all classes as JSON.
+// Nit: ListClasses
 func GetClasses(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -46,12 +76,12 @@ func GetClasses(myDb *db.MyDatabase) gin.HandlerFunc {
 }
 
 // AddClass adds a class from JSON received in the request body.
-func AddClass(myDb *db.MyDatabase) gin.HandlerFunc {
+// TODO: be consistent with your names CreateClass and dbCreateClass
+func CreateClass(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var newClass Class
 
-		// Call BindJSON to bind the received JSON to
-		// newStudent.
+		// Call BindJSON to bind the received JSON to newClass.
 		if err := c.BindJSON(&newClass); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -65,7 +95,7 @@ func AddClass(myDb *db.MyDatabase) gin.HandlerFunc {
 
 		newClass.Time = parsedTime.Format("15:04:05")
 
-		if err := InsertClass(myDb, &newClass); err != nil {
+		if err := DbCreateClass(myDb, &newClass); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
