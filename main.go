@@ -58,10 +58,10 @@ func main() {
 	router.DELETE("/students/:id", student.SoftDeleteStudent(myDb))
 
 	// Class endpoints
-	router.GET("/classes", class.GetClasses(myDb))
-	router.POST("/classes", class.CreateClass(myDb))
-	router.PATCH("/classes/:id", class.UpdateClass(myDb))
-	router.DELETE("/classes/:id", class.SoftDeleteClass(myDb))
+	router.GET("/classes", class.ListClasses(myDb))
+	// router.POST("/classes", class.CreateClass(myDb))
+	// router.PATCH("/classes/:id", class.UpdateClass(myDb))
+	// router.DELETE("/classes/:id", class.SoftDeleteClass(myDb))
 
 	// Roster endpoints
 	// router.GET("/roster", roster.GetRoster(myDb))
