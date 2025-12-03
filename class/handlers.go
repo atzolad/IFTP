@@ -9,14 +9,15 @@ import (
 )
 
 type Class struct {
-	ID           int      `json:"id"`
-	Name         string   `json:"name"`
-	Teacher      string   `json:"teacher"`
-	DayOfWeek    string   `json:"day_of_week"`
-	Time         string   `json:"time"`
-	Description  string   `json:"description"`
-	Capacity     string   `json:"capacity"`
-	SessionDates []string `json:"session_dates"`
+	ID            int      `json:"id"`
+	Name          string   `json:"name"`
+	Teacher       string   `json:"teacher"`
+	DayOfWeek     string   `json:"day_of_week"`
+	Time          string   `json:"time"`
+	Description   string   `json:"description"`
+	Capacity      string   `json:"capacity"`
+	SessionDates  []string `json:"session_dates"`
+	EnrolledCount int      `json:"enrolled_count"`
 }
 
 // GetClasses responds with the list of all classes as JSON.
@@ -35,6 +36,28 @@ func ListClasses(myDb *db.MyDatabase) gin.HandlerFunc {
 		fmt.Printf("Successfully retrieved class list \n")
 	}
 }
+
+func ListClassesByMonth(myDb *db.MyDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		month := c.Param("month")
+
+		classes, err := dbListClassesByMonth(myDb, month)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.Header("content-type", "application/json")
+		c.JSON(http.StatusOK, classes)
+		fmt.Printf("Successfully retrieved class list \n")
+	}
+}
+
+// 		id := c.Param("id")
+// 		integerID, err := strconv.Atoi(id)
+// 		if err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		}
 
 // func ApproveClassDates(myDb *db.MyDatabase) gin.HandlerFunc {
 // 	return func(c *gin.Context) {

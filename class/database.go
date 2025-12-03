@@ -2,6 +2,7 @@ package class
 
 import (
 	"IFTP/db"
+	"fmt"
 
 	"github.com/lib/pq"
 )
@@ -12,7 +13,7 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 		FROM classes AS c
 		JOIN class_schedule AS cs ON cs.class_id = c.id
 		WHERE active = True
-		GROUP BY 1`)
+		GROUP BY c.id`)
 
 	if err != nil {
 		return nil, err
@@ -29,6 +30,39 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 			&class.Description, &class.Capacity, (*pq.StringArray)(&class.SessionDates)); err != nil {
 			return nil, err
 		}
+		classes = append(classes, class)
+	}
+	if err = rows.Err(); err != nil {
+		return classes, err
+	}
+	return classes, nil
+}
+
+func dbListClassesByMonth(myDb *db.MyDatabase, month string) ([]Class, error) {
+	rows, err := myDb.Db.Query(
+		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
+		FROM classes AS c
+		JOIN class_schedule AS cs ON cs.class_id = c.id
+		JOIN roster AS r ON r.class_id = c.id
+		WHERE active = True AND month = $1
+		GROUP BY c.id`, month)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// A Classes slice to hold the data from the returned rows
+	var classes []Class
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var class Class
+		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
+			&class.Description, &class.Capacity, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
+			return nil, err
+		}
+		fmt.Println(classes)
 		classes = append(classes, class)
 	}
 	if err = rows.Err(); err != nil {

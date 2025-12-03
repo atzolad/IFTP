@@ -144,9 +144,8 @@
                     </div>
                     <div class="col-auto">
                         <select class="form-select" id="monthFilter">
-                            <option selected>November 2025</option>
-                            <option>December 2025</option>
-                            <option>January 2026</option>
+                            <option value= "2025-12-01" selected> December 2025</option>
+                            <option value = "2026-01-01">January 2026</option>
                         </select>
                     </div>
                 </div>
@@ -1408,58 +1407,69 @@
     <script>
         let isAdminView = false;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const containerWrapper = document.getElementById('class-cards-container-wrapper');
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     const containerWrapper = document.getElementById('class-cards-container-wrapper');
+        //     const month = document.getElementById('monthFilter').value
+        //     console.log(month)
 
-            const baseUrl = 'http://localhost:8080'
-            const apiEndpoint = baseUrl + '/classes'
+        //     const monthYear = month;
+        //     const dateObj = new Date(monthYear);
+        //     const formattedDate = dateObj.toISOString().slice(0, 10).replace(/-/g, '-'); // Slice and replace the year-month-day with hyphens
+        //     console.log(formattedDate); // Output: 2025-11-01 
 
-            fetch(apiEndpoint)
-                .then(response => response.json())
-                .then(data => {
-                    // Iterate over the data array and create HTML for each item
-                    data.forEach(item => {
-                        console.log(item)
+        //     const baseUrl = 'http://localhost:8080'
+        //     const apiEndpoint = baseUrl + '/classes' + '/' + formattedDate
 
-                        var sessionDatesHtml = ``;
-                        item.session_dates.forEach(session_date => {
-                            const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-                            sessionDatesHtml += dateBadge;
-                        });
+        //     fetch(apiEndpoint)
+        //         .then(response => response.json())
+        //         .then(data => {
+                    
+        //             if (data !== null &&data !== undefined){
+        //             // Iterate over the data array and create HTML for each item
+        //             data.forEach(item => {
+        //                 console.log(item)
 
-                        console.log(sessionDatesHtml);
+        //                 var sessionDatesHtml = ``;
+        //                 item.session_dates.forEach(session_date => {
+        //                     const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+        //                     sessionDatesHtml += dateBadge;
+        //                 });
 
-                        const containerHtml = `
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card class-card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${item.name}</h5>
-                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${item.teacher}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${item.day_of_week} at ${item.time}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${item.capacity} capacity</p>
-                                            <p class="card-text mb-3">${item.description}</p>
-                                            <div class="mb-3">
-                                                <strong class="d-block mb-2">Session Dates:</strong>
-                                                ${sessionDatesHtml}
-                                            </div>
-                                            <button class="btn btn-secondary w-100" disabled>
-                                                <i class="bi bi-lock"></i> Requires Approval
-                                            </button>
-                                            <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('English Literature')">
-                                                <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>`
-                        // Append the new HTML to the wrapper
-                        containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
-                });
-        });
+        //                 console.log(sessionDatesHtml);
+
+        //                 const containerHtml = `
+        //                         <div class="col-md-6 col-lg-4">
+        //                             <div class="card class-card">
+        //                                 <div class="card-body">
+        //                                     <h5 class="card-title">${item.name}</h5>
+        //                                     <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${item.teacher}</p>
+        //                                     <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${item.day_of_week} at ${item.time}</p>
+        //                                     <p class="text-muted mb-2"><i class="bi bi-people"></i> ${item.capacity} capacity</p>
+        //                                     <p class="card-text mb-3">${item.description}</p>
+        //                                     <div class="mb-3">
+        //                                         <strong class="d-block mb-2">Session Dates:</strong>
+        //                                         ${sessionDatesHtml}
+        //                                     </div>
+        //                                     <button class="btn btn-secondary w-100" disabled>
+        //                                         <i class="bi bi-lock"></i> Requires Approval
+        //                                     </button>
+        //                                     <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('English Literature')">
+        //                                         <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
+        //                                     </button>
+        //                                 </div>
+        //                             </div>
+        //                         </div>`
+        //                 // Append the new HTML to the wrapper
+        //                 containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
+        //             });
+        // }else {
+        //     console.warn("Data is null or undefined, cannot call forEach.");
+        // }})
+        //         .catch(error => {
+        //             console.error('Error fetching data:', error);
+        //             containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
+        //         });
+        // });
 
         function toggleView() {
             isAdminView = !isAdminView;
@@ -1604,7 +1614,12 @@
             const endpointUrl = baseUrl + '/roster/' + classId + '/enroll';
             
             // TODO: get the class dates from document
-            // const classDates = document.getElementById('classDates');
+            // item.session_dates.forEach(session_date => {
+            //                 const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+            //                 sessionDatesHtml += dateBadge;
+            //             });
+            const classDates = document.getElementById('session_dates');
+            console.log(classDates)
 
             const methodType = 'POST'; // or 'POST', 'PUT', 'DELETE', etc.
 
@@ -1666,6 +1681,85 @@
                 // In real implementation, this would update the calendar and database
             }
         }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const monthFilter = document.getElementById('monthFilter');
+            const month = document.getElementById('monthFilter').value
+            console.log(month)
+
+
+            renderClasses(month);
+
+            // Re-render the classes when changing the month. 
+            monthFilter.addEventListener('change', (event) => {
+                // This function will execute when a new option is selected
+                const selectedValue = event.target.value; // Get the value of the selected option
+                renderClasses(selectedValue);
+                console.log('Selected Value:', selectedValue);
+
+            });
+        });
+        
+        function renderClasses(month) {
+            const containerWrapper = document.getElementById('class-cards-container-wrapper');
+            const baseUrl = 'http://localhost:8080'
+            const apiEndpoint = baseUrl + '/classes' + '/' + month
+
+            // Clear existing classes
+            containerWrapper.innerHTML = '';
+
+            fetch(apiEndpoint)
+                .then(response => response.json())
+                .then(data => {
+                    
+                    if (data !== null &&data !== undefined){
+                    // Iterate over the data array and create HTML for each item
+                    data.forEach(item => {
+                        console.log(item)
+
+                        var sessionDatesHtml = ``;    
+                        item.session_dates.forEach(session_date => {
+                            const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+                            sessionDatesHtml += dateBadge;
+                        });
+
+                        console.log(sessionDatesHtml);
+
+                        const containerHtml = `
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card class-card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${item.name}</h5>
+                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${item.teacher}</p>
+                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${item.day_of_week} at ${item.time}</p>
+                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${item.capacity} capacity</p>
+                                            <p class="card-text mb-3">${item.description}</p>
+                                            <div class="mb-3">
+                                                <strong class="d-block mb-2">Session Dates:</strong>
+                                                ${sessionDatesHtml}
+                                            </div>
+                                            <button class="btn btn-secondary w-100">
+                                                <i class="bi bi-lock"></i> Requires Approval
+                                            </button>
+                                            <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('${item.name}')">
+                                                <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>`
+                        // Append the new HTML to the wrapper
+                        containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
+                    });
+        }else {
+            containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>';
+        }})
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
+                });
+}
     </script>
 </body>
 </html>
