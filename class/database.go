@@ -9,9 +9,10 @@ import (
 
 func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 	rows, err := myDb.Db.Query(
-		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, ARRAY_AGG(cs.session_date ORDER BY cs.session_date) AS session_dates
+		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
 		JOIN class_schedule AS cs ON cs.class_id = c.id
+		JOIN roster AS r ON r.class_id = c.id
 		WHERE active = True
 		GROUP BY c.id`)
 
@@ -27,7 +28,7 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 	for rows.Next() {
 		var class Class
 		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
-			&class.Description, &class.Capacity, (*pq.StringArray)(&class.SessionDates)); err != nil {
+			&class.Description, &class.Capacity, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
 			return nil, err
 		}
 		classes = append(classes, class)
@@ -39,13 +40,34 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 }
 
 func dbListClassesByMonth(myDb *db.MyDatabase, month string) ([]Class, error) {
-	rows, err := myDb.Db.Query(
-		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
+	queryStmt := `SELECT c.id, name, teacher, day_of_week, time, description, capacity, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
 		JOIN class_schedule AS cs ON cs.class_id = c.id
 		JOIN roster AS r ON r.class_id = c.id
-		WHERE active = True AND month = $1
-		GROUP BY c.id`, month)
+		WHERE active = True`
+
+	var args []any
+
+	if month != "" {
+		args = append(args, month)
+		queryStmt = queryStmt + fmt.Sprintf(" AND month = $%d ", len(args))
+	}
+	// if student_id != "" {
+	// 	args = append(args, student_id)
+	// 	queryStmt = queryStmt + fmt.Sprintf(" AND student_id = $%d ", len(args))
+	// }
+
+	queryStmt = queryStmt + " GROUP BY c.id "
+	// var rows *sql.Rows
+	// var err error
+
+	rows, err := myDb.Db.Query(queryStmt, args...)
+
+	// if len(args) > 0 {
+	// 	rows, err = myDb.Db.Query(queryStmt, args[0])
+	// } else {
+	// 	rows, err = myDb.Db.Query(queryStmt)
+	// }
 
 	if err != nil {
 		return nil, err
