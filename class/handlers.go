@@ -4,6 +4,7 @@ import (
 	"IFTP/db"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,9 +41,14 @@ func ListClasses(myDb *db.MyDatabase) gin.HandlerFunc {
 func ListClassesByMonth(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		month := c.Param("month")
-		// studentId := c.Param("student_id")
+		studentId := c.Param("student_id")
 
-		classes, err := dbListClassesByMonth(myDb, month)
+		studentIntegerId, err := strconv.Atoi(studentId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		classes, err := dbListClassesByMonth(myDb, month, studentIntegerId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -53,12 +59,6 @@ func ListClassesByMonth(myDb *db.MyDatabase) gin.HandlerFunc {
 		fmt.Printf("Successfully retrieved class list \n")
 	}
 }
-
-// 		id := c.Param("id")
-// 		integerID, err := strconv.Atoi(id)
-// 		if err != nil {
-// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		}
 
 // func ApproveClassDates(myDb *db.MyDatabase) gin.HandlerFunc {
 // 	return func(c *gin.Context) {

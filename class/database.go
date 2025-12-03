@@ -39,7 +39,7 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 	return classes, nil
 }
 
-func dbListClassesByMonth(myDb *db.MyDatabase, month string) ([]Class, error) {
+func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId ...int) ([]Class, error) {
 	queryStmt := `SELECT c.id, name, teacher, day_of_week, time, description, capacity, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
 		JOIN class_schedule AS cs ON cs.class_id = c.id
@@ -49,13 +49,15 @@ func dbListClassesByMonth(myDb *db.MyDatabase, month string) ([]Class, error) {
 	var args []any
 
 	if month != "" {
+		fmt.Printf("Month: %v", month)
 		args = append(args, month)
 		queryStmt = queryStmt + fmt.Sprintf(" AND month = $%d ", len(args))
 	}
-	// if student_id != "" {
-	// 	args = append(args, student_id)
-	// 	queryStmt = queryStmt + fmt.Sprintf(" AND student_id = $%d ", len(args))
-	// }
+	if len(studentId) > 0 {
+		fmt.Printf("student id: %v ", studentId[0])
+		args = append(args, studentId[0])
+		queryStmt = queryStmt + fmt.Sprintf(" AND r.student_id = $%d ", len(args))
+	}
 
 	queryStmt = queryStmt + " GROUP BY c.id "
 	// var rows *sql.Rows
