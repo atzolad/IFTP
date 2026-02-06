@@ -59,7 +59,7 @@ func main() {
 
 	// Class endpoints
 	router.GET("/classes", class.ListClasses(myDb))
-	router.GET("/classes/:student_id/:month", class.ListClassesByMonth(myDb))
+	router.GET("/classes/:student_id", class.ListClassesByMonth(myDb))
 	// router.GET("/classes/:month", class.ListClassesByMonth(myDb))
 	// router.POST("/classes", class.CreateClass(myDb))
 	// router.PATCH("/classes/:id", class.UpdateClass(myDb))

@@ -40,8 +40,11 @@ func ListClasses(myDb *db.MyDatabase) gin.HandlerFunc {
 
 func ListClassesByMonth(myDb *db.MyDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		month := c.Param("month")
+		// month := c.Param("month")
+		month := c.Query("month")
 		studentId := c.Param("student_id")
+		fmt.Println(month)
+		fmt.Println(studentId)
 
 		studentIntegerId, err := strconv.Atoi(studentId)
 		if err != nil {
