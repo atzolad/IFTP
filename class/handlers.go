@@ -2,11 +2,10 @@ package class
 
 import (
 	"IFTP/db"
+	"IFTP/utils"
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Class struct {
@@ -23,42 +22,49 @@ type Class struct {
 
 // GetClasses responds with the list of all classes as JSON.
 // Nit: ListClasses
-func ListClasses(myDb *db.MyDatabase) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func ListClasses(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
 		classes, err := dbListClasses(myDb)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error fetching classes from db: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
 			return
 		}
 
-		c.Header("content-type", "application/json")
-		c.JSON(http.StatusOK, classes)
+		utils.WriteJSONResponse(w, http.StatusOK, classes)
 		fmt.Printf("Successfully retrieved class list \n")
 	}
 }
 
-func ListClassesByMonth(myDb *db.MyDatabase) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		// month := c.Param("month")
-		month := c.Query("month")
-		studentId := c.Param("student_id")
+		month := r.FormValue("month")
+		studentId := r.PathValue("student_id")
 		fmt.Println(month)
 		fmt.Println(studentId)
 
 		studentIntegerId, err := strconv.Atoi(studentId)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			utils.WriteJSONResponse(w, http.StatusBadRequest, err)
+			return
 		}
 
 		classes, err := dbListClassesByMonth(myDb, month, studentIntegerId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error fetching classes from db for month %v: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
 			return
 		}
 
-		c.Header("content-type", "application/json")
-		c.JSON(http.StatusOK, classes)
+		utils.WriteJSONResponse(w, http.StatusOK, classes)
 		fmt.Printf("Successfully retrieved class list \n")
 	}
 }
