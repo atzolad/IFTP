@@ -614,7 +614,8 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <table class="table table-hover">
+                            <table class="table table-hover text-center">
+                                <!-- TODO- Adjust the alignment of these- perhaps the name to the left and actions to the right but center everything else. -->
                                 <thead>
                                     <tr>
                                         <th>Class Name</th>
@@ -1878,7 +1879,11 @@
 
                     if (classes !== null && classes !== undefined) {
                         classes.forEach(selectedClass => {
-                            console.log(selectedClass)
+
+
+                            //Convert the string from the backend to a JS date object and remove the Time.
+                            const formattedMonth = new Date(selectedClass.month).toISOString().slice(0, 10);
+                            selectedClass.month = formattedMonth
 
                             const row = document.createElement('tr');
 
