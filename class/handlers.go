@@ -15,6 +15,7 @@ type Class struct {
 	DayOfWeek     string   `json:"day_of_week"`
 	Time          string   `json:"time"`
 	Description   string   `json:"description"`
+	Month         string   `json:"month"`
 	Capacity      string   `json:"capacity"`
 	SessionDates  []string `json:"session_dates"`
 	EnrolledCount int      `json:"enrolled_count"`
