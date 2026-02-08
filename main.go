@@ -67,12 +67,13 @@ func main() {
 	// Render the main index.
 	mux.HandleFunc("/", utils.IndexHandler(tpl, baseUrl))
 
+	mux.HandleFunc("GET /classes", class.ListClasses(myDb))
+	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
+
 	log.Printf("Server starting on :%v", port)
 	if err := http.ListenAndServe(":"+port, wrappedMux); err != nil {
 		log.Fatalf("Error initializing server: %v", err)
 	}
-
-	mux.HandleFunc("GET /classes", class.ListClasses(myDb))
 
 	// // Render the main index.
 	// router.GET("/", func(c *gin.Context) {
