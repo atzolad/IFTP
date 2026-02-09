@@ -11,8 +11,8 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 	rows, err := myDb.Db.Query(
 		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
-		JOIN class_schedule AS cs ON cs.class_id = c.id
-		JOIN roster AS r ON r.class_id = c.id
+		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id
+		LEFT JOIN roster AS r ON r.class_id = c.id
 		WHERE active = True
 		GROUP BY cs.month, c.id`)
 
