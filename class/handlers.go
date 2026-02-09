@@ -19,7 +19,11 @@ type Class struct {
 	Month         string   `json:"month"`
 	Capacity      string   `json:"capacity"`
 	SessionDates  []string `json:"session_dates"`
-	EnrolledCount int      `json:"enrolled_count"`
+	EnrolledCount int      `json:"enrolledCount"`
+}
+
+type CalendarEventsResponse struct {
+	ScheduledClasses []Class `json:"scheduledClasses"`
 }
 
 // GetClasses responds with the list of all classes as JSON.
@@ -60,7 +64,6 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 				return
 			}
 			studentIntegerId = &val
-
 		}
 
 		classes, err := dbListClassesByMonth(myDb, month, studentIntegerId)
@@ -75,6 +78,29 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 		fmt.Println(classes)
 		utils.WriteJSONResponse(w, http.StatusOK, classes)
 		fmt.Printf("Successfully retrieved class list \n")
+	}
+}
+
+func GetCalendarEvents(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("Getting calendar events")
+		//TODO: If this endpoint gets really slow, add month
+		// month := r.PathValue("month")
+
+		classes, err := dbListClasses(myDb)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error fetching classes from db: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, CalendarEventsResponse{
+			ScheduledClasses: classes,
+		})
+
 	}
 }
 

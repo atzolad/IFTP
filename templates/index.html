@@ -1893,7 +1893,7 @@
                                         <td>${selectedClass.day_of_week}</td>
                                         <td>${selectedClass.time}</td>
                                         <td>${selectedClass.month}</td>
-                                        <td>${selectedClass.enrolled_count}</td>
+                                        <td>${selectedClass.enrolledCount}</td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-primary me-1 editClassButton"
                                                 onclick="showEditClassModal()"><i class="bi bi-pencil"></i></button>
@@ -1944,27 +1944,25 @@
                         if (calendarEvents.scheduledClasses !== null && calendarEvents.scheduledClasses !== undefined) {
 
                             calendarEvents.scheduledClasses.forEach(calEvent => {
-                                events.push({
-                                    title: calEvent.name,
-                                    start: new Date(calEvent.startDate).toISOString().split('T')[0],
-                                    end: new Date(calEvent.endDate).toISOString().split('T')[0],
-                                    className: 'fc-event-basic',
-                                    // color: calEvent.colorTag,
-                                    extendedProps: {
-                                        "className": calEvent.name,
-                                        "enrolledCount": calEvent.enrolledCount,
-                                        "capacity": calEvent.capacity
-                                    }
+                                calEvent.session_dates.forEach(dateStr => {
+                                    events.push({
+                                        title: `${calEvent.name}- ${calEvent.enrolledCount}/${calEvent.capacity}`,
+                                        start: dateStr,
+                                        allDay: true,
+                                        className: 'fc-event-basic',
+                                        // color: calEvent.colorTag,
+                                        extendedProps: {
+                                            "enrolledCount": calEvent.enrolledCount,
+                                            "capacity": calEvent.capacity
+                                        }
 
+                                    })
                                 })
-
                             })
-
                         }
-
                     }
+                    console.log("Processed events:", events)
                     return events;
-
                 })
                 .catch(error => {
                     console.warn("Api unavailable. Rendering empty calendar", error);
@@ -1987,12 +1985,10 @@
                         events: events,
                         eventClick: function (info) {
                             console.log(info.event)
-                            alert(`
-                            Class: \n  
-                            ${info.event.name}
-                            \n
-                            Enrolled: \n
-                            ${info.event.extendedProps.enrolledCount}/${info.event.extendedProps.capacity}`);
+                            alert(`Class: 
+                            ${info.event.title}
+                            Enrolled:
+                             ${info.event.extendedProps.enrolledCount}/${info.event.extendedProps.capacity}`);
                         },
                     });
                     adminCalendar.render()
