@@ -1771,7 +1771,7 @@
 
                             const containerHtml = `
                                 <div class="col-md-6 col-lg-4">
-                                    <div class="card class-card">
+                                    <div class="card class-card border-primary">
                                         <div class="card-body">
                                             <h5 class="card-title">${item.name}</h5>
                                             <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${item.teacher}</p>
@@ -1831,10 +1831,13 @@
                             console.log(sessionDatesHtml);
 
                             const containerHtml = `
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card class-card">
+                                <div class="col-md-6 col-lg-4 mb-5">
+                                    <div class="card class-card border-primary">
                                         <div class="card-body">
-                                            <h5 class="card-title">${item.name}</h5>
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h5 class="card-title">${item.name}</h5>
+                                                <span class="badge bg-success">Enrolled</span>
+                                            </div>
                                             <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${item.teacher}</p>
                                             <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${item.day_of_week} at ${item.time}</p>
                                             <p class="text-muted mb-2"><i class="bi bi-people"></i> ${item.capacity} capacity</p>
@@ -1843,15 +1846,11 @@
                                                 <strong class="d-block mb-2">Session Dates:</strong>
                                                 ${sessionDatesHtml}
                                             </div>
-                                            <button class="btn btn-secondary w-100">
-                                                <i class="bi bi-lock"></i> Requires Approval
-                                            </button>
-                                            <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('${item.name}')">
-                                                <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
-                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm w-100 unenrollBtn">Unenroll</button>
                                         </div>
                                     </div>
                                 </div>`
+
                             // Append the new HTML to the wrapper
                             containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
                         });
