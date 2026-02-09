@@ -1728,120 +1728,161 @@
             const month = document.getElementById('monthFilter').value
             console.log(month)
 
+            const RefreshClasses = async (month) => {
+                await renderEnrolledClasses(month, student_id = 2);
+                console.log("Enrolled classses:", currentEnrolledClasses)
+                await renderClasses(month);
+                RenderManageClassesTable();
+            }
 
-            renderClasses(month);
-            renderEnrolledClasses(month, student_id = 2);
+            RefreshClasses(month);
             //TODO need to separate the admin and student views- no need to populate the admin view for a student login. Should probably completely separate the two.
-            RenderManageClassesTable();
+
 
             // Re-render the classes when changing the month. 
             monthFilter.addEventListener('change', (event) => {
                 // This function will execute when a new option is selected
                 const selectedMonth = event.target.value;
-                renderClasses(selectedMonth);
-                renderEnrolledClasses(selectedMonth, student_id = 2)
+                RefreshClasses(selectedMonth)
                 console.log('Selected Month:', selectedMonth);
 
             });
         });
 
-        function renderClasses(month) {
+        async function renderClasses(month) {
             const containerWrapper = document.getElementById('class-cards-container-wrapper');
             // const baseUrl = 'http://localhost:8080'
             const apiEndpoint = baseUrl + '/classes' + '?' + 'month=' + month
-            // Clear existing classes
-            containerWrapper.innerHTML = '';
 
-            fetch(apiEndpoint)
-                .then(response => response.json())
-                .then(data => {
 
-                    if (data !== null && data !== undefined) {
-                        // Iterate over the data array and create HTML for each item
-                        data.forEach(item => {
-                            console.log(item)
+            try {
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`)
+                }
 
-                            var sessionDatesHtml = ``;
-                            item.session_dates.forEach(session_date => {
-                                const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-                                sessionDatesHtml += dateBadge;
-                            });
+                const classes = await (response.json());
 
-                            console.log(sessionDatesHtml);
 
-                            const containerHtml = `
+                // Clear existing classes
+                containerWrapper.innerHTML = '';
+
+                if (!classes || classes.length === 0) {
+                    containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>'
+                    return
+                }
+
+                classes.forEach(selectedClass => {
+                    console.log(selectedClass)
+                    const isAlreadyEnrolled = currentEnrolledClasses.includes(selectedClass.id);
+
+                    let enrollBtnHtml = '';
+
+                    if (isAlreadyEnrolled) {
+                        console.log("Is enrolled!")
+                        enrollBtnHtml = `
+                                            <button class="btn btn-primary w-100" onclick="showEnrollModal(${selectedClass.id})">
+                                            <i class="bi bi-check-circle"></i> Register for next month
+                                            </button>`
+                    }
+                    else {
+                        console.log("Not enrolled!")
+                        enrollBtnHtml = `                            
+                                            <button class="btn btn-secondary w-100">
+                                                <i class="bi bi-lock"></i> Requires Approval
+                                            </button>
+                                            <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('${selectedClass.name}')">
+                                                <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
+                                            </button>`
+
+                    }
+
+                    // TODO- may want to update this show request approval modal to selectedClass.id instead of name.
+
+                    var sessionDatesHtml = ``;
+                    selectedClass.session_dates.forEach(session_date => {
+                        const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+                        sessionDatesHtml += dateBadge;
+                    });
+
+                    console.log(sessionDatesHtml);
+
+                    const containerHtml = `
                                 <div class="col-md-6 col-lg-4">
                                     <div class="card class-card border-primary">
                                         <div class="card-body">
-                                            <h5 class="card-title">${item.name}</h5>
-                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${item.teacher}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${item.day_of_week} at ${item.time}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${item.capacity} capacity</p>
-                                            <p class="card-text mb-3">${item.description}</p>
+                                            <h5 class="card-title">${selectedClass.name}</h5>
+                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${selectedClass.teacher}</p>
+                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${selectedClass.day_of_week} at ${selectedClass.time}</p>
+                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${selectedClass.capacity} capacity</p>
+                                            <p class="card-text mb-3">${selectedClass.description}</p>
                                             <div class="mb-3">
                                                 <strong class="d-block mb-2">Session Dates:</strong>
                                                 ${sessionDatesHtml}
                                             </div>
-                                            <button class="btn btn-secondary w-100">
-                                                <i class="bi bi-lock"></i> Requires Approval
-                                            </button>
-                                            <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('${item.name}')">
-                                                <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
-                                            </button>
+                                            ${enrollBtnHtml}
                                         </div>
                                     </div>
                                 </div>`
-                            // Append the new HTML to the wrapper
-                            containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
-                        });
-                    } else {
-                        containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
+                    // Append the new HTML to the wrapper
+                    containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
                 });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                containerWrapper.innerHTML = '<p class="text-danger">Failed to load classes.</p>';
+            }
         }
 
-        function renderEnrolledClasses(month, student_id) {
+        let currentEnrolledClasses = [];
+
+        async function renderEnrolledClasses(month, student_id) {
             const containerWrapper = document.getElementById('enrolled-class-cards-container-wrapper');
             const baseUrl = 'http://localhost:8080'
             //TODO replace this student_id with the logged in student's id
             const apiEndpoint = baseUrl + '/classes' + '/' + student_id + '?' + 'month=' + month
 
-            // Clear existing classes
-            containerWrapper.innerHTML = '';
+            try {
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-            fetch(apiEndpoint)
-                .then(response => response.json())
-                .then(data => {
+                const classes = await (response.json());
 
-                    if (data !== null && data !== undefined) {
-                        // Iterate over the data array and create HTML for each item
-                        data.forEach(item => {
-                            console.log(item)
+                // Clear existing classes
+                containerWrapper.innerHTML = '';
 
-                            var sessionDatesHtml = ``;
-                            item.session_dates.forEach(session_date => {
-                                const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-                                sessionDatesHtml += dateBadge;
-                            });
+                if (!classes || classes.length === 0) {
+                    currentEnrolledClasses = [];
+                    containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>';
+                    return
+                }
 
-                            console.log(sessionDatesHtml);
+                currentEnrolledClasses = classes.map(selectedClass => selectedClass.id);
 
-                            const containerHtml = `
+                classes.forEach(selectedClass => {
+                    console.log(selectedClass)
+
+                    var sessionDatesHtml = ``;
+                    selectedClass.session_dates.forEach(session_date => {
+                        const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+                        sessionDatesHtml += dateBadge;
+                    });
+
+                    console.log(sessionDatesHtml);
+
+                    const containerHtml = `
                                 <div class="col-md-6 col-lg-4 mb-5">
                                     <div class="card class-card border-primary">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h5 class="card-title">${item.name}</h5>
+                                                <h5 class="card-title">${selectedClass.name}</h5>
                                                 <span class="badge bg-success">Enrolled</span>
                                             </div>
-                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${item.teacher}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${item.day_of_week} at ${item.time}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${item.capacity} capacity</p>
-                                            <p class="card-text mb-3">${item.description}</p>
+                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${selectedClass.teacher}</p>
+                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${selectedClass.day_of_week} at ${selectedClass.time}</p>
+                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${selectedClass.capacity} capacity</p>
+                                            <p class="card-text mb-3">${selectedClass.description}</p>
                                             <div class="mb-3">
                                                 <strong class="d-block mb-2">Session Dates:</strong>
                                                 ${sessionDatesHtml}
@@ -1851,17 +1892,13 @@
                                     </div>
                                 </div>`
 
-                            // Append the new HTML to the wrapper
-                            containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
-                        });
-                    } else {
-                        containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
+                    // Append the new HTML to the wrapper
+                    containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
                 });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
+            }
         }
 
 
