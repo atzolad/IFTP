@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type Class struct {
@@ -45,14 +46,21 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// month := c.Param("month")
 		month := r.FormValue("month")
-		studentId := r.PathValue("student_id")
+		studentId := strings.TrimSpace(r.PathValue("student_id"))
+		var studentIntegerId *int
+		fmt.Println("MONTH:")
 		fmt.Println(month)
+		fmt.Println("STUDENT ID:")
 		fmt.Println(studentId)
 
-		studentIntegerId, err := strconv.Atoi(studentId)
-		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusBadRequest, err)
-			return
+		if studentId != "" {
+			val, err := strconv.Atoi(studentId)
+			if err != nil {
+				utils.WriteJSONResponse(w, http.StatusBadRequest, err)
+				return
+			}
+			studentIntegerId = &val
+
 		}
 
 		classes, err := dbListClassesByMonth(myDb, month, studentIntegerId)
@@ -64,7 +72,7 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 			})
 			return
 		}
-
+		fmt.Println(classes)
 		utils.WriteJSONResponse(w, http.StatusOK, classes)
 		fmt.Printf("Successfully retrieved class list \n")
 	}

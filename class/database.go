@@ -3,6 +3,7 @@ package class
 import (
 	"IFTP/db"
 	"fmt"
+	"strings"
 
 	"github.com/lib/pq"
 )
@@ -11,7 +12,7 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 	rows, err := myDb.Db.Query(
 		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
-		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id
+		JOIN class_schedule AS cs ON cs.class_id = c.id
 		LEFT JOIN roster AS r ON r.class_id = c.id
 		WHERE active = True
 		GROUP BY cs.month, c.id`)
@@ -39,37 +40,36 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 	return classes, nil
 }
 
-func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId ...int) ([]Class, error) {
-	queryStmt := `SELECT c.id, name, teacher, day_of_week, time, description, capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
-		FROM classes AS c
-		JOIN class_schedule AS cs ON cs.class_id = c.id
-		JOIN roster AS r ON r.class_id = c.id
-		WHERE active = True`
+func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
 
+	var query strings.Builder
 	var args []any
+
+	query.WriteString(`SELECT c.id, name, teacher, day_of_week, time, description, capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
+		FROM classes AS c
+		JOIN class_schedule AS cs ON cs.class_id = c.id`)
 
 	if month != "" {
 		fmt.Printf("Month: %v", month)
 		args = append(args, month)
-		queryStmt = queryStmt + fmt.Sprintf(" AND month = $%d ", len(args))
-	}
-	if len(studentId) > 0 {
-		fmt.Printf("student id: %v ", studentId[0])
-		args = append(args, studentId[0])
-		queryStmt = queryStmt + fmt.Sprintf(" AND r.student_id = $%d ", len(args))
+		fmt.Fprintf(&query, " AND month = $%d ", len(args))
 	}
 
-	queryStmt = queryStmt + " GROUP BY cs.month, c.id "
+	query.WriteString(`
+			LEFT JOIN roster AS r ON r.class_id = c.id
+			WHERE c.active = True`)
+
+	if studentId != nil {
+		fmt.Printf("student id: %v ", *studentId)
+		args = append(args, *studentId)
+		fmt.Fprintf(&query, " AND r.student_id = $%d ", len(args))
+	}
+
+	query.WriteString(" GROUP BY cs.month, c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity")
 	// var rows *sql.Rows
 	// var err error
-
-	rows, err := myDb.Db.Query(queryStmt, args...)
-
-	// if len(args) > 0 {
-	// 	rows, err = myDb.Db.Query(queryStmt, args[0])
-	// } else {
-	// 	rows, err = myDb.Db.Query(queryStmt)
-	// }
+	fmt.Println(query.String())
+	rows, err := myDb.Db.Query(query.String(), args...)
 
 	if err != nil {
 		return nil, err

@@ -67,7 +67,7 @@ func main() {
 	// Render the main index.
 	mux.HandleFunc("/", utils.IndexHandler(tpl, baseUrl))
 
-	mux.HandleFunc("GET /classes", class.ListClasses(myDb))
+	mux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
 
 	log.Printf("Server starting on :%v", port)

@@ -1737,9 +1737,10 @@
             // Re-render the classes when changing the month. 
             monthFilter.addEventListener('change', (event) => {
                 // This function will execute when a new option is selected
-                const selectedValue = event.target.value; // Get the value of the selected option
-                renderClasses(selectedValue);
-                console.log('Selected Value:', selectedValue);
+                const selectedMonth = event.target.value;
+                renderClasses(selectedMonth);
+                renderEnrolledClasses(selectedMonth, student_id = 2)
+                console.log('Selected Month:', selectedMonth);
 
             });
         });
@@ -1747,8 +1748,7 @@
         function renderClasses(month) {
             const containerWrapper = document.getElementById('class-cards-container-wrapper');
             // const baseUrl = 'http://localhost:8080'
-            // const apiEndpoint = baseUrl + '/classes' + '/' + month
-            const apiEndpoint = baseUrl + '/classes'
+            const apiEndpoint = baseUrl + '/classes' + '?' + 'month=' + month
             // Clear existing classes
             containerWrapper.innerHTML = '';
 
