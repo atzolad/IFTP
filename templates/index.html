@@ -647,7 +647,7 @@
                             <!-- <div class="mb-3">
                                 <input type="text" class="form-control" placeholder="Search students...">
                             </div> -->
-                            <table class="table table-hover" id="ManageStudentsTable">
+                            <table class="table table-hover text-center" id="ManageStudentsTable">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -2059,7 +2059,7 @@
         function renderManageStudentsTable() {
             console.log("Render manage students table")
             const containerWrapper = document.getElementById('ManageStudentsTableBody')
-            const apiEndpoint = baseUrl + '/students'
+            const apiEndpoint = baseUrl + '/students/enrollment'
 
             // Clear existing students
             containerWrapper.innerHTML = '';
@@ -2069,6 +2069,8 @@
                 .then(students => {
                     if (students !== null && students !== undefined) {
                         students.forEach(student => {
+
+                            const studentClasses = student.enrolledClasses.join(', ');
 
                             var studentStatusl;
 
@@ -2085,7 +2087,7 @@
                                     <tr>
                                         <td>${student.name}</td>
                                         <td>${student.email}</td>
-                                        <td>${student.enrolledClasses}</td>
+                                        <td>${studentClasses}</td>
                                             </td>
                                             <td><span class="badge ${studentStatus === 'Active' ? ' bg-success' : 'bg-danger text-white'}">
                                                 ${studentStatus}
