@@ -36,9 +36,9 @@ func dbRetrieveStudents(myDb *db.MyDatabase) ([]Student, error) {
 
 func dbGetStudentsWithEnrollment(myDb *db.MyDatabase) ([]Student, error) {
 	rows, err := myDb.Db.Query(
-		`SELECT s.id, s.name, s.email, s.active, ARRAY_AGG(DISTINCT c.name ORDER BY c.name) AS enrolledClasses FROM students AS s 
-		JOIN roster AS r on r.student_id = s.id
-		JOIN classes AS c on r.class_id = c.id
+		`SELECT s.id, s.name, s.email, s.active, COALESCE(ARRAY_AGG(DISTINCT c.name ORDER BY c.name) FILTER (WHERE c.name IS NOT NULL), '{}') AS enrolledClasses FROM students AS s 
+		LEFT JOIN roster AS r on r.student_id = s.id
+		LEFT JOIN classes AS c on r.class_id = c.id
 		WHERE s.active = true
 		GROUP BY s.name, s.id, s.email`)
 
@@ -54,11 +54,13 @@ func dbGetStudentsWithEnrollment(myDb *db.MyDatabase) ([]Student, error) {
 	for rows.Next() {
 		var student Student
 		if err := rows.Scan(&student.ID, &student.Name, &student.Email, &student.Active, (*pq.StringArray)(&student.EnrolledClasses)); err != nil {
+			fmt.Println(err)
 			return nil, err
 		}
 		students = append(students, student)
 	}
 	if err = rows.Err(); err != nil {
+		fmt.Println(err)
 		return students, err
 	}
 	return students, nil
