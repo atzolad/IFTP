@@ -231,14 +231,13 @@
         <div class="tab-pane fade" id="calendar-pane" role="tabpanel">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>My Class Schedule - November 2025</h2>
-                <div>
-                    <button class="btn btn-outline-secondary me-2"><i class="bi bi-chevron-left"></i> Previous</button>
-                    <button class="btn btn-outline-secondary">Next <i class="bi bi-chevron-right"></i></button>
+                <div class="card-body">
+                    <div id="studentFullCalendar"></div>
                 </div>
             </div>
 
             <!-- Student Calendar Grid -->
-            <div class="card">
+            <!-- <div class="card">
                 <div class="card-body p-0">
                     <table class="table table-bordered mb-0">
                         <thead>
@@ -375,10 +374,10 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Calendar Legend -->
-            <div class="card mt-3">
+            <!-- <div class="card mt-3">
                 <div class="card-body">
                     <strong>Legend:</strong>
                     <div class="d-flex align-items-center mt-2">
@@ -389,10 +388,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
-    </div>
+
 
     <!-- ADMIN VIEW -->
     <div id="adminView" class="d-none">
@@ -1477,6 +1476,11 @@
                 studentView.classList.remove('d-none');
                 adminView.classList.add('d-none');
                 userName.textContent = 'Student Name';
+                if (studentCalendar) {
+                    setTimeout(() => {
+                        studentCalendar.updateSize();
+                    }, 50);
+                }
             }
         }
 
@@ -1707,6 +1711,10 @@
                 console.log('Selected Month:', selectedMonth);
 
             });
+
+            // TODO replace this with actual logged in student's id.
+            renderStudentCalendar(studentId = 2);
+            window.studentCalendarInitialized = true;
 
             renderAdminCalendar();
             window.AdminCalendarInitialized = true;
@@ -1996,7 +2004,84 @@
                     adminCalendar.updateSize();
 
                 })
+        }
 
+        //Initialize the var in the global scope so it can be accessed outside this function
+
+        let studentCalendar;
+
+        function renderStudentCalendar(studentId) {
+            const apiEndpoint = baseUrl + `/calendarEvents/${studentId}`
+            console.log("STUDENT CALENDAR API ENDPOINT:")
+            console.log(apiEndpoint)
+            var calendarEl = document.getElementById('studentFullCalendar');
+
+            if (!calendarEl) {
+                return
+            }
+
+            fetch(apiEndpoint)
+                .then(response => {
+                    if (!response.ok) throw new Error('Endpoint not found');
+                    return response.json();
+                })
+
+                .then(calendarEvents => {
+                    let events = [];
+                    console.log("Student Calendar events:")
+                    console.log(calendarEvents)
+
+                    if (calendarEvents !== null && calendarEvents !== undefined) {
+                        if (calendarEvents.scheduledClasses !== null && calendarEvents.scheduledClasses !== undefined) {
+
+                            calendarEvents.scheduledClasses.forEach(calEvent => {
+                                calEvent.session_dates.forEach(dateStr => {
+                                    events.push({
+                                        title: `${calEvent.name}`,
+                                        start: dateStr,
+                                        allDay: true,
+                                        className: 'fc-event-basic',
+                                        // color: calEvent.colorTag,
+                                    })
+                                })
+                            })
+                        }
+                    }
+                    console.log("Processed student events:", events)
+                    return events;
+                })
+                .catch(error => {
+                    console.warn("Api unavailable. Rendering empty calendar", error);
+                    return [];
+                })
+
+                .then(events => {
+
+                    studentCalendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: 'dayGridMonth',
+                        handleWindowResize: false,
+                        windowResizeDelay: 200,
+                        selectable: true,
+                        headerToolbar: {
+                            left: 'prev, next, today',
+                            center: 'title',
+                            right: 'dayGridMonth, timeGridWeek'
+                        },
+                        // height: 'auto',
+                        events: events,
+                        eventClick: function (info) {
+                            console.log(info.event)
+                            alert(`Class: 
+                            ${info.event.title}
+                            Enrolled:
+                             ${info.event.extendedProps.enrolledCount}/${info.event.extendedProps.capacity}`);
+                        },
+                    });
+                    studentCalendar.render()
+                    window.studentCalendarInitialized = true;
+                    studentCalendar.updateSize();
+
+                })
         }
 
     </script>

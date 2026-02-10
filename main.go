@@ -70,6 +70,7 @@ func main() {
 	mux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
+	mux.HandleFunc("GET /calendarEvents/{student_id}", class.GetCalendarEventsByStudent(myDb))
 
 	log.Printf("Server starting on :%v", port)
 	if err := http.ListenAndServe(":"+port, wrappedMux); err != nil {
