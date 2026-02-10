@@ -644,10 +644,10 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <div class="mb-3">
+                            <!-- <div class="mb-3">
                                 <input type="text" class="form-control" placeholder="Search students...">
-                            </div>
-                            <table class="table table-hover">
+                            </div> -->
+                            <table class="table table-hover" id="ManageStudentsTable">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -657,35 +657,7 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>John Doe</td>
-                                        <td>john@example.com</td>
-                                        <td>Math 101, Science Lab</td>
-                                        <td><span class="badge bg-success">Active</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1"
-                                                onclick="showEditStudentModal()"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-info me-1"
-                                                onclick="showStudentClassesModal()"><i class="bi bi-book"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger"><i
-                                                    class="bi bi-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Jane Smith</td>
-                                        <td>jane@example.com</td>
-                                        <td>English Literature</td>
-                                        <td><span class="badge bg-success">Active</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1"><i
-                                                    class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-info me-1"><i
-                                                    class="bi bi-book"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger"><i
-                                                    class="bi bi-trash"></i></button>
-                                        </td>
-                                    </tr>
+                                <tbody id="ManageStudentsTableBody">
                                 </tbody>
                             </table>
                         </div>
@@ -1622,10 +1594,11 @@
             //                 const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
             //                 sessionDatesHtml += dateBadge;
             //             });
+
             const classDates = document.getElementById('session_dates');
             console.log(classDates)
 
-            const methodType = 'POST'; // or 'POST', 'PUT', 'DELETE', etc.
+            const methodType = 'POST';
 
             try {
                 // Make the API call using fetch
@@ -1633,25 +1606,19 @@
                     method: methodType,
                     headers: {
                         'Content-Type': 'application/json',
-                        // Add any other necessary headers (e.g., authorization tokens)
                     },
-                    body: JSON.stringify({ student_id: studentId, class_dates: ["2025-11-21", "2025-11-28"] }), // Only needed for POST/PUT requests
+                    body: JSON.stringify({ student_id: studentId, class_dates: ["2025-11-21", "2025-11-28"] }),
                 });
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                // Handle the response data (e.g., JSON, text)
-                const data = await response.json(); // Use response.text() if the endpoint returns plain text
+                const data = await response.json();
                 console.log('Success:', data);
-
-                // // Display the result on the page
-                // document.getElementById('responseArea').innerText = 'API Response: ' + JSON.stringify(data);
 
             } catch (error) {
                 console.error('Error:', error);
-                // document.getElementById('responseArea').innerText = 'Error calling API: ' + error.message;
             }
         }
 
@@ -1719,6 +1686,9 @@
 
             renderAdminCalendar();
             window.AdminCalendarInitialized = true;
+
+            renderManageStudentsTable();
+            window.ManageStudentsInitialized = true;
         });
 
         async function renderClasses(month) {
@@ -1923,7 +1893,7 @@
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
-                    containerWrapper.innerHTML() = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
+                    containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
 
                 });
         }
@@ -2084,6 +2054,72 @@
 
                 })
         }
+
+
+        function renderManageStudentsTable() {
+            console.log("Render manage students table")
+            const containerWrapper = document.getElementById('ManageStudentsTableBody')
+            const apiEndpoint = baseUrl + '/students'
+
+            // Clear existing students
+            containerWrapper.innerHTML = '';
+
+            fetch(apiEndpoint)
+                .then(response => response.json())
+                .then(students => {
+                    if (students !== null && students !== undefined) {
+                        students.forEach(student => {
+
+                            var studentStatusl;
+
+                            if (student.active === true) {
+                                studentStatus = 'Active'
+
+                            } else {
+                                studentStatus = 'Inactive'
+                            }
+
+                            const row = document.createElement('tr');
+
+                            row.innerHTML = `
+                                    <tr>
+                                        <td>${student.name}</td>
+                                        <td>${student.email}</td>
+                                        <td>${student.enrolledClasses}</td>
+                                            </td>
+                                            <td><span class="badge ${studentStatus === 'Active' ? ' bg-success' : 'bg-danger text-white'}">
+                                                ${studentStatus}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1"
+                                                onclick="showEditStudentModal()"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-info me-1"
+                                                onclick="showStudentClassesModal()"><i class="bi bi-book"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger"><i
+                                                    class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                            `
+
+                            containerWrapper.appendChild(row);
+                        });
+                        // TODO may need to adjust state management heere- window.initialized etc..
+
+                    } else {
+                        containerWrapper.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No Students Found.</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
+
+                });
+        }
+
+
+
+
 
     </script>
 </body>

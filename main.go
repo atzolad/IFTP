@@ -3,6 +3,7 @@ package main
 import (
 	"IFTP/class"
 	"IFTP/db"
+	"IFTP/students"
 	"IFTP/utils"
 	"database/sql"
 	"fmt"
@@ -67,10 +68,15 @@ func main() {
 	// Render the main index.
 	mux.HandleFunc("/", utils.IndexHandler(tpl, baseUrl))
 
+	// Class Endpoints
 	mux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
 	mux.HandleFunc("GET /calendarEvents/{student_id}", class.GetCalendarEventsByStudent(myDb))
+
+	// Student Endpoints
+	mux.HandleFunc("GET /students", students.GetStudents(myDb))
+	mux.HandleFunc("GET /students/enrollment", students.GetStudentsWithEnrollment(myDb))
 
 	log.Printf("Server starting on :%v", port)
 	if err := http.ListenAndServe(":"+port, wrappedMux); err != nil {
