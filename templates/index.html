@@ -2070,7 +2070,10 @@
                     if (students !== null && students !== undefined) {
                         students.forEach(student => {
 
-                            const studentClasses = student.enrolledClasses.join(', ');
+                            var studentClasses = student.enrolledClasses.join(', ');
+                            if (studentClasses.length < 1) {
+                                studentClasses = "No classses enrolled"
+                            }
 
                             var studentStatusl;
 
