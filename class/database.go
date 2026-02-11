@@ -15,7 +15,8 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 		JOIN class_schedule AS cs ON cs.class_id = c.id
 		LEFT JOIN roster AS r ON r.class_id = c.id
 		WHERE active = True
-		GROUP BY cs.month, c.id`)
+		GROUP BY cs.month, c.id
+		ORDER  BY cs.month DESC`)
 
 	if err != nil {
 		return nil, err
@@ -66,6 +67,7 @@ func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId *int) ([]
 	}
 
 	query.WriteString(" GROUP BY cs.month, c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity")
+	query.WriteString(" ORDER BY cs.month DESC")
 	// var rows *sql.Rows
 	// var err error
 	fmt.Println(query.String())
@@ -91,6 +93,70 @@ func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId *int) ([]
 	}
 	if err = rows.Err(); err != nil {
 		return classes, err
+	}
+	return classes, nil
+}
+
+func dbListStudentEnrolledClasses(myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
+	var query strings.Builder
+	var args []any
+
+	query.WriteString(`SELECT
+    c.id,
+    c.name,
+    c.teacher,
+    c.day_of_week,
+    c.time,
+    c.description,
+    c.capacity,
+    cs.month,
+    ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates,
+    COUNT(DISTINCT r_all.student_id) AS enrolled_count
+FROM classes c
+JOIN class_schedule cs ON cs.class_id = c.id
+JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date
+LEFT JOIN roster r_all ON r_all.class_id = c.id AND r_all.class_date = cs.session_date
+WHERE c.active = true `)
+
+	if studentId != nil {
+		args = append(args, *studentId)
+		fmt.Fprintf(&query, " AND r_student.student_id = $%d ", len(args))
+	}
+
+	if month != "" {
+		args = append(args, month)
+		fmt.Fprintf(&query, " AND cs.month = $%d ", len(args))
+	}
+
+	query.WriteString(`
+GROUP BY
+    cs.month,
+    c.id,
+    c.name,
+    c.teacher,
+    c.day_of_week,
+    c.time,
+    c.description,
+    c.capacity;`)
+
+	fmt.Println("QUERY:", query.String())
+
+	rows, err := myDb.Db.Query(query.String(), args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var classes []Class
+
+	for rows.Next() {
+
+		var class Class
+		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
+			&class.Description, &class.Capacity, &class.Month, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
+			return nil, err
+		}
+		classes = append(classes, class)
 	}
 	return classes, nil
 }

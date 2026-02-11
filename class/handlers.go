@@ -81,6 +81,41 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
+// func ListStudentEnrolledClasses(myDb *db.MyDatabase) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		// month := c.Param("month")
+// 		month := r.FormValue("month")
+// 		studentId := strings.TrimSpace(r.PathValue("student_id"))
+// 		var studentIntegerId *int
+// 		fmt.Println("MONTH:")
+// 		fmt.Println(month)
+// 		fmt.Println("STUDENT ID:")
+// 		fmt.Println(studentId)
+
+// 		if studentId != "" {
+// 			val, err := strconv.Atoi(studentId)
+// 			if err != nil {
+// 				utils.WriteJSONResponse(w, http.StatusBadRequest, err)
+// 				return
+// 			}
+// 			studentIntegerId = &val
+// 		}
+
+// 		classes, err := dbListStudentEnrolledClasses(myDb, month, studentIntegerId)
+// 		if err != nil {
+// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+// 				Status:  "error",
+// 				Message: fmt.Sprintf("Error fetching classes from db for month: %v", err),
+// 				Code:    http.StatusInternalServerError,
+// 			})
+// 			return
+// 		}
+// 		fmt.Println(classes)
+// 		utils.WriteJSONResponse(w, http.StatusOK, classes)
+// 		fmt.Printf("Successfully retrieved class list \n")
+// 	}
+// }
+
 func GetCalendarEvents(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Getting calendar events")
@@ -124,7 +159,7 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 		//TODO: If this endpoint gets really slow, add month
 		// month := r.PathValue("month")
 
-		classes, err := dbListClassesByMonth(myDb, "", studentIntegerId)
+		classes, err := dbListStudentEnrolledClasses(myDb, "", studentIntegerId)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
