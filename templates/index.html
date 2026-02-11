@@ -52,11 +52,11 @@
         }
 
         .calendar-day.holiday {
-            background-color: #fff3cd;
+            background-color: #ea0e0e55;
         }
 
         .calendar-day.has-class {
-            background-color: #d1ecf1;
+            background-color: #88e9fac0;
         }
 
         .class-badge {
@@ -412,6 +412,8 @@
                             <select class="form-select" id="monthFilter">
                                 <option value="2025-12-01" selected> December 2025</option>
                                 <option value="2026-01-01">January 2026</option>
+                                <option value="2026-02-01">February 2026</option>
+                                <option value="2026-03-01">March 2026</option>
                             </select>
                         </div>
                     </div>
@@ -650,7 +652,7 @@
                     <a class="nav-link" href="#" onclick="showAdminSection('classes')">
                         <i class="bi bi-book"></i>
                         <span>Manage Classes</span>
-
+                        <span class="badge bg-danger ms-2">2</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -660,13 +662,13 @@
                         <span class="badge bg-danger ms-2">2</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="#" onclick="showAdminSection('pending')">
                         <i class="bi bi-clock-history"></i>
                         <span>Pending Approvals</span>
                         <span class="badge bg-danger ms-2">5</span>
                     </a>
-                </li>
+                </li> -->
             </ul>
         </div>
 
@@ -949,43 +951,78 @@
                         </div>
                     </div>
                     <!-- Class Schedule Approvals -->
-                    <h4 class="mb-3">Monthly Class Schedule Approvals</h4>
+                    <h4 class="mb-3 mt-4">Monthly Class Schedule Approvals</h4>
                     <p class="text-muted">Review and approve auto-generated class schedules for upcoming months.
                     </p>
 
-                    <div class="card mt-4 mb-3">
-                        <div class="card-header bg-warning">
-                            <h5 class="mb-0">December 2025 - Math 101</h5>
+                    <div class="card mb-3">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">March 2026 - Matthew Moore</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p><strong>Teacher:</strong> Alex Johnson</p>
+                                    <p><strong>Teacher:</strong> Matthew Moore</p>
                                     <p><strong>Day:</strong> Monday</p>
-                                    <p><strong>Time:</strong> 10:00 AM</p>
-                                    <p><strong>Capacity:</strong> 20 students</p>
+                                    <p><strong>Time:</strong> 7:00 PM</p>
+                                    <p><strong>Capacity:</strong> 16 students</p>
                                 </div>
                                 <div class="col-md-6">
                                     <p><strong>Proposed Dates:</strong></p>
                                     <div>
-                                        <span class="badge bg-light text-dark me-1">Dec 2</span>
-                                        <span class="badge bg-light text-dark me-1">Dec 9</span>
-                                        <span class="badge bg-light text-dark me-1">Dec 16</span>
-                                        <span class="badge bg-light text-dark me-1">Dec 23</span>
-                                        <span class="badge bg-light text-dark me-1">Dec 30</span>
+                                        <span class="badge bg-light text-dark me-1">March 2</span>
+                                        <span class="badge bg-light text-dark me-1">March 9</span>
+                                        <span class="badge bg-light text-dark me-1">March 16</span>
+                                        <span class="badge bg-light text-dark me-1">March 23</span>
                                     </div>
                                     <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
                                         Note:
-                                        Dec 25 is Christmas - no class scheduled</p>
+                                        Warning if potential holiday conflicts</p>
                                 </div>
                             </div>
                             <div class="mt-3">
-                                <button class="btn btn-success me-2"><i class="bi bi-check-circle"></i>
+                                <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
                                     Approve</button>
                                 <button class="btn btn-primary me-2"
-                                    onclick="showCalendarEditModal('Math 101', 'December 2025')"><i
+                                    onclick="showCalendarEditModal('Mondays with Matthew moore', 'March 2026')"><i
                                         class="bi bi-calendar-edit"></i> Edit on Calendar</button>
-                                <button class="btn btn-danger"><i class="bi bi-x-circle"></i> Reject</button>
+                                <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">March 2026 - Liam Clancy</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Teacher:</strong> Liam Clancy</p>
+                                    <p><strong>Day:</strong> Tuesday</p>
+                                    <p><strong>Time:</strong> 7:00 PM</p>
+                                    <p><strong>Capacity:</strong> 16 students</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Proposed Dates:</strong></p>
+                                    <div>
+                                        <span class="badge bg-light text-dark me-1">March 3</span>
+                                        <span class="badge bg-light text-dark me-1">March 10</span>
+                                        <span class="badge bg-light text-dark me-1">March 17</span>
+                                        <span class="badge bg-light text-dark me-1">March 24</span>
+                                    </div>
+                                    <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
+                                        Note:
+                                        Warning if potential holiday conflicts</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
+                                    Approve</button>
+                                <button class="btn btn-primary me-2"
+                                    onclick="showCalendarEditModal('Tuesdays with Liam Clancy', 'March 2026')"><i
+                                        class="bi bi-calendar-edit"></i> Edit on Calendar</button>
+                                <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
                             </div>
                         </div>
                     </div>
@@ -1420,7 +1457,7 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Class Name</label>
-                                <input type="text" class="form-control" placeholder="e.g., Math 101">
+                                <input type="text" class="form-control" placeholder="e.g., Mondays with Matthew Moore">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Teacher</label>
@@ -1453,9 +1490,9 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Month</label>
                                 <select class="form-select">
-                                    <option>November 2025</option>
-                                    <option>December 2025</option>
-                                    <option>January 2026</option>
+                                    <option>February 2026</option>
+                                    <option>March 2026</option>
+                                    <option>April 2026</option>
                                 </select>
                             </div>
                         </div>
@@ -1497,13 +1534,13 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Math 101 - Class Roster</h5>
+                    <h5 class="modal-title">Mondays with Matthew moore- Class Roster</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted">15 students enrolled</p>
+                    <p class="text-muted">3 students enrolled</p>
 
-                    <h6>Session: November 4, 2025</h6>
+                    <h6>Session: March 2, 2026</h6>
                     <table class="table table-sm">
                         <thead>
                             <tr>
@@ -1515,21 +1552,21 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>John Doe</td>
-                                <td>john@example.com</td>
-                                <td><span class="badge bg-success">Enrolled</span></td>
+                                <td>Alex Zolad</td>
+                                <td>Alex@gmail.com</td>
+                                <td><span class="badge bg-primary">Enrolled</span></td>
                                 <td><button class="btn btn-sm btn-outline-danger">Remove</button></td>
                             </tr>
                             <tr>
-                                <td>Jane Smith</td>
-                                <td>jane@example.com</td>
-                                <td><span class="badge bg-success">Enrolled</span></td>
+                                <td>Megan Chang</td>
+                                <td>Megan@gmail.com</td>
+                                <td><span class="badge bg-primary">Enrolled</span></td>
                                 <td><button class="btn btn-sm btn-outline-danger">Remove</button></td>
                             </tr>
                             <tr>
-                                <td>Mike Johnson</td>
-                                <td>mike@example.com</td>
-                                <td><span class="badge bg-success">Enrolled</span></td>
+                                <td>Anze Kopitar</td>
+                                <td>Kopi@gmail.com</td>
+                                <td><span class="badge bg-primary">Enrolled</span></td>
                                 <td><button class="btn btn-sm btn-outline-danger">Remove</button></td>
                             </tr>
                         </tbody>
@@ -1538,16 +1575,16 @@
                     <div class="mt-4">
                         <h6>Select Different Session:</h6>
                         <select class="form-select">
-                            <option selected>November 4, 2025</option>
-                            <option>November 11, 2025</option>
-                            <option>November 18, 2025</option>
-                            <option>November 25, 2025</option>
+                            <option selected>March 2, 2026</option>
+                            <option>March 9, 2026</option>
+                            <option>March 16, 2026</option>
+                            <option>March 23, 2026</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Export to CSV</button>
+                    <button type="button" class="btn btn-primary">Export to PDF</button>
                 </div>
             </div>
         </div>
@@ -1672,8 +1709,8 @@
                                         <th>Saturday</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <!-- December 2025 Example -->
+                                <tbody id="editCalendarBody">
+                                    <!-- December 2025 Example
                                     <tr>
                                         <td class="calendar-day other-month">
                                             <div class="day-number">30</div>
@@ -1804,7 +1841,7 @@
                                         <td class="calendar-day other-month">
                                             <div class="day-number">3</div>
                                         </td>
-                                    </tr>
+                                    </tr> -->
                                 </tbody>
                             </table>
                         </div>
@@ -1815,11 +1852,10 @@
                         <div class="card-body">
                             <strong>Selected Dates:</strong>
                             <div id="selectedDatesSummary" class="mt-2">
-                                <span class="badge bg-primary me-1">Dec 1</span>
-                                <span class="badge bg-primary me-1">Dec 8</span>
-                                <span class="badge bg-primary me-1">Dec 15</span>
-                                <span class="badge bg-primary me-1">Dec 22</span>
-                                <span class="badge bg-primary me-1">Dec 29</span>
+                                <span class="badge bg-primary me-1">March 2</span>
+                                <span class="badge bg-primary me-1">March 9</span>
+                                <span class="badge bg-primary me-1">March 16</span>
+                                <span class="badge bg-primary me-1">March 23</span>
                             </div>
                         </div>
                     </div>
@@ -1845,7 +1881,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success"><i class="bi bi-check-circle"></i> Save &
+                    <button type="button" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save &
                         Approve</button>
                 </div>
             </div>
@@ -1986,8 +2022,27 @@
             new bootstrap.Modal(document.getElementById('dayModal')).show();
         }
 
-        function showCalendarEditModal(className, month) {
-            document.getElementById('calendarEditTitle').textContent = className + ' - ' + month;
+        // function showCalendarEditModal(className, month) {
+        //     document.getElementById('calendarEditTitle').textContent = className + ' - ' + month;
+
+        //     new bootstrap.Modal(document.getElementById('calendarEditModal')).show();
+        // }
+
+        function showCalendarEditModal(className, monthString) {
+            // Update the Title
+            document.getElementById('calendarEditTitle').textContent = className + ' - ' + monthString;
+
+            // Parse the monthString (Expected format: "March 2026")
+            const dateParts = monthString.split(' ');
+            const monthName = dateParts[0];
+            const year = parseInt(dateParts[1]);
+
+            const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth();
+
+            // Generate the calendar
+            generateCalendar(year, monthIndex);
+
+            // 4. Show the Modal
             new bootstrap.Modal(document.getElementById('calendarEditModal')).show();
         }
 
@@ -2007,7 +2062,7 @@
                 // Add the class
                 element.classList.add('has-class');
                 const newBadge = document.createElement('span');
-                newBadge.className = 'badge class-badge bg-success';
+                newBadge.className = 'badge class-badge bg-primary';
                 newBadge.innerHTML = '<i class="bi bi-check-circle"></i> Selected';
                 element.appendChild(newBadge);
             }
@@ -2104,7 +2159,7 @@
             console.log(month)
 
             const RefreshClasses = async (month) => {
-                await renderEnrolledClasses(month, student_id = 2);
+                await renderEnrolledClasses(month, student_id = 1);
                 console.log("Enrolled classses:", currentEnrolledClasses)
                 await renderClasses(month);
                 RenderManageClassesTable();
@@ -2124,7 +2179,7 @@
             });
 
             // TODO replace this with actual logged in student's id.
-            renderStudentCalendar(studentId = 2);
+            renderStudentCalendar(studentId = 1);
             window.studentCalendarInitialized = true;
 
             renderAdminCalendar();
@@ -2132,6 +2187,10 @@
 
             renderManageStudentsTable();
             window.ManageStudentsInitialized = true;
+
+
+            // Call March 2026
+            // generateCalendar(2026, 2);
 
 
             const navLinks = document.querySelectorAll('.nav-link');
@@ -2676,6 +2735,63 @@
                 });
         }
 
+        const holidays = {
+            '2026-03-17': 'St. Patrick\'s Day'
+        };
+
+        const selectedDates = ['2026-03-02', '2026-03-09', '2026-03-16', '2026-03-23'];
+
+        function generateCalendar(year, month) {
+            const tbody = document.getElementById('editCalendarBody');
+            tbody.innerHTML = '';
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+            let date = 1;
+            let nextMonthDate = 1;
+
+            for (let i = 0; i < 6; i++) {
+                let row = document.createElement('tr');
+
+                for (let j = 0; j < 7; j++) {
+                    let cell = document.createElement('td');
+                    cell.classList.add('calendar-day');
+
+                    if (i === 0 && j < firstDay) {
+                        cell.classList.add('other-month');
+                        cell.innerHTML = `<div class="day-number">${prevMonthLastDay - firstDay + j + 1}</div>`;
+                    } else if (date > daysInMonth) {
+                        cell.classList.add('other-month');
+                        cell.innerHTML = `<div class="day-number">${nextMonthDate++}</div>`;
+                    } else {
+                        const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                        cell.setAttribute('onclick', `toggleClassDate(this, '${fullDate}')`);
+
+                        let content = `<div class="day-number">${date}</div>`;
+
+                        //  Check for Holidays
+                        if (holidays[fullDate]) {
+                            cell.classList.add('holiday');
+                            content += `<span class="badge class-badge bg-danger">${holidays[fullDate]}</span>`;
+                        }
+
+                        // Check for Selected Dates
+                        if (selectedDates.includes(fullDate)) {
+                            cell.classList.add('has-class');
+                            content += `<span class="badge class-badge bg-primary"><i class="bi bi-check-circle"></i> Selected</span>`;
+                        }
+
+                        cell.innerHTML = content;
+                        date++;
+                    }
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+                if (date > daysInMonth && i >= 4) break;
+            }
+        }
 
 
 
