@@ -57,7 +57,7 @@ func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId *int) ([]
 	}
 
 	query.WriteString(`
-			LEFT JOIN roster AS r ON r.class_id = c.id
+			LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date
 			WHERE c.active = True`)
 
 	if studentId != nil {
@@ -101,22 +101,14 @@ func dbListStudentEnrolledClasses(myDb *db.MyDatabase, month string, studentId *
 	var query strings.Builder
 	var args []any
 
-	query.WriteString(`SELECT
-    c.id,
-    c.name,
-    c.teacher,
-    c.day_of_week,
-    c.time,
-    c.description,
-    c.capacity,
-    cs.month,
-    ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates,
-    COUNT(DISTINCT r_all.student_id) AS enrolled_count
-FROM classes c
-JOIN class_schedule cs ON cs.class_id = c.id
-JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date
-LEFT JOIN roster r_all ON r_all.class_id = c.id AND r_all.class_date = cs.session_date
-WHERE c.active = true `)
+	query.WriteString(`
+	SELECT c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r_all.student_id) AS enrolled_count
+	FROM classes c
+	JOIN class_schedule cs ON cs.class_id = c.id
+	JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date
+	LEFT JOIN roster r_all ON r_all.class_id = c.id AND r_all.class_date = cs.session_date
+	WHERE c.active = true 
+	`)
 
 	if studentId != nil {
 		args = append(args, *studentId)
@@ -128,16 +120,7 @@ WHERE c.active = true `)
 		fmt.Fprintf(&query, " AND cs.month = $%d ", len(args))
 	}
 
-	query.WriteString(`
-GROUP BY
-    cs.month,
-    c.id,
-    c.name,
-    c.teacher,
-    c.day_of_week,
-    c.time,
-    c.description,
-    c.capacity;`)
+	query.WriteString(`GROUP BY cs.month, c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity;`)
 
 	fmt.Println("QUERY:", query.String())
 
