@@ -5,12 +5,14 @@ import (
 	"IFTP/db"
 	"IFTP/students"
 	"IFTP/utils"
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 )
@@ -35,25 +37,38 @@ func main() {
 	fmt.Println("Connecting with:", connStr)
 
 	// Initialise the connection pool.
-	sqldb, err := sql.Open("pgx", connStr)
+	ctx := context.Background()
+	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Unable to connect to database: %v \n", err)
+	}
+	// sqldb, err := sql.Open("pgx", connStr)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	defer pool.Close()
+	// defer sqldb.Close()
+
+	// Test the connection
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := pool.Ping(pingCtx); err != nil {
+		log.Fatalf("Error: Could not ping database: %v \n", err)
 	}
 
 	fmt.Printf("Succesfully connected to database \n")
-	defer sqldb.Close()
-
-	// Test the connection
-	if err := sqldb.Ping(); err != nil {
-		log.Fatal(err)
-	}
+	// if err := sqldb.Ping(); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// Load all the html templates from the templates directory.
 	tpl := utils.LoadTemplates()
 
 	// Create an instance of myDatabase containing the connection pool.
 	myDb := &db.MyDatabase{
-		Db:        sqldb,
+		Pool:      pool,
 		Logger:    log.Default(),
 		Templates: tpl.Index,
 	}

@@ -23,17 +23,17 @@ const (
 )
 
 type Class struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	Teacher       string    `json:"teacher"`
-	DayOfWeek     string    `json:"day_of_week"`
-	Time          string    `json:"time"`
-	Description   string    `json:"description"`
-	Month         string    `json:"month"`
-	Capacity      int       `json:"capacity"`
-	SessionDates  []string  `json:"session_dates"`
-	EnrolledCount int       `json:"enrolledCount"`
-	EndDate       time.Time `json:"endDate"`
+	ID            string      `db:"id" json:"id"`
+	Name          string      `db:"name" json:"name"`
+	Teacher       string      `db:"teacher" json:"teacher"`
+	DayOfWeek     string      `db:"day_of_week" json:"day_of_week"`
+	Time          string      `db:"time" json:"time"`
+	Description   string      `db:"description" json:"description"`
+	Month         time.Time   `db:"month" json:"month"`
+	Capacity      int         `db:"capacity" json:"capacity"`
+	SessionDates  []time.Time `db:"session_dates" json:"session_dates"`
+	EnrolledCount int         `db:"enrolled_count" json:"enrolledCount"`
+	EndDate       time.Time   `db:"endDate" json:"endDate"`
 }
 
 type ClassSchedule struct {
@@ -51,7 +51,9 @@ type CalendarEventsResponse struct {
 func ListClasses(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		classes, err := dbListClasses(myDb)
+		ctx := r.Context()
+
+		classes, err := dbListClasses(ctx, myDb)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
@@ -69,6 +71,7 @@ func ListClasses(myDb *db.MyDatabase) http.HandlerFunc {
 func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		ctx := r.Context()
 		month := r.FormValue("month")
 		studentId := strings.TrimSpace(r.PathValue("student_id"))
 		var studentIntegerId *int
@@ -86,7 +89,7 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 			studentIntegerId = &val
 		}
 
-		classes, err := dbListClassesByMonth(myDb, month, studentIntegerId)
+		classes, err := dbListClassesByMonth(ctx, myDb, month, studentIntegerId)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",

@@ -1,13 +1,14 @@
 package db
 
 import (
-	"database/sql"
 	"html/template"
 	"log"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type MyDatabase struct {
-	Db        *sql.DB
+	Pool      *pgxpool.Pool
 	Logger    *log.Logger
 	Templates *template.Template
 }

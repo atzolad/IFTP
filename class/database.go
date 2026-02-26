@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/lib/pq"
 )
 
-func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
-	rows, err := myDb.Db.Query(
+func dbListClasses(ctx context.Context, myDb *db.MyDatabase) ([]Class, error) {
+	rows, err := myDb.Pool.Query(ctx,
 		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
 		JOIN class_schedule AS cs ON cs.class_id = c.id
@@ -25,25 +26,15 @@ func dbListClasses(myDb *db.MyDatabase) ([]Class, error) {
 	}
 	defer rows.Close()
 
-	// A Classes slice to hold the data from the returned rows
-	var classes []Class
-
 	// Loop through rows, using Scan to assign column data to struct fields.
-	for rows.Next() {
-		var class Class
-		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
-			&class.Description, &class.Capacity, &class.Month, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
-			return nil, err
-		}
-		classes = append(classes, class)
-	}
-	if err = rows.Err(); err != nil {
-		return classes, err
+	classes, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[Class])
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving classes from db: %v", err)
 	}
 	return classes, nil
 }
 
-func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
+func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
 
 	var query strings.Builder
 	var args []any
@@ -70,32 +61,33 @@ func dbListClassesByMonth(myDb *db.MyDatabase, month string, studentId *int) ([]
 
 	query.WriteString(" GROUP BY cs.month, c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity")
 	query.WriteString(" ORDER BY cs.month DESC")
-	// var rows *sql.Rows
-	// var err error
+
 	fmt.Println(query.String())
-	rows, err := myDb.Db.Query(query.String(), args...)
+	rows, err := myDb.Pool.Query(ctx, query.String(), args...)
 
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	// A Classes slice to hold the data from the returned rows
-	var classes []Class
+	classes, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[Class])
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving classes from db: %v", err)
+	}
 
-	// Loop through rows, using Scan to assign column data to struct fields.
-	for rows.Next() {
-		var class Class
-		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
-			&class.Description, &class.Capacity, &class.Month, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
-			return nil, err
-		}
-		fmt.Println(classes)
-		classes = append(classes, class)
-	}
-	if err = rows.Err(); err != nil {
-		return classes, err
-	}
+	// // Loop through rows, using Scan to assign column data to struct fields.
+	// for rows.Next() {
+	// 	var class Class
+	// 	if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
+	// 		&class.Description, &class.Capacity, &class.Month, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
+	// 		return nil, err
+	// 	}
+	// 	fmt.Println(classes)
+	// 	classes = append(classes, class)
+	// }
+	// if err = rows.Err(); err != nil {
+	// 	return classes, err
+	// }
 	return classes, nil
 }
 
