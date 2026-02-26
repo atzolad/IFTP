@@ -11,17 +11,36 @@ import (
 	"time"
 )
 
+type classScheduleStatus string
+
+// Define an enum for the class schedule status
+// TODO need to define these ENUMS in Postgres db
+
+const (
+	PENDING   classScheduleStatus = "Pending"
+	SCHEDULED classScheduleStatus = "Scheduled"
+	CANCELLED classScheduleStatus = "Cancelled"
+)
+
 type Class struct {
-	ID            int       `json:"id"`
-	Name          string    `json:"name"`
-	Teacher       string    `json:"teacher"`
-	DayOfWeek     string    `json:"day_of_week"`
-	Time          time.Time `json:"time"`
-	Description   string    `json:"description"`
-	Month         string    `json:"month"`
-	Capacity      string    `json:"capacity"`
-	SessionDates  []string  `json:"session_dates"`
-	EnrolledCount int       `json:"enrolledCount"`
+	ID            string      `json:"id"`
+	Name          string      `json:"name"`
+	Teacher       string      `json:"teacher"`
+	DayOfWeek     string      `json:"day_of_week"`
+	Time          time.Time   `json:"time"`
+	Description   string      `json:"description"`
+	Month         string      `json:"month"`
+	Capacity      int         `json:"capacity"`
+	SessionDates  []time.Time `json:"session_dates"`
+	EnrolledCount int         `json:"enrolledCount"`
+}
+
+type ClassSchedule struct {
+	Id          string              `json:"id"`
+	ClassId     string              `json:"classId"`
+	SessionDate time.Time           `json:"sessionDate"`
+	Month       time.Time           `json:"month"`
+	Status      classScheduleStatus `json:"status"`
 }
 
 type CalendarEventsResponse struct {
@@ -188,6 +207,19 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		fmt.Printf("New Class Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
 			newClass.Name, newClass.Teacher, newClass.DayOfWeek, newClass.Time, newClass.Description, newClass.Month, newClass.Capacity, newClass.SessionDates)
 
+		ctx := r.Context()
+
+		tx, err := myDb.Db.BeginTx(ctx, nil)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error Begining transcation: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+		}
+
+		defer tx.Rollback()
+
 		if err := dbCreateClass(myDb, &newClass); err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
@@ -197,7 +229,24 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		utils.WriteJSONResponse(w, http.StatusOK, newClass)
+		if newClass.SessionDates != nil {
+
+			for _, sessionDate := range newClass.SessionDates {
+				err := dbInsertClass_ScheduleRow(ctx, tx, &newClass, sessionDate)
+				if err != nil {
+					utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+						Status:  "error",
+						Message: "Error scheduling class",
+						Code:    http.StatusInternalServerError,
+					})
+					return
+				}
+
+			}
+
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class")
 		fmt.Printf("Successfully created new class: %v", newClass)
 	}
 }
