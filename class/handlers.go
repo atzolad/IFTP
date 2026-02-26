@@ -23,16 +23,17 @@ const (
 )
 
 type Class struct {
-	ID            string      `json:"id"`
-	Name          string      `json:"name"`
-	Teacher       string      `json:"teacher"`
-	DayOfWeek     string      `json:"day_of_week"`
-	Time          time.Time   `json:"time"`
-	Description   string      `json:"description"`
-	Month         string      `json:"month"`
-	Capacity      int         `json:"capacity"`
-	SessionDates  []time.Time `json:"session_dates"`
-	EnrolledCount int         `json:"enrolledCount"`
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	Teacher       string    `json:"teacher"`
+	DayOfWeek     string    `json:"day_of_week"`
+	Time          string    `json:"time"`
+	Description   string    `json:"description"`
+	Month         string    `json:"month"`
+	Capacity      int       `json:"capacity"`
+	SessionDates  []string  `json:"session_dates"`
+	EnrolledCount int       `json:"enrolledCount"`
+	EndDate       time.Time `json:"endDate"`
 }
 
 type ClassSchedule struct {
@@ -194,6 +195,8 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 
 	}
 }
+
+// TODO- Need to go back and handle the END date logic
 
 func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

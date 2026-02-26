@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/lib/pq"
 )
@@ -155,7 +154,7 @@ func dbCreateClass(myDb *db.MyDatabase, c *Class) error {
 	return err
 }
 
-func dbInsertClass_ScheduleRow(ctx context.Context, tx *sql.Tx, c *Class, sessionDate time.Time) error {
+func dbInsertClass_ScheduleRow(ctx context.Context, tx *sql.Tx, c *Class, sessionDate string) error {
 	_, err := tx.ExecContext(ctx,
 		`INSERT INTO class_schedule (class_id, session_date, month, status) 
 		VALUES ($1, $2, $3, $4)`,
