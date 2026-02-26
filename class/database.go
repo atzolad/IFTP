@@ -28,7 +28,7 @@ func dbListClasses(ctx context.Context, myDb *db.MyDatabase) ([]Class, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	classes, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[Class])
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving classes from db: %v", err)
+		return nil, err
 	}
 	return classes, nil
 }

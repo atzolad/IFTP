@@ -5,23 +5,21 @@ import (
 	"IFTP/utils"
 	"fmt"
 	"net/http"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Student struct {
-	ID              int      `json:"id"`
-	Name            string   `json:"name"`
-	Email           string   `json:"email"`
-	Active          bool     `json:"active"`
-	EnrolledClasses []string `json:"enrolledClasses"`
+	ID              int      `db:"id" json:"id"`
+	Name            string   `db:"name" json:"name"`
+	Email           string   `db:"email" json:"email"`
+	Active          bool     `db:"active" json:"active"`
+	EnrolledClasses []string `db:"enrolledClasses" json:"enrolledClasses"`
 }
 
 func GetStudents(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		students, err := dbRetrieveStudents(myDb)
+		ctx := r.Context()
+		students, err := dbRetrieveStudents(ctx, myDb)
 		if err != nil {
 			fmt.Printf("Error retrieving students from DB")
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, err)
@@ -36,7 +34,8 @@ func GetStudents(myDb *db.MyDatabase) http.HandlerFunc {
 func GetStudentsWithEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		students, err := dbGetStudentsWithEnrollment(myDb)
+		ctx := r.Context()
+		students, err := dbGetStudentsWithEnrollment(ctx, myDb)
 		if err != nil {
 			fmt.Printf("Error retrieving students from DB")
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, err)
@@ -48,74 +47,82 @@ func GetStudentsWithEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-// AddStudent adds a user from JSON received in the request body.
-func AddStudent(myDb *db.MyDatabase) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var newStudent Student
+// // AddStudent adds a user from JSON received in the request body.
+// func AddStudent(myDb *db.MyDatabase) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Call BindJSON to bind the received JSON to
-		// newStudent.
-		if err := c.BindJSON(&newStudent); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
+// 		ctx := r.Context()
 
-		if err := InsertStudent(myDb, &newStudent); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+// 		var newStudent Student
 
-		c.JSON(http.StatusCreated, newStudent)
-		fmt.Printf("Successfully created new student: %v", newStudent)
-	}
-}
+// 		if err := json.NewDecoder(r.Body).Decode(&newStudent); err != nil {
+// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+// 				Status:  "error",
+// 				Message: fmt.Sprintf("Error decoding student info: %v", err),
+// 				Code:    http.StatusInternalServerError,
+// 			})
+// 		}
 
-// Update Student updates the student details based on the JSON received in the request body.
-func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Param("id")
-		integerID, err := strconv.Atoi(id)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
+// 		if err := InsertStudent(ctx, myDb, &newStudent); err != nil {
+// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+// 				Status:  "error",
+// 				Message: fmt.Sprintf("Error adding student to db: %v", err),
+// 				Code:    http.StatusInternalServerError,
+// 			})
+// 			return
+// 		}
 
-		var updateStudent Student
+// 		utils.WriteJSONResponse(w, http.StatusOK, "Successfully added student to db")
+// 		fmt.Printf("Successfully created new student: %v", newStudent)
+// 	}
+// }
 
-		// Call BindJSON to bind the received JSON to updatedStudent
-		if err := c.BindJSON(&updateStudent); err != nil {
-			return
-		}
+// // Update Student updates the student details based on the JSON received in the request body.
+// func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		id := c.Param("id")
+// 		integerID, err := strconv.Atoi(id)
+// 		if err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		}
 
-		returnedStudent, err := UpdateStudentDB(myDb, integerID, &updateStudent)
+// 		var updateStudent Student
 
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+// 		// Call BindJSON to bind the received JSON to updatedStudent
+// 		if err := c.BindJSON(&updateStudent); err != nil {
+// 			return
+// 		}
 
-		c.Header("content-type", "application/json")
-		c.JSON(http.StatusOK, returnedStudent)
-		fmt.Printf("Successfully updated student: %v \n", returnedStudent.Name)
-	}
-}
+// 		returnedStudent, err := UpdateStudentDB(myDb, integerID, &updateStudent)
 
-// SoftDeleteStudent changes the Active status of the student to false, rather than permanently deleting.
-func SoftDeleteStudent(myDb *db.MyDatabase) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Param("id")
+// 		if err != nil {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 			return
+// 		}
 
-		integerID, err := strconv.Atoi(id)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid student id"})
-		}
+// 		c.Header("content-type", "application/json")
+// 		c.JSON(http.StatusOK, returnedStudent)
+// 		fmt.Printf("Successfully updated student: %v \n", returnedStudent.Name)
+// 	}
+// }
 
-		deletedStudent, err := SoftDeleteStudentDB(myDb, integerID)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
+// // SoftDeleteStudent changes the Active status of the student to false, rather than permanently deleting.
+// func SoftDeleteStudent(myDb *db.MyDatabase) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		id := c.Param("id")
 
-		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("student %v deleted successfully", deletedStudent)})
-		fmt.Printf("Successfully soft deleted student %v with id: %v \n", deletedStudent, integerID)
-	}
-}
+// 		integerID, err := strconv.Atoi(id)
+// 		if err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid student id"})
+// 		}
+
+// 		deletedStudent, err := SoftDeleteStudentDB(myDb, integerID)
+// 		if err != nil {
+// 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+// 			return
+// 		}
+
+// 		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("student %v deleted successfully", deletedStudent)})
+// 		fmt.Printf("Successfully soft deleted student %v with id: %v \n", deletedStudent, integerID)
+// 	}
+// }

@@ -125,7 +125,7 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
-				Message: fmt.Sprintf("Error fetching classes from db for month %v: %v", err),
+				Message: fmt.Sprintf("Error fetching classes from db for month : %v", err),
 				Code:    http.StatusInternalServerError,
 			})
 			return
@@ -272,51 +272,52 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		if len(newClass.SessionDates) > 0 {
-			batch := pgx.Batch{}
+			batch := &pgx.Batch{}
 
 			for _, sessionDate := range newClass.SessionDates {
 				batch.Queue(
 					`INSERT INTO class_schedule (class_id, session_date, month, status) 
 					VALUES ($1, $2, $3, $4)`,
-					newClass.ID, sessionDate, newClass.Month, "scheduled",)
+					newClass.ID, sessionDate, newClass.Month, "scheduled")
+			}
+
+			br := tx.SendBatch(ctx, batch)
+
+			if err := br.Close(); err != nil {
+				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+					Status:  "error",
+					Message: "Error batch scheduling session dates",
+					Code:    http.StatusInternalServerError,
+				})
+				return
+			}
+
+			// if newClass.SessionDates != nil {
+			// 	for _, sessionDate := range newClass.SessionDates {
+			// 		err := dbInsertClass_ScheduleRow(ctx, tx, &newClass, sessionDate)
+			// 		if err != nil {
+			// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+			// 				Status:  "error",
+			// 				Message: "Error scheduling class",
+			// 				Code:    http.StatusInternalServerError,
+			// 			})
+			// 			return
+			// 		}
+
+			// 	}
+
+			// }
+			if err := tx.Commit(ctx); err != nil {
+				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+					Status:  "error",
+					Message: "Failed to commit database changes",
+					Code:    http.StatusInternalServerError,
+				})
+				return
+			}
+			utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class")
+			log.Printf("Successfully created new class: %v", newClass)
 		}
-
-		br := tx.SendBatch(ctx, batch)
-
-		if err := br.Close(); err != nil {
-			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-				Status:  "error",
-				Message: "Error batch scheduling session dates",
-				Code:    http.StatusInternalServerError,
-			})
-			return
-		}
-
-		// if newClass.SessionDates != nil {
-		// 	for _, sessionDate := range newClass.SessionDates {
-		// 		err := dbInsertClass_ScheduleRow(ctx, tx, &newClass, sessionDate)
-		// 		if err != nil {
-		// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-		// 				Status:  "error",
-		// 				Message: "Error scheduling class",
-		// 				Code:    http.StatusInternalServerError,
-		// 			})
-		// 			return
-		// 		}
-
-		// 	}
-
-		// }
-		if err := tx.Commit(ctx); err != nil {
-			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-				Status:  "error",
-				Message: "Failed to commit database changes",
-				Code:    http.StatusInternalServerError,
-			})
-			return
-		}
-		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class")
-		log.Printf("Successfully created new class: %v", newClass)
 	}
 }
 
