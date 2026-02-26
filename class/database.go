@@ -3,9 +3,9 @@ package class
 import (
 	"IFTP/db"
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -144,16 +144,16 @@ func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, mont
 	return classes, nil
 }
 
-func dbCreateClass(myDb *db.MyDatabase, c *Class) error {
-	err := myDb.Db.QueryRow(
+func dbCreateClass(ctx context.Context, tx pgx.Tx, c *Class) error {
+	err := tx.QueryRow(ctx,
 		"INSERT INTO classes (name, teacher, day_of_week, time, description, capacity) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
 		c.Name, c.Teacher, c.DayOfWeek, c.Time, c.Description, c.Capacity).Scan(&c.ID)
 
 	return err
 }
 
-func dbInsertClass_ScheduleRow(ctx context.Context, tx *sql.Tx, c *Class, sessionDate string) error {
-	_, err := tx.ExecContext(ctx,
+func dbInsertClass_ScheduleRow(ctx context.Context, tx pgx.Tx, c *Class, sessionDate time.Time) error {
+	_, err := tx.Exec(ctx,
 		`INSERT INTO class_schedule (class_id, session_date, month, status) 
 		VALUES ($1, $2, $3, $4)`,
 		c.ID, sessionDate, c.Month, "Scheduled")
