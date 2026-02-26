@@ -12,7 +12,7 @@ type Student struct {
 	Name            string   `db:"name" json:"name"`
 	Email           string   `db:"email" json:"email"`
 	Active          bool     `db:"active" json:"active"`
-	EnrolledClasses []string `db:"enrolledClasses" json:"enrolledClasses"`
+	EnrolledClasses []string `db:"enrolled_classes" json:"enrolledClasses"`
 }
 
 func GetStudents(myDb *db.MyDatabase) http.HandlerFunc {
@@ -37,7 +37,7 @@ func GetStudentsWithEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
 		ctx := r.Context()
 		students, err := dbGetStudentsWithEnrollment(ctx, myDb)
 		if err != nil {
-			fmt.Printf("Error retrieving students from DB")
+			fmt.Printf("Error retrieving students from DB: %v", err)
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, err)
 			return
 		}

@@ -47,11 +47,13 @@ func (c Class) MarshalJSON() ([]byte, error) {
 		Month        string   `json:"month"`
 		SessionDates []string `json:"session_dates"`
 		EndDate      string   `json:"endDate"`
+		Time         string   `json:"time"`
 		Alias
 	}{
 		Month:        c.Month.Format("2006-01-02"),
 		SessionDates: formatTimeSlice(c.SessionDates),
 		EndDate:      c.EndDate.Format("2006-01-02"),
+		Time:         formatTime(c.Time),
 		Alias:        (Alias)(c),
 	})
 }
@@ -66,6 +68,13 @@ func formatTimeSlice(dates []time.Time) []string {
 		formatted[i] = d.Format("2006-01-02")
 	}
 	return formatted
+}
+
+func formatTime(time string) string {
+	if time == "" {
+		return ""
+	}
+	return strings.Split(time, ".")[0]
 }
 
 type ClassSchedule struct {
