@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/lib/pq"
 )
 
 func dbListClasses(ctx context.Context, myDb *db.MyDatabase) ([]Class, error) {
@@ -75,6 +74,8 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 		return nil, fmt.Errorf("Error retrieving classes from db: %v", err)
 	}
 
+	return classes, nil
+
 	// // Loop through rows, using Scan to assign column data to struct fields.
 	// for rows.Next() {
 	// 	var class Class
@@ -88,10 +89,10 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 	// if err = rows.Err(); err != nil {
 	// 	return classes, err
 	// }
-	return classes, nil
+
 }
 
-func dbListStudentEnrolledClasses(myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
+func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
 	var query strings.Builder
 	var args []any
 
@@ -118,23 +119,28 @@ func dbListStudentEnrolledClasses(myDb *db.MyDatabase, month string, studentId *
 
 	fmt.Println("QUERY:", query.String())
 
-	rows, err := myDb.Db.Query(query.String(), args...)
+	rows, err := myDb.Pool.Query(ctx, query.String(), args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var classes []Class
+	// var classes []Class
 
-	for rows.Next() {
-
-		var class Class
-		if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
-			&class.Description, &class.Capacity, &class.Month, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
-			return nil, err
-		}
-		classes = append(classes, class)
+	classes, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[Class])
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving student enrolled classes from db: %v", err)
 	}
+
+	// for rows.Next() {
+
+	// 	var class Class
+	// 	if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
+	// 		&class.Description, &class.Capacity, &class.Month, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
+	// 		return nil, err
+	// 	}
+	// 	classes = append(classes, class)
+	// }
 	return classes, nil
 }
 

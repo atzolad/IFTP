@@ -23,7 +23,7 @@ const (
 )
 
 type Class struct {
-	ID            string      `db:"id" json:"id"`
+	ID            int         `db:"id" json:"id"`
 	Name          string      `db:"name" json:"name"`
 	Teacher       string      `db:"teacher" json:"teacher"`
 	DayOfWeek     string      `db:"day_of_week" json:"day_of_week"`
@@ -36,8 +36,37 @@ type Class struct {
 	EndDate       time.Time   `db:"endDate" json:"endDate"`
 }
 
+func (c Class) MarshalJSON() ([]byte, error) {
+	// Creates a new type with all of the fields of Class but none of the methods
+	type Alias Class
+
+	return json.Marshal(&struct {
+		Month        string   `json:"month"`
+		SessionDates []string `json:"session_dates"`
+		EndDate      string   `json:"endDate"`
+		Alias
+	}{
+		Month:        c.Month.Format("2006-01-02"),
+		SessionDates: formatTimeSlice(c.SessionDates),
+		EndDate:      c.EndDate.Format("2006-01-02"),
+		Alias:        (Alias)(c),
+	})
+}
+
+func formatTimeSlice(dates []time.Time) []string {
+	if len(dates) == 0 {
+		return []string{}
+	}
+
+	formatted := make([]string, len(dates))
+	for i, d := range dates {
+		formatted[i] = d.Format("2006-01-02")
+	}
+	return formatted
+}
+
 type ClassSchedule struct {
-	Id          string              `json:"id"`
+	Id          int                 `json:"id"`
 	ClassId     string              `json:"classId"`
 	SessionDate time.Time           `json:"sessionDate"`
 	Month       time.Time           `json:"month"`
@@ -145,7 +174,8 @@ func GetCalendarEvents(myDb *db.MyDatabase) http.HandlerFunc {
 		//TODO: If this endpoint gets really slow, add month
 		// month := r.PathValue("month")
 
-		classes, err := dbListClasses(myDb)
+		ctx := r.Context()
+		classes, err := dbListClasses(ctx, myDb)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
@@ -166,6 +196,7 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Getting calendar events by student")
 
+		ctx := r.Context()
 		studentId := strings.TrimSpace(r.PathValue("student_id"))
 		fmt.Printf("studentId: %v", studentId)
 		var studentIntegerId *int
@@ -182,7 +213,7 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 		//TODO: If this endpoint gets really slow, add month
 		// month := r.PathValue("month")
 
-		classes, err := dbListStudentEnrolledClasses(myDb, "", studentIntegerId)
+		classes, err := dbListStudentEnrolledClasses(ctx, myDb, "", studentIntegerId)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
