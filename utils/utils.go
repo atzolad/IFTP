@@ -78,7 +78,7 @@ func LoggingWrapper(next http.Handler) http.Handler {
 		lw := &LogWriter{w, http.StatusOK}
 		next.ServeHTTP(lw, r)
 		//Log the Reponse details
-		log.Printf("Response: %s %s - Status: %d", r.Method, r.URL.Path, lw.statusCode)
+		log.Printf("Response: %s %s %s - Status: %d", r.Method, r.URL.Path, r.Body, lw.statusCode)
 	})
 }
 

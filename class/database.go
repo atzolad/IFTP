@@ -144,13 +144,13 @@ func dbListStudentEnrolledClasses(myDb *db.MyDatabase, month string, studentId *
 	return classes, nil
 }
 
-// func DbCreateClass(myDb *db.MyDatabase, c *Class) error {
-// 	err := myDb.Db.QueryRow(
-// 		"INSERT INTO classes (name, teacher, day, time) VALUES($1, $2, $3, $4) RETURNING id",
-// 		c.Name, c.Teacher, c.Day, c.Time).Scan(&c.ID)
+func dbCreateClass(myDb *db.MyDatabase, c *Class) error {
+	err := myDb.Db.QueryRow(
+		"INSERT INTO classes (name, teacher, day_of_week, time, description, capacity) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
+		c.Name, c.Teacher, c.DayOfWeek, c.Time, c.Description, c.Capacity).Scan(&c.ID)
 
-// 	return err
-// }
+	return err
+}
 
 // func UpdateClassDB(myDb *db.MyDatabase, id int, c *Class) (*Class, error) {
 // 	updates := []string{}

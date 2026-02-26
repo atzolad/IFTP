@@ -3,31 +3,31 @@ package class
 import (
 	"IFTP/db"
 	"IFTP/utils"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Class struct {
-	ID            int      `json:"id"`
-	Name          string   `json:"name"`
-	Teacher       string   `json:"teacher"`
-	DayOfWeek     string   `json:"day_of_week"`
-	Time          string   `json:"time"`
-	Description   string   `json:"description"`
-	Month         string   `json:"month"`
-	Capacity      string   `json:"capacity"`
-	SessionDates  []string `json:"session_dates"`
-	EnrolledCount int      `json:"enrolledCount"`
+	ID            int       `json:"id"`
+	Name          string    `json:"name"`
+	Teacher       string    `json:"teacher"`
+	DayOfWeek     string    `json:"day_of_week"`
+	Time          time.Time `json:"time"`
+	Description   string    `json:"description"`
+	Month         string    `json:"month"`
+	Capacity      string    `json:"capacity"`
+	SessionDates  []string  `json:"session_dates"`
+	EnrolledCount int       `json:"enrolledCount"`
 }
 
 type CalendarEventsResponse struct {
 	ScheduledClasses []Class `json:"scheduledClasses"`
 }
 
-// GetClasses responds with the list of all classes as JSON.
-// Nit: ListClasses
 func ListClasses(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -48,14 +48,14 @@ func ListClasses(myDb *db.MyDatabase) http.HandlerFunc {
 
 func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// month := c.Param("month")
+
 		month := r.FormValue("month")
 		studentId := strings.TrimSpace(r.PathValue("student_id"))
 		var studentIntegerId *int
-		fmt.Println("MONTH:")
-		fmt.Println(month)
-		fmt.Println("STUDENT ID:")
-		fmt.Println(studentId)
+		// fmt.Println("MONTH:")
+		// fmt.Println(month)
+		// fmt.Println("STUDENT ID:")
+		// fmt.Println(studentId)
 
 		if studentId != "" {
 			val, err := strconv.Atoi(studentId)
@@ -176,6 +176,32 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
+func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var newClass Class
+
+		if err := json.NewDecoder(r.Body).Decode(&newClass); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, err)
+			return
+		}
+
+		fmt.Printf("New Class Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
+			newClass.Name, newClass.Teacher, newClass.DayOfWeek, newClass.Time, newClass.Description, newClass.Month, newClass.Capacity, newClass.SessionDates)
+
+		if err := dbCreateClass(myDb, &newClass); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error adding Class to DB",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, newClass)
+		fmt.Printf("Successfully created new class: %v", newClass)
+	}
+}
+
 // func ApproveClassDates(myDb *db.MyDatabase) gin.HandlerFunc {
 // 	return func(c *gin.Context) {
 
@@ -205,36 +231,6 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 // 		c.Header("content-type", "application/json")
 // 		c.JSON(http.StatusOK, classes)
 // 		fmt.Printf("Successfully retrieved class list \n")
-// 	}
-// }
-
-// // AddClass adds a class from JSON received in the request body.
-// // TODO: be consistent with your names CreateClass and dbCreateClass
-// func CreateClass(myDb *db.MyDatabase) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		var newClass Class
-
-// 		// Call BindJSON to bind the received JSON to newClass.
-// 		if err := c.BindJSON(&newClass); err != nil {
-// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 			return
-// 		}
-
-// 		// Validate that the time provided is in the correct format
-// 		parsedTime, err := time.Parse("15:04:05", newClass.Time)
-// 		if err != nil {
-// 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid time format, expected HH:MM:SS"})
-// 		}
-
-// 		newClass.Time = parsedTime.Format("15:04:05")
-
-// 		if err := DbCreateClass(myDb, &newClass); err != nil {
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 			return
-// 		}
-
-// 		c.JSON(http.StatusCreated, newClass)
-// 		fmt.Printf("Successfully created new class: %v", newClass)
 // 	}
 // }
 

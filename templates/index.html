@@ -1961,7 +1961,6 @@
         }
 
         function showEnrollModal(className) {
-            console.log("Hiiiiii!!");
             document.getElementById('enrollClassName').textContent = className;
             new bootstrap.Modal(document.getElementById('enrollModal')).show();
         }
@@ -2336,7 +2335,7 @@
                     if (isAlreadyEnrolled) {
                         console.log("Is enrolled!")
                         enrollBtnHtml = `
-                                            <button class="btn btn-primary w-100" onclick="showEnrollModal(${selectedClass.id})">
+                                            <button class="btn btn-primary w-100" onclick="showEnrollModal(${selectedClass.name})">
                                             <i class="bi bi-check-circle"></i> Register for next month
                                             </button>`
                     }
