@@ -32,7 +32,7 @@ type Class struct {
 	DayOfWeek     string      `db:"day_of_week" json:"day_of_week"`
 	Time          string      `db:"time" json:"time"`
 	Description   string      `db:"description" json:"description"`
-	Month         time.Time   `db:"month" json:"month"`
+	Month         *time.Time  `db:"month" json:"month"`
 	Capacity      int         `db:"capacity" json:"capacity"`
 	SessionDates  []time.Time `db:"session_dates" json:"session_dates"`
 	EnrolledCount int         `db:"enrolled_count" json:"enrolledCount"`
@@ -272,6 +272,7 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		defer tx.Rollback(ctx)
 
 		if err := dbCreateClass(ctx, tx, &newClass); err != nil {
+			log.Printf("Erorr adding class to db: %v", err)
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
 				Message: "Error adding Class to DB",
@@ -280,7 +281,11 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
+		var hasSessionDates bool
+		hasSessionDates = false
+
 		if len(newClass.SessionDates) > 0 {
+			hasSessionDates = true
 			batch := &pgx.Batch{}
 
 			for _, sessionDate := range newClass.SessionDates {
@@ -293,6 +298,7 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			br := tx.SendBatch(ctx, batch)
 
 			if err := br.Close(); err != nil {
+				log.Printf("Error batch scheduling session dates: %v", err)
 				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 					Status:  "error",
 					Message: "Error batch scheduling session dates",
@@ -316,14 +322,21 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			// 	}
 
 			// }
-			if err := tx.Commit(ctx); err != nil {
-				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-					Status:  "error",
-					Message: "Failed to commit database changes",
-					Code:    http.StatusInternalServerError,
-				})
-				return
-			}
+
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Failed to commit database changes",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+		if hasSessionDates {
+			utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class and scheduled session dates")
+			log.Printf("Successfully created new class with session dates: %v", newClass)
+		} else {
 			utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class")
 			log.Printf("Successfully created new class: %v", newClass)
 		}

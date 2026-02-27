@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -73,12 +75,15 @@ func (lw *LogWriter) Unwrap() http.ResponseWriter { return lw.ResponseWriter }
 // Log the connection details for the API
 func LoggingWrapper(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// This helper copies the body so it can be read twice
+		bodyBytes, _ := io.ReadAll(r.Body)
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Refill the body for the next handler
 		// Log the request details
-		log.Printf("Request Type : %v to %v From %v", r.Method, r.URL.Path, r.RemoteAddr)
+		log.Printf("Request %s %s | Body  %s", r.Method, r.URL.Path, string(bodyBytes))
 		lw := &LogWriter{w, http.StatusOK}
 		next.ServeHTTP(lw, r)
 		//Log the Reponse details
-		log.Printf("Response: %s %s %s - Status: %d", r.Method, r.URL.Path, r.Body, lw.statusCode)
+		log.Printf("Response: %s %s - Status: %d", r.Method, r.URL.Path, lw.statusCode)
 	})
 }
 
