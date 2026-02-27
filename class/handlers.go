@@ -25,11 +25,23 @@ const (
 	CANCELLED classScheduleStatus = "Cancelled"
 )
 
+type DayOfWeek string
+
+const (
+	Monday    DayOfWeek = "Monday"
+	Tuesday   DayOfWeek = "Tuesday"
+	Wednesday DayOfWeek = "Wednesday"
+	Thursday  DayOfWeek = "Thursday"
+	Friday    DayOfWeek = "Friday"
+	Saturday  DayOfWeek = "Saturday"
+	Sunday    DayOfWeek = "Sunday"
+)
+
 type Class struct {
 	ID            int         `db:"id" json:"id"`
 	Name          string      `db:"name" json:"name"`
 	Teacher       string      `db:"teacher" json:"teacher"`
-	DayOfWeek     string      `db:"day_of_week" json:"day_of_week"`
+	DayOfWeek     DayOfWeek   `db:"day_of_week" json:"day_of_week"`
 	Time          string      `db:"time" json:"time"`
 	Description   string      `db:"description" json:"description"`
 	Month         *time.Time  `db:"month" json:"month"`
@@ -252,7 +264,11 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		var newClass Class
 
 		if err := json.NewDecoder(r.Body).Decode(&newClass); err != nil {
-			utils.WriteJSONResponse(w, http.StatusBadRequest, err)
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error Decoding Request: %v", err),
+				Code:    http.StatusBadRequest,
+			})
 			return
 		}
 
