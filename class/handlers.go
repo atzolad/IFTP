@@ -5,10 +5,13 @@ import (
 	"IFTP/utils"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type classScheduleStatus string
@@ -256,7 +259,7 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// ctx := r.Context()
+		ctx := r.Context()
 
 		var newClass Class
 
@@ -272,87 +275,87 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		fmt.Printf("New Class Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
 			newClass.Name, newClass.Teacher, newClass.DayOfWeek, newClass.Time, newClass.Description, newClass.Month, newClass.Capacity, newClass.SessionDates)
 
-		// tx, err := myDb.Pool.Begin(ctx)
-		// if err != nil {
-		// 	utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-		// 		Status:  "error",
-		// 		Message: fmt.Sprintf("Error Begining transcation: %v", err),
-		// 		Code:    http.StatusInternalServerError,
-		// 	})
-		// 	return
-		// }
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error Begining transcation: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
 
-		// defer tx.Rollback(ctx)
+		defer tx.Rollback(ctx)
 
-		// if err := dbCreateClass(ctx, tx, &newClass); err != nil {
-		// 	log.Printf("Erorr adding class to db: %v", err)
-		// 	utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-		// 		Status:  "error",
-		// 		Message: "Error adding Class to DB",
-		// 		Code:    http.StatusInternalServerError,
-		// 	})
-		// 	return
-		// }
+		if err := dbCreateClass(ctx, tx, &newClass); err != nil {
+			log.Printf("Erorr adding class to db: %v", err)
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error adding Class to DB",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
 
-		// var hasSessionDates bool
-		// hasSessionDates = false
+		var hasSessionDates bool
+		hasSessionDates = false
 
-		// if len(newClass.SessionDates) > 0 {
-		// 	hasSessionDates = true
-		// 	batch := &pgx.Batch{}
+		if len(newClass.SessionDates) > 0 {
+			hasSessionDates = true
+			batch := &pgx.Batch{}
 
-		// 	for _, sessionDate := range newClass.SessionDates {
-		// 		batch.Queue(
-		// 			`INSERT INTO class_schedule (class_id, session_date, month, status)
-		// 			VALUES ($1, $2, $3, $4)`,
-		// 			newClass.ID, sessionDate, newClass.Month, "scheduled")
-		// 	}
+			for _, sessionDate := range newClass.SessionDates {
+				batch.Queue(
+					`INSERT INTO class_schedule (class_id, session_date, month, status)
+					VALUES ($1, $2, $3, $4)`,
+					newClass.ID, sessionDate, newClass.Month, "scheduled")
+			}
 
-		// 	br := tx.SendBatch(ctx, batch)
+			br := tx.SendBatch(ctx, batch)
 
-		// 	if err := br.Close(); err != nil {
-		// 		log.Printf("Error batch scheduling session dates: %v", err)
-		// 		utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-		// 			Status:  "error",
-		// 			Message: "Error batch scheduling session dates",
-		// 			Code:    http.StatusInternalServerError,
-		// 		})
-		// 		return
-		// 	}
+			if err := br.Close(); err != nil {
+				log.Printf("Error batch scheduling session dates: %v", err)
+				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+					Status:  "error",
+					Message: "Error batch scheduling session dates",
+					Code:    http.StatusInternalServerError,
+				})
+				return
+			}
 
-		// 	// if newClass.SessionDates != nil {
-		// 	// 	for _, sessionDate := range newClass.SessionDates {
-		// 	// 		err := dbInsertClass_ScheduleRow(ctx, tx, &newClass, sessionDate)
-		// 	// 		if err != nil {
-		// 	// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-		// 	// 				Status:  "error",
-		// 	// 				Message: "Error scheduling class",
-		// 	// 				Code:    http.StatusInternalServerError,
-		// 	// 			})
-		// 	// 			return
-		// 	// 		}
+			// if newClass.SessionDates != nil {
+			// 	for _, sessionDate := range newClass.SessionDates {
+			// 		err := dbInsertClass_ScheduleRow(ctx, tx, &newClass, sessionDate)
+			// 		if err != nil {
+			// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+			// 				Status:  "error",
+			// 				Message: "Error scheduling class",
+			// 				Code:    http.StatusInternalServerError,
+			// 			})
+			// 			return
+			// 		}
 
-		// 	// 	}
+			// 	}
 
-		// 	// }
+			// }
 
-		// }
+		}
 
-		// if err := tx.Commit(ctx); err != nil {
-		// 	utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-		// 		Status:  "error",
-		// 		Message: "Failed to commit database changes",
-		// 		Code:    http.StatusInternalServerError,
-		// 	})
-		// 	return
-		// }
-		// if hasSessionDates {
-		// 	utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class and scheduled session dates")
-		// 	log.Printf("Successfully created new class with session dates: %v", newClass)
-		// } else {
-		// 	utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class")
-		// 	log.Printf("Successfully created new class: %v", newClass)
-		// }
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Failed to commit database changes",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+		if hasSessionDates {
+			utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class and scheduled session dates")
+			log.Printf("Successfully created new class with session dates: %v", newClass)
+		} else {
+			utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class")
+			log.Printf("Successfully created new class: %v", newClass)
+		}
 	}
 }
 
