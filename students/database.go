@@ -19,20 +19,7 @@ func dbRetrieveStudents(ctx context.Context, myDb *db.MyDatabase) ([]Student, er
 	if err != nil {
 		return nil, err
 	}
-	// // A students slice to hold the data from the returned rows
-	// var students []Student
 
-	// // Loop through rows, using Scan to assign column data to struct fields.
-	// for rows.Next() {
-	// 	var student Student
-	// 	if err := rows.Scan(&student.ID, &student.Name, &student.Email, &student.Active); err != nil {
-	// 		return nil, err
-	// 	}
-	// 	students = append(students, student)
-	// }
-	// if err = rows.Err(); err != nil {
-	// 	return students, err
-	// }
 	return students, nil
 }
 
@@ -53,22 +40,7 @@ func dbGetStudentsWithEnrollment(ctx context.Context, myDb *db.MyDatabase) ([]St
 	if err != nil {
 		return nil, err
 	}
-	// // A students slice to hold the data from the returned rows
-	// var students []Student
 
-	// // Loop through rows, using Scan to assign column data to struct fields.
-	// for rows.Next() {
-	// 	var student Student
-	// 	if err := rows.Scan(&student.ID, &student.Name, &student.Email, &student.Active, (*pq.StringArray)(&student.EnrolledClasses)); err != nil {
-	// 		fmt.Println(err)
-	// 		return nil, err
-	// 	}
-	// 	students = append(students, student)
-	// }
-	// if err = rows.Err(); err != nil {
-	// 	fmt.Println(err)
-	// 	return students, err
-	// }
 	return students, nil
 }
 

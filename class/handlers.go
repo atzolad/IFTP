@@ -323,22 +323,6 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 				return
 			}
 
-			// if newClass.SessionDates != nil {
-			// 	for _, sessionDate := range newClass.SessionDates {
-			// 		err := dbInsertClass_ScheduleRow(ctx, tx, &newClass, sessionDate)
-			// 		if err != nil {
-			// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-			// 				Status:  "error",
-			// 				Message: "Error scheduling class",
-			// 				Code:    http.StatusInternalServerError,
-			// 			})
-			// 			return
-			// 		}
-
-			// 	}
-
-			// }
-
 		}
 
 		if err := tx.Commit(ctx); err != nil {

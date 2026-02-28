@@ -101,36 +101,37 @@ func main() {
 		log.Fatalf("Error initializing server: %v", err)
 	}
 
-	// // Render the main index.
-	// router.GET("/", func(c *gin.Context) {
-	// 	c.HTML(http.StatusOK, "index.html", gin.H{
-	// 		"title": "IFTP Main Page",
-	// 	})
-	// })
-	// // Studentendpoints- make sure to pass the database instance to each function.
-	// router.GET("/students", student.GetStudents(myDb))
-	// router.POST("/students", student.AddStudent(myDb))
-	// router.PATCH("/students/:id", student.UpdateStudent(myDb))
-	// router.DELETE("/students/:id", student.SoftDeleteStudent(myDb))
-
-	// // Class endpoints
-	// router.GET("/classes", class.ListClasses(myDb))
-	// router.GET("/classes/:student_id", class.ListClassesByMonth(myDb))
-	// // router.GET("/classes/:month", class.ListClassesByMonth(myDb))
-	// // router.POST("/classes", class.CreateClass(myDb))
-	// // router.PATCH("/classes/:id", class.UpdateClass(myDb))
-	// // router.DELETE("/classes/:id", class.SoftDeleteClass(myDb))
-
-	// // Roster endpoints
-	// // router.GET("/roster", roster.GetRoster(myDb))
-	// // router.GET("/roster/:student_id/classes,", roster.GetStudentClasses)
-	// // router.GET("/roster/:class_id/students", roster.GetClassStudents)
-	// router.POST("/roster/:class_id/enroll", roster.Enroll(myDb))
-	// // router.DELETE("/roster/:id", roster.LeaveClass(myDb))
-	// // router.PATCH("/roster/:id", roster.UpdateRoster(myDb))
-
-	// router.Run()
 }
+
+// // Render the main index.
+// router.GET("/", func(c *gin.Context) {
+// 	c.HTML(http.StatusOK, "index.html", gin.H{
+// 		"title": "IFTP Main Page",
+// 	})
+// })
+// // Studentendpoints- make sure to pass the database instance to each function.
+// router.GET("/students", student.GetStudents(myDb))
+// router.POST("/students", student.AddStudent(myDb))
+// router.PATCH("/students/:id", student.UpdateStudent(myDb))
+// router.DELETE("/students/:id", student.SoftDeleteStudent(myDb))
+
+// // Class endpoints
+// router.GET("/classes", class.ListClasses(myDb))
+// router.GET("/classes/:student_id", class.ListClassesByMonth(myDb))
+// // router.GET("/classes/:month", class.ListClassesByMonth(myDb))
+// // router.POST("/classes", class.CreateClass(myDb))
+// // router.PATCH("/classes/:id", class.UpdateClass(myDb))
+// // router.DELETE("/classes/:id", class.SoftDeleteClass(myDb))
+
+// // Roster endpoints
+// // router.GET("/roster", roster.GetRoster(myDb))
+// // router.GET("/roster/:student_id/classes,", roster.GetStudentClasses)
+// // router.GET("/roster/:class_id/students", roster.GetClassStudents)
+// router.POST("/roster/:class_id/enroll", roster.Enroll(myDb))
+// // router.DELETE("/roster/:id", roster.LeaveClass(myDb))
+// // router.PATCH("/roster/:id", roster.UpdateRoster(myDb))
+
+// router.Run()
 
 // FirstDay returns the day of the first Monday in the given month.
 // func FirstDay(weekday time.Weekday, year int, month time.Month) int {
