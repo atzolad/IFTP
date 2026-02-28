@@ -2866,6 +2866,13 @@
                 .filter(date => date.value) //ignores empty fields
                 .map(date => date.valueAsDate);
 
+            const monthSelect = document.getElementById('classModalMonthSelect').value
+
+            if (monthSelect) {
+                const monthAsDate = new Date(monthSelect);
+                formattedMonth = monthAsDate.toISOString();
+            }
+
 
             const newClass = {
                 name: document.getElementById('classModalName').value,
@@ -2873,7 +2880,7 @@
                 day_of_week: document.getElementById('classModalWeekday').value,
                 time: document.getElementById('classModalTime').value,
                 description: document.getElementById('classModalDescription').value,
-                month: document.getElementById('classModalMonthSelect').valueAsDate,
+                ...(formattedMonth && { month: formattedMonth }),
                 capacity: document.getElementById('classModalCapacity').valueAsNumber,
                 session_dates: sessionDates,
             }
@@ -2881,6 +2888,7 @@
             if (endDate) {
                 newClass.endDate = endDate
             }
+            console.log(newClass)
 
             try {
                 const resp = await fetch('/classes', {
