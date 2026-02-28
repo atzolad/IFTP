@@ -1463,8 +1463,9 @@
                                     placeholder="e.g., Mondays with Matthew Moore">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label id="classModalTeacher" class="form-label">Teacher*</label>
-                                <input type="text" class="form-control" placeholder="Teacher name">
+                                <label class="form-label">Teacher*</label>
+                                <input id="classModalTeacher" type="text" class="form-control"
+                                    placeholder="Teacher name">
                             </div>
                         </div>
                         <div class="row">
@@ -2475,7 +2476,7 @@
         function RenderManageClassesTable() {
             console.log("Render Manage Classes Table")
             const containerWrapper = document.getElementById('ManageClassesTableBody');
-            const apiEndpoint = baseUrl + '/classes'
+            const apiEndpoint = baseUrl + '/classes/all'
             // Clear existing classes
             containerWrapper.innerHTML = '';
 
@@ -2896,7 +2897,7 @@
 
 
                     //Re-render class list with new additions
-                    renderClasses();
+                    RenderManageClassesTable();
 
                     timerId = setTimeout(() => {
                         document.getElementById('addClassAlert').innerHTML = '';

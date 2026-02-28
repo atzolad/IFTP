@@ -84,6 +84,7 @@ func main() {
 	mux.HandleFunc("/", utils.IndexHandler(tpl, baseUrl))
 
 	// Class Endpoints
+	mux.HandleFunc("GET /classes/all", class.ListClasses(myDb))
 	mux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))

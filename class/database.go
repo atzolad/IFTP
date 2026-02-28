@@ -12,9 +12,15 @@ import (
 
 func dbListClasses(ctx context.Context, myDb *db.MyDatabase) ([]Class, error) {
 	rows, err := myDb.Pool.Query(ctx,
-		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
+		`SELECT c.id, name, teacher, day_of_week, time, description, capacity, COALESCE(cs.month, '0001-01-01'::date) AS month, 
+		COALESCE(
+			ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) 
+			FILTER (WHERE cs.session_date IS NOT NULL), 
+			'{}'
+		) AS session_dates, 
+		COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
-		JOIN class_schedule AS cs ON cs.class_id = c.id
+		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id
 		LEFT JOIN roster AS r ON r.class_id = c.id
 		WHERE active = True
 		GROUP BY cs.month, c.id
@@ -38,9 +44,15 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 	var query strings.Builder
 	var args []any
 
-	query.WriteString(`SELECT c.id, name, teacher, day_of_week, time, description, capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r.student_id) AS enrolled_count
+	query.WriteString(`SELECT c.id, name, teacher, day_of_week, time, description, capacity, COALESCE(cs.month, '0001-01-01'::date) AS month, 
+		COALESCE(
+			ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) 
+			FILTER (WHERE cs.session_date IS NOT NULL), 
+			'{}'
+		) AS session_dates, 
+		COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
-		JOIN class_schedule AS cs ON cs.class_id = c.id`)
+		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id`)
 
 	if month != "" {
 		fmt.Printf("Month: %v", month)
