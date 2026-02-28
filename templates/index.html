@@ -2875,10 +2875,12 @@
                 description: document.getElementById('classModalDescription').value,
                 month: document.getElementById('classModalMonthSelect').valueAsDate,
                 capacity: document.getElementById('classModalCapacity').valueAsNumber,
-                sessionDates: sessionDates,
-                endDate: document.getElementById('classModalEndDate').valueAsDate,
+                session_dates: sessionDates,
             }
-
+            endDate = document.getElementById('classModalEndDate').valueAsDate
+            if (endDate) {
+                newClass.endDate = endDate
+            }
 
             try {
                 const resp = await fetch('/classes', {
