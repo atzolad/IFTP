@@ -3,6 +3,7 @@ package main
 import (
 	"IFTP/class"
 	"IFTP/db"
+	"IFTP/roster"
 	"IFTP/students"
 	"IFTP/utils"
 	"context"
@@ -89,6 +90,9 @@ func main() {
 	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("PATCH /classes/{class_id}", class.UpdateClass(myDb))
 	mux.HandleFunc("POST /classes", class.CreateClass(myDb))
+
+	// Roster Endpoints
+	mux.HandleFunc("Get /roster/{class_id}", roster.GetRoster(myDb))
 
 	// Calendar Endpoints
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))

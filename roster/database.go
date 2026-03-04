@@ -1,5 +1,12 @@
 package roster
 
+import (
+	"IFTP/db"
+	"context"
+)
+
+func dbGetRoster(ctx context.Context, myDb *db.MyDatabase) ([]Student, error)
+
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
 
 // 	var rosterID int

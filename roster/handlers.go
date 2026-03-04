@@ -1,5 +1,13 @@
 package roster
 
+import (
+	"IFTP/db"
+	"IFTP/utils"
+	"fmt"
+	"log"
+	"net/http"
+)
+
 //	type Roster struct {
 //		ID                int    `json:"id"`
 //		Lecture_Date      string `json:"date"`
@@ -8,27 +16,48 @@ package roster
 //		Registration_date string `json:"registration_date"`
 //		Active            bool   `json:"active"`
 //	}
+
+type StudentRoster struct {
+	Id     int          `db:"id" json:"id"`
+	Name   string       `db:"name" json:"name"`
+	Email  string       `db:"email" json:"email"`
+	Status RosterStatus `db:"status" json:"status"`
+}
+
+type RosterStatus string
+
+const (
+	Enrolled RosterStatus = "Enrolled"
+	AWAY     RosterStatus = "Away"
+)
+
 type enrollmentRequest struct {
 	StudentID  int      `json:"student_id"`
 	ClassID    int      `json:"class_id"`
 	ClassDates []string `json:"class_dates"`
 }
 
-// // GetRoster responds with the overall enrolled class lists
-// func GetRoster(myDb *db.MyDatabase) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
+// GetRoster responds with the overall enrolled class lists
+func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		fullRoster, err := GetRoster(myDb)
-// 		if err != nil {
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 			return
-// 		}
+		ctx := r.Context()
 
-// 		c.Header("content-type", "application/json")
-// 		c.JSON(http.StatusOK, fullRoster)
-// 		fmt.Printf("Successfully retrieved roster \n")
-// 	}
-// }
+		fullRoster, err := dbGetRoster(ctx, myDb)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error retrieving roster from db: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			log.Printf("Error retrieving roster from db: %v", err)
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, fullRoster)
+		log.Printf("Successfully retrieved roster\n")
+	}
+}
 
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students
