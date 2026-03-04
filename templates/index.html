@@ -2958,7 +2958,7 @@
                 console.log("add!")
                 await createClass(c);
             } else {
-                await updateClass(c);
+                await updateClass(c, classId);
             }
         }
 
@@ -3026,7 +3026,7 @@
             }
         }
 
-        async function updateClass(form) {
+        async function updateClass(form, classId) {
 
             //TODO - May want to go through this later and only send the values that are updated. For now it seems simpler to send it all.
 
