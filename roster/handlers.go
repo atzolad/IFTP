@@ -58,11 +58,11 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 
 		ctx := r.Context()
 
-		month := r.FormValue("month")
-		classDate := r.FormValue("class_date")
-		classId := r.PathValue("class_id")
+		monthStr := r.FormValue("month")
+		classDateStr := r.FormValue("class_date")
+		classIdStr := r.PathValue("class_id")
 
-		classIntId, err := strconv.Atoi(classId)
+		classId, err := strconv.Atoi(classIdStr)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
@@ -72,7 +72,25 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		fullRoster, err := dbGetRoster(ctx, myDb, classIntId, month, classDate)
+		month, err := time.Parse("2006-01-02", monthStr)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error: month required in YYYY-MM-DD format", err),
+				Code:    http.StatusBadRequest,
+			})
+		}
+
+		classDate, err := time.Parse("2006-01-02", classDateStr)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error: class date required in YYYY-MM-DD format", err),
+				Code:    http.StatusBadRequest,
+			})
+		}
+
+		fullRoster, err := dbGetRoster(ctx, myDb, classId, month, classDate)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
