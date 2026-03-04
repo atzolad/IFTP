@@ -173,56 +173,71 @@ func dbInsertClass_ScheduleRow(ctx context.Context, tx pgx.Tx, c *Class, session
 	return err
 }
 
-// func UpdateClassDB(myDb *db.MyDatabase, id int, c *Class) (*Class, error) {
-// 	updates := []string{}
-// 	args := []any{}
-// 	argCount := 1
+func dbUpdateClassDB(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, error) {
+	updates := []string{}
+	args := []any{}
 
-// 	if c.Name != "" {
-// 		updates = append(updates, fmt.Sprintf("name=$%d", argCount))
-// 		args = append(args, c.Name)
-// 		argCount++
-// 	}
+	if c.Name != "" {
+		args = append(args, c.Name)
+		updates = append(updates, fmt.Sprintf("name=$%d", len(args)))
 
-// 	if c.Teacher != "" {
-// 		updates = append(updates, fmt.Sprintf("teacher=$%d", argCount))
-// 		args = append(args, c.Teacher)
-// 		argCount++
-// 	}
+	}
 
-// 	if c.Day != "" {
-// 		updates = append(updates, fmt.Sprintf("day=$%d", argCount))
-// 		args = append(args, c.Day)
-// 		argCount++
-// 	}
+	if c.Teacher != "" {
+		args = append(args, c.Teacher)
+		updates = append(updates, fmt.Sprintf("teacher=$%d", len(args)))
 
-// 	if c.Time != "" {
-// 		updates = append(updates, fmt.Sprintf("time=$%d", argCount))
-// 		args = append(args, c.Time)
-// 		argCount++
-// 	}
+	}
 
-// 	if len(updates) == 0 {
-// 		return nil, fmt.Errorf("no fields to update")
-// 	}
+	if c.DayOfWeek != "" {
+		args = append(args, c.DayOfWeek)
+		updates = append(updates, fmt.Sprintf("day=$%d", len(args)))
 
-// 	args = append(args, id)
-// 	// RETURNING gives you the updated row within one request to the DB
-// 	query := fmt.Sprintf("UPDATE classes SET %s WHERE id=$%d RETURNING id, name, teacher, day, time",
-// 		strings.Join(updates, ", "), argCount)
+	}
 
-// 	var updated Class
-// 	err := myDb.Db.QueryRow(query, args...).Scan(&updated.ID, &updated.Name, &updated.Teacher, &updated.Day, &updated.Time)
+	if c.Time != "" {
+		args = append(args, c.Time)
+		updates = append(updates, fmt.Sprintf("time=$%d", len(args)))
 
-// 	if err == sql.ErrNoRows {
-// 		return nil, fmt.Errorf("active student with id %d not found", id)
-// 	}
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	}
 
-// 	return &updated, nil
-// }
+	if c.Description != "" {
+		args = append(args, c.Description)
+		updates = append(updates, fmt.Sprintf("description=$%d", len(args)))
+
+	}
+
+	if c.Capacity != 0 {
+		args = append(args, c.Capacity)
+		updates = append(updates, fmt.Sprintf("capacity=$%d", len(args)))
+	}
+
+	if !c.EndDate.IsZero() {
+		args = append(args, c.EndDate)
+		updates = append(updates, fmt.Sprintf("end_date=$%d", len(args)))
+	}
+
+	if len(updates) == 0 {
+		return nil, fmt.Errorf("no fields to update")
+	}
+
+	args = append(args, id)
+	// RETURNING gives you the updated row within one request to the DB
+	query := fmt.Sprintf("UPDATE classes SET %s WHERE id=$%d RETURNING id, name, teacher, day_of_week, time, description, capacity",
+		strings.Join(updates, ", "), len(args))
+
+	var updated Class
+	err := tx.QueryRow(ctx, query, args...).Scan(&updated.ID, &updated.Name, &updated.Teacher, &updated.DayOfWeek, &updated.Time, &updated.Description, &updated.Capacity)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("class with id %d not found", id)
+		}
+		return nil, err
+	}
+
+	return &updated, nil
+}
 
 // // TODO: standard is to just call this delete not softDelete. Add comment about soft delete
 // func SoftDeleteClassDB(myDb *db.MyDatabase, id int) (string, error) {

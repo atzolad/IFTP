@@ -87,9 +87,12 @@ func main() {
 	mux.HandleFunc("GET /classes/all", class.ListClasses(myDb))
 	mux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
 	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
+	// mux.HandleFunc("PATCH /classes/{class_id}", class.UpdateClass(myDb))
+	mux.HandleFunc("POST /classes", class.CreateClass(myDb))
+
+	// Calendar Endpoints
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
 	mux.HandleFunc("GET /calendarEvents/{student_id}", class.GetCalendarEventsByStudent(myDb))
-	mux.HandleFunc("POST /classes", class.CreateClass(myDb))
 
 	// Student Endpoints
 	mux.HandleFunc("GET /students", students.GetStudents(myDb))

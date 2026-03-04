@@ -343,6 +343,82 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
+// Update Class updates the class details based on the JSON received in the request body.
+func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+
+		id := r.PathValue("class_id")
+		integerID, err := strconv.Atoi(id)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Invalid Class id- must be an integer: %v", err),
+				Code:    http.StatusBadRequest,
+			})
+			log.Printf("Invalid Class id- must be an integer: %v", err)
+			return
+		}
+
+		var updateClass Class
+
+		if err := json.NewDecoder(r.Body).Decode(&updateClass); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error Decoding Request: %v", err),
+				Code:    http.StatusBadRequest,
+			})
+			log.Printf("Error Decoding Request: %v", err)
+			return
+		}
+
+		// Validate that the time provided is in the correct format
+		if updateClass.Time != "" {
+			parsedTime, err := time.Parse("15:04:05", updateClass.Time)
+			if err != nil {
+				utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+					Status:  "error",
+					Message: fmt.Sprintf("Invalid time format, expected HH:MM:SS"),
+					Code:    http.StatusBadRequest,
+				})
+				log.Printf("Error updating class- invalid time format: %v", err)
+			}
+			updateClass.Time = parsedTime.Format("15:04:05")
+		}
+
+		fmt.Printf("UpdayeClass Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
+			updateClass.Name, updateClass.Teacher, updateClass.DayOfWeek, updateClass.Time, updateClass.Description, updateClass.Month, updateClass.Capacity, updateClass.SessionDates)
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error Begining transcation: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		defer tx.Rollback(ctx)
+
+		returnedClass, err := dbUpdateClass(ctx, integerID, &updateClass)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error updating Class in DB",
+				Code:    http.StatusInternalServerError,
+			})
+			log.Printf("Error updating class in database: %v", err)
+			return
+		}
+
+		// c.Header("content-type", "application/json")
+		// c.JSON(http.StatusOK, returnedClass)
+		// fmt.Printf("Successfully updated class: %v \n", returnedClass.Name)
+	}
+}
+
 // func ApproveClassDates(myDb *db.MyDatabase) gin.HandlerFunc {
 // 	return func(c *gin.Context) {
 
@@ -372,43 +448,6 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 // 		c.Header("content-type", "application/json")
 // 		c.JSON(http.StatusOK, classes)
 // 		fmt.Printf("Successfully retrieved class list \n")
-// 	}
-// }
-
-// // Update Class updates the class details based on the JSON received in the request body.
-// func UpdateClass(myDb *db.MyDatabase) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		id := c.Param("id")
-// 		integerID, err := strconv.Atoi(id)
-// 		if err != nil {
-// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		}
-
-// 		var updateClass Class
-
-// 		// Call BindJSON to bind the received JSON to updatedStudent
-// 		if err := c.BindJSON(&updateClass); err != nil {
-// 			return
-// 		}
-
-// 		// Validate that the time provided is in the correct format
-// 		if updateClass.Time != "" {
-// 			parsedTime, err := time.Parse("15:04:05", updateClass.Time)
-// 			if err != nil {
-// 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid time format, expected HH:MM:SS"})
-// 			}
-// 			updateClass.Time = parsedTime.Format("15:04:05")
-// 		}
-
-// 		returnedClass, err := UpdateClassDB(myDb, integerID, &updateClass)
-// 		if err != nil {
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 			return
-// 		}
-
-// 		c.Header("content-type", "application/json")
-// 		c.JSON(http.StatusOK, returnedClass)
-// 		fmt.Printf("Successfully updated class: %v \n", returnedClass.Name)
 // 	}
 // }
 
