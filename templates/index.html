@@ -1523,9 +1523,9 @@
                                     <input type="date" class="form-control" name="sessionDate">
                                 </div>
                             </div>
-                            <button type="button" id="addDateBtn" class="btn btn-sm btn-outline-primary mt-2"><i
+                            <!-- <button type="button" id="addDateBtn" class="btn btn-sm btn-outline-primary mt-2"><i
                                     class="bi bi-plus"></i>
-                                Add Date</button>
+                                Add Date</button> -->
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -2129,7 +2129,7 @@
 
         function showAddClassModal() {
             document.getElementById('classModalTitle').textContent = 'Add New Class';
-            document.getElementById('AddClassSubmitBtn').textContent = 'Add Class'
+            document.getElementById('AddClassSubmitBtn').textContent = 'Add Class';
             document.getElementById('classModalName').required = true;
             document.getElementById('classModalTeacher').required = true;
             document.getElementById('classModalWeekday').required = true;
@@ -2137,13 +2137,43 @@
 
             document.getElementById('classModalForm').dataset.mode = 'add'
 
-            new bootstrap.Modal(document.getElementById('classModal')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('classModal')).show();
         }
 
-        function showEditClassModal() {
-            document.getElementById('classModalTitle').textContent = 'Edit Class';
-            new bootstrap.Modal(document.getElementById('classModal')).show();
+        function showEditClassModal(selectedClass) {
+
+            document.getElementById('classModalTitle').textContent = `Edit Class - ${selectedClass.name}`;
+            document.getElementById('AddClassSubmitBtn').textContent = 'Edit Class';
+
+            document.getElementById('classModalName').required = false;
+            document.getElementById('classModalTeacher').required = false;
+            document.getElementById('classModalWeekday').required = false;
+            document.getElementById('classModalCapacity').required = false;
+
+            document.getElementById('classModalName').value = selectedClass.name || '';
+            document.getElementById('classModalTeacher').value = selectedClass.teacher || '';
+            document.getElementById('classModalWeekday').value = selectedClass.day_of_week || '';
+            document.getElementById('classModalTime').value = selectedClass.time || '';
+            document.getElementById('classModalCapacity').value = selectedClass.capacity || '';
+            document.getElementById('classModalMonthSelect').value = selectedClass.month || '';
+            document.getElementById('classModalDescription').value = selectedClass.description || '';
+            // document.getElementById('classModalEndDate').value = selectedClass.endDate || '';
+
+            const dateInputs = document.querySelectorAll('input[name="sessionDate"]');
+
+            dateInputs.forEach((input, index) => {
+                if (selectedClass.session_dates?.[index]) {
+                    input.value = new Date(selectedClass.session_dates[index]).toISOString().slice(0, 10);
+                } else {
+                    input.value = '';
+                }
+
+            });
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('classModal')).show();
         }
+
+
 
         function showRosterModal() {
             new bootstrap.Modal(document.getElementById('rosterModal')).show();
@@ -2500,7 +2530,7 @@
 
                     classes.forEach(selectedClass => {
 
-                        classesMap[selectedClass.id] = selectedClass.id
+                        classesMap[selectedClass.id] = selectedClass;
 
                         //Convert the string from the backend to a JS date object and remove the Time.
                         selectedClass.month = new Date(selectedClass.month).toISOString().slice(0, 10);
@@ -2541,6 +2571,43 @@
                     console.error('Error fetching data:', error);
                     containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
                 });
+        }
+
+        // Event listener for Manage Classes Table buttons
+        const manageClassesContainerWrapper = document.getElementById('ManageClassesTableBody');
+        manageClassesContainerWrapper.addEventListener('click', (event) => {
+            const editBtn = event.target.closest('.editClassButton');
+            const rosterBtn = event.target.closest('.showRosterButton');
+            const deletBtn = event.target.closest('.deleteClassButton');
+
+            if (editBtn) {
+                const row = editBtn.closest('tr');
+                const classId = row.dataset.id;
+                const selectedClass = classesMap[classId];
+                console.log(`Clicked edit button for class id: ${classId}`)
+                showEditClassModal(selectedClass);
+            }
+
+            if (rosterBtn) {
+                const row = rosterBtn.closest('tr');
+                const classId = row.dataset.id;
+                const selectedClass = classesMap[classId];
+                console.log(`Clicked roster button for class id: ${classId}`)
+                showRosterModal(selectedClass);
+            }
+
+            if (deletBtn) {
+                const row = deletBtn.closest('tr');
+                const classId = row.dataset.id;
+                deleteClass(classId);
+            }
+        });
+
+        // TODO- Build the delete function
+
+        function deleteClass(classId) {
+            console.log(`Delete button clicked! Delete class with id ${classId}`)
+            return
         }
 
         let adminCalendar;
