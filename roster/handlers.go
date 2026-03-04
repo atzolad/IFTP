@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 //	type Roster struct {
@@ -31,7 +32,14 @@ const (
 	AWAY     RosterStatus = "Away"
 )
 
-type enrollmentRequest struct {
+type GetRosterRequest struct {
+	ClassName     string          `db:"class_name" json:"class_name"`
+	Students      []StudentRoster `db:"students" json:"students"`
+	EnrolledCount int             `db:"enrolled_count" json:"enrolled_count"`
+	SessionDates  []time.Time     `db:"session_dates" json:"session_dates"`
+}
+
+type EnrollmentRequest struct {
 	StudentID  int      `json:"student_id"`
 	ClassID    int      `json:"class_id"`
 	ClassDates []string `json:"class_dates"`
