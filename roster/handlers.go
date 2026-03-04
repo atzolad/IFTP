@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -19,7 +20,7 @@ import (
 //	}
 
 type StudentRoster struct {
-	Id     int          `db:"id" json:"id"`
+	ID     int          `db:"id" json:"id"`
 	Name   string       `db:"name" json:"name"`
 	Email  string       `db:"email" json:"email"`
 	Status RosterStatus `db:"status" json:"status"`
@@ -39,6 +40,12 @@ type GetRosterRequest struct {
 	SessionDates  []time.Time     `db:"session_dates" json:"session_dates"`
 }
 
+type RosterRequest struct {
+	ClassID   int       `json:"class_id"`
+	Month     time.Time `json:"month"`
+	ClassDate time.Time `json:"class_date"`
+}
+
 type EnrollmentRequest struct {
 	StudentID  int      `json:"student_id"`
 	ClassID    int      `json:"class_id"`
@@ -51,7 +58,21 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 
 		ctx := r.Context()
 
-		fullRoster, err := dbGetRoster(ctx, myDb)
+		month := r.FormValue("month")
+		classDate := r.FormValue("class_date")
+		classId := r.PathValue("class_id")
+
+		classIntId, err := strconv.Atoi(classId)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error: Class id required", err),
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		fullRoster, err := dbGetRoster(ctx, myDb, classIntId, month, classDate)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",

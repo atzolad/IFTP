@@ -61,6 +61,13 @@ func CreateDatesMap(classDays []time.Weekday, year int, month time.Month) (dates
 	return datesMap
 }
 
+func ParseDate(dateStr string) (time.Time, error) {
+	if dateStr == "" {
+		return time.Time{}, fmt.Errorf("date is required")
+	}
+	return time.Parse("2006-01-02", dateStr)
+}
+
 //createDatesMap:
 // go through each day of the week in the list
 //For Monday- if Monday does not exists in the map, add it and add the first date.
