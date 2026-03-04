@@ -2484,46 +2484,62 @@
                 .then(response => response.json())
                 .then(classes => {
 
-                    if (classes !== null && classes !== undefined) {
-                        classes.forEach(selectedClass => {
+                    if (!classes.length) {
+                        const row = document.createElement('tr');
+                        const td = document.createElement('td');
+                        td.colSpan = 7;
+                        td.className = 'text-center text-muted';
+                        td.textContent = 'No Classes Found';
+                        row.appendChild(td);
+                        containerWrapper.appendChild(row)
+                        return;
+                    }
 
+                    // Reset classesMap
+                    classesMap = {};
 
-                            //Convert the string from the backend to a JS date object and remove the Time.
-                            const formattedMonth = new Date(selectedClass.month).toISOString().slice(0, 10);
-                            selectedClass.month = formattedMonth
+                    classes.forEach(selectedClass => {
 
-                            const row = document.createElement('tr');
+                        classesMap[selectedClass.id] = selectedClass.id
 
-                            row.innerHTML = `
-                                    <tr>
-                                        <td>${selectedClass.name}</td>
-                                        <td>${selectedClass.teacher}</td>
-                                        <td>${selectedClass.day_of_week}</td>
-                                        <td>${selectedClass.time}</td>
-                                        <td>${selectedClass.month}</td>
-                                        <td>${selectedClass.enrolledCount}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1 editClassButton"
-                                                onclick="showEditClassModal()"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-info me-1 showRosterButton"
-                                                onclick="showRosterModal()"><i class="bi bi-people"></i></button>
+                        //Convert the string from the backend to a JS date object and remove the Time.
+                        selectedClass.month = new Date(selectedClass.month).toISOString().slice(0, 10);
+
+                        const row = document.createElement('tr');
+                        row.dataset.id = selectedClass.id;
+
+                        const fields = [
+                            selectedClass.name,
+                            selectedClass.teacher,
+                            selectedClass.day_of_week,
+                            selectedClass.time,
+                            selectedClass.month,
+                            selectedClass.enrolledCount,
+                        ];
+
+                        fields.forEach(value => {
+                            const td = document.createElement('td');
+                            td.textContent = value ?? '';
+                            row.appendChild(td);
+                        });
+
+                        const buttonsTd = document.createElement('td');
+
+                        buttonsTd.innerHTML = `
+                                            <button class="btn btn-sm btn-outline-primary me-1 editClassButton">
+                                                <i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-info me-1 showRosterButton">
+                                                <i class="bi bi-people"></i></button>
                                             <button class="btn btn-sm btn-outline-danger deleteClassButton"><i
                                                     class="bi bi-trash"></i></button>
-                                        </td>
-                                    </tr>
-
                                 `
-                            containerWrapper.appendChild(row);
-                        });
-                        // TODO add state management later- window.initialized...
-                    } else {
-                        containerWrapper.innerHtml = '<tr><td colspan="6" class="text-center text-muted">No Classes Found.</td></tr>';
-                    }
+                        row.appendChild(buttonsTd);
+                        containerWrapper.appendChild(row);
+                    });
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
                     containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
-
                 });
         }
 
