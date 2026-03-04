@@ -2142,6 +2142,10 @@
 
         function showEditClassModal(selectedClass) {
 
+            console.log("Month:")
+            console.log(selectedClass.month)
+            console.log(selectedClass)
+
             document.getElementById('classModalTitle').textContent = `Edit Class - ${selectedClass.name}`;
             document.getElementById('AddClassSubmitBtn').textContent = 'Edit Class';
 
@@ -2155,8 +2159,22 @@
             document.getElementById('classModalWeekday').value = selectedClass.day_of_week || '';
             document.getElementById('classModalTime').value = selectedClass.time || '';
             document.getElementById('classModalCapacity').value = selectedClass.capacity || '';
-            document.getElementById('classModalMonthSelect').value = selectedClass.month || '';
             document.getElementById('classModalDescription').value = selectedClass.description || '';
+
+            const monthValue = new Date(selectedClass.month).toISOString().slice(0, 10);
+            const monthSelect = document.getElementById('classModalMonthSelect');
+            monthSelect.value = monthValue;
+
+            if (monthSelect.value !== monthValue) {
+                // month not in dropdown, add it
+                const option = document.createElement('option');
+                option.value = monthValue;
+                option.textContent = new Date(monthValue).toLocaleString('default', { month: 'long', year: 'numeric' });
+                monthSelect.insertBefore(option, monthSelect.firstChild);
+                monthSelect.value = monthValue;
+            }
+            document.getElementById('classModalMonthSelect').value = monthValue;
+
             // document.getElementById('classModalEndDate').value = selectedClass.endDate || '';
 
             const dateInputs = document.querySelectorAll('input[name="sessionDate"]');
@@ -2895,7 +2913,7 @@
         function populateMonthDropdown(ElementId) {
             const monthDropdown = document.getElementById(ElementId)
 
-            monthDropdown.innerHtml = `<option value="">Loading...</option>`;
+            monthDropdown.innerHTML = '';
 
             const monthOptions = [];
             const currentDate = new Date();
