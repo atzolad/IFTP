@@ -4,6 +4,7 @@ import (
 	"IFTP/db"
 	"IFTP/utils"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -69,6 +70,8 @@ func (c Class) MarshalJSON() ([]byte, error) {
 		Alias:        (Alias)(c),
 	})
 }
+
+var ErrNoFieldsToUpdate = errors.New("no fields to update")
 
 func formatTimeSlice(dates []time.Time) []string {
 	if len(dates) == 0 {
@@ -297,8 +300,7 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		var hasSessionDates bool
-		hasSessionDates = false
+		hasSessionDates := false
 
 		if len(newClass.SessionDates) > 0 {
 			hasSessionDates = true
@@ -361,9 +363,9 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		var updateClass Class
+		var updateRequest Class
 
-		if err := json.NewDecoder(r.Body).Decode(&updateClass); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
 				Message: fmt.Sprintf("Error Decoding Request: %v", err),
@@ -373,22 +375,25 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
+		updateRequest.ID = integerID
+
 		// Validate that the time provided is in the correct format
-		if updateClass.Time != "" {
-			parsedTime, err := time.Parse("15:04:05", updateClass.Time)
+		if updateRequest.Time != "" {
+			parsedTime, err := time.Parse("15:04:05", updateRequest.Time)
 			if err != nil {
 				utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 					Status:  "error",
-					Message: fmt.Sprintf("Invalid time format, expected HH:MM:SS"),
+					Message: "Invalid time format, expected HH:MM:SS",
 					Code:    http.StatusBadRequest,
 				})
 				log.Printf("Error updating class- invalid time format: %v", err)
+				return
 			}
-			updateClass.Time = parsedTime.Format("15:04:05")
+			updateRequest.Time = parsedTime.Format("15:04:05")
 		}
 
-		fmt.Printf("UpdateClass Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
-			updateClass.Name, updateClass.Teacher, updateClass.DayOfWeek, updateClass.Time, updateClass.Description, updateClass.Month, updateClass.Capacity, updateClass.SessionDates)
+		log.Printf("updateRequest Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
+			updateRequest.Name, updateRequest.Teacher, updateRequest.DayOfWeek, updateRequest.Time, updateRequest.Description, updateRequest.Month, updateRequest.Capacity, updateRequest.SessionDates)
 
 		tx, err := myDb.Pool.Begin(ctx)
 		if err != nil {
@@ -402,20 +407,82 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 
 		defer tx.Rollback(ctx)
 
-		returnedClass, err := dbUpdateClass(ctx, integerID, &updateClass)
+		returnedClass, err := dbUpdateClass(ctx, tx, integerID, &updateRequest)
 		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-				Status:  "error",
-				Message: "Error updating Class in DB",
-				Code:    http.StatusInternalServerError,
-			})
+			if errors.Is(err, ErrNoFieldsToUpdate) {
+				utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+					Status:  "error",
+					Message: "Error updating class in database- not fields provided to update",
+					Code:    http.StatusBadRequest,
+				})
+
+			} else {
+
+				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+					Status:  "error",
+					Message: "Error updating Class in DB",
+					Code:    http.StatusInternalServerError,
+				})
+
+			}
+
 			log.Printf("Error updating class in database: %v", err)
 			return
 		}
 
-		// c.Header("content-type", "application/json")
-		// c.JSON(http.StatusOK, returnedClass)
-		// fmt.Printf("Successfully updated class: %v \n", returnedClass.Name)
+		hasSessionDates := false
+
+		if updateRequest.SessionDates != nil {
+			hasSessionDates = true
+			err := dbDeleteFromClassSchedule(ctx, tx, updateRequest.ID)
+			if err != nil {
+				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+					Status:  "error",
+					Message: "Error removing old session dates from db",
+					Code:    http.StatusInternalServerError,
+				})
+				log.Printf("Error removing old session dates from db: %v", err)
+				return
+			}
+
+			if len(updateRequest.SessionDates) > 0 {
+				batch := &pgx.Batch{}
+
+				for _, sessionDate := range updateRequest.SessionDates {
+					batch.Queue(
+						`INSERT INTO class_schedule (class_id, session_date, month, status)
+					VALUES ($1, $2, $3, $4)`,
+						updateRequest.ID, sessionDate, updateRequest.Month, "scheduled")
+				}
+
+				br := tx.SendBatch(ctx, batch)
+
+				if err := br.Close(); err != nil {
+					log.Printf("Error batch scheduling session dates: %v", err)
+					utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+						Status:  "error",
+						Message: "Error batch scheduling session dates",
+						Code:    http.StatusInternalServerError,
+					})
+					return
+				}
+			}
+		}
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Failed to commit database changes",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+		if hasSessionDates {
+			utils.WriteJSONResponse(w, http.StatusOK, returnedClass)
+			log.Printf("Successfully updated class with session dates: %v", returnedClass)
+		} else {
+			utils.WriteJSONResponse(w, http.StatusOK, returnedClass)
+			log.Printf("Successfully updated class: %v", returnedClass)
+		}
 	}
 }
 

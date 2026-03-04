@@ -173,7 +173,10 @@ func dbInsertClass_ScheduleRow(ctx context.Context, tx pgx.Tx, c *Class, session
 	return err
 }
 
-func dbUpdateClassDB(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, error) {
+func dbUpdateClass(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, error) {
+
+	// month is intentionally excluded — it belongs to class_schedule, not classes
+
 	updates := []string{}
 	args := []any{}
 
@@ -191,7 +194,7 @@ func dbUpdateClassDB(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, 
 
 	if c.DayOfWeek != "" {
 		args = append(args, c.DayOfWeek)
-		updates = append(updates, fmt.Sprintf("day=$%d", len(args)))
+		updates = append(updates, fmt.Sprintf("day_of_week=$%d", len(args)))
 
 	}
 
@@ -218,11 +221,11 @@ func dbUpdateClassDB(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, 
 	}
 
 	if len(updates) == 0 {
-		return nil, fmt.Errorf("no fields to update")
+		return nil, ErrNoFieldsToUpdate
 	}
 
 	args = append(args, id)
-	// RETURNING gives you the updated row within one request to the DB
+
 	query := fmt.Sprintf("UPDATE classes SET %s WHERE id=$%d RETURNING id, name, teacher, day_of_week, time, description, capacity",
 		strings.Join(updates, ", "), len(args))
 
@@ -237,6 +240,11 @@ func dbUpdateClassDB(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, 
 	}
 
 	return &updated, nil
+}
+
+func dbDeleteFromClassSchedule(ctx context.Context, tx pgx.Tx, id int) error {
+	_, err := tx.Exec(ctx, "DELETE FROM class_schedule WHERE class_id = $1", id)
+	return err
 }
 
 // // TODO: standard is to just call this delete not softDelete. Add comment about soft delete
