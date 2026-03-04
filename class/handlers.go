@@ -387,7 +387,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			updateClass.Time = parsedTime.Format("15:04:05")
 		}
 
-		fmt.Printf("UpdayeClass Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
+		fmt.Printf("UpdateClass Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
 			updateClass.Name, updateClass.Teacher, updateClass.DayOfWeek, updateClass.Time, updateClass.Description, updateClass.Month, updateClass.Capacity, updateClass.SessionDates)
 
 		tx, err := myDb.Pool.Begin(ctx)
