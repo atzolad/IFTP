@@ -1590,27 +1590,31 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <div id="addStudentAlert"></div>
+                    <form id="studentModalForm">
                         <div class="mb-3">
-                            <label class="form-label">Full Name</label>
-                            <input type="text" class="form-control" placeholder="Student name">
+                            <label class="form-label">Full Name*</label>
+                            <input type="text" class="form-control" placeholder="Student name" id="studentModalName"
+                                required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" placeholder="email@example.com">
+                            <label class="form-label">Email*</label>
+                            <input type="email" class="form-control" placeholder="email@example.com"
+                                id="studentModalEmail" required>
                         </div>
                         <div class="row mt-3">
                             <div class="col-12">
                                 <small class="form-label fw-bold">Notes</small>
-                                <textarea id="jobNotes" name="notes" class="form-control" rows="3"
-                                    placeholder="Additional notes..."></textarea>
+                                <textarea id="studentModalNotes" name="notes" class="form-control" rows="3"
+                                    placeholder="Additional notes..." id="studentModalNotes"></textarea>
                             </div>
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="studentModalAddBtn">Save
+                                Student</button>
+                        </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary">Save Student</button>
                 </div>
             </div>
         </div>
@@ -2067,7 +2071,6 @@
 
             if (selectElement.value) {
                 alert('Adding ' + selectedClass + ' to this day');
-                // In real implementation, this would update the calendar and database
             } else {
                 alert('Please select a class to add');
             }
@@ -2269,13 +2272,21 @@
 
 
         function showAddStudentModal() {
+
             document.getElementById('studentModalTitle').textContent = 'Add New Student';
-            new bootstrap.Modal(document.getElementById('studentModal')).show();
+            document.getElementById('studentModalAddBtn').textContent = 'Add Student';
+
+            document.getElementById('studentModalForm').dataset.mode = 'add'
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('studentModal')).show();
         }
 
         function showEditStudentModal() {
             document.getElementById('studentModalTitle').textContent = 'Edit Student';
-            new bootstrap.Modal(document.getElementById('studentModal')).show();
+            document.getElementById('studentModalAddBtn').textContent = 'Edit Student';
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('studentModal')).show();
+
         }
 
         function removeClass(className) {
@@ -3169,7 +3180,71 @@
             }
         }
 
+        // Student Modal submissions:
+        document.getElementById('studentModalForm').addEventListener('submit', studentFormSubmit);
 
+        async function studentFormSubmit(s) {
+            console.log("student form submit!");
+            s.preventDefault();
+
+            const form = s.target
+            const mode = form.dataset.mode
+            const studentId = form.dataset.id
+
+            console.log("Current mode is:", mode);
+
+            if (mode === 'add') {
+                console.log("add")
+                await addStudent(s);
+
+            } else {
+                await updateStudent(s, studentId);
+            }
+        }
+
+        async function addStudent(form) {
+
+            const newStudent = {
+                name: document.getElementById('studentModalName').value,
+                email: document.getElementById('studentModalEmail').value,
+                notes: document.getElementById('studentModalNotes').value,
+            }
+
+            try {
+                const resp = await fetch(`/students`, {
+                    method: 'POST',
+                    headers: { 'Content-type': 'application/json' },
+                    body: JSON.stringify(newStudent)
+                });
+
+                const responseData = await resp.json();
+
+                if (resp.ok) {
+                    const responseString = JSON.stringify(responseData, null, 2)
+                    console.log(responseString)
+                    showAlert('addStudentAlert', `Student added successfully: <pre><code>${responseString}</pre></code>`, 'success');
+
+                    renderManageStudentsTable();
+
+                    timerId = setTimeout(() => {
+                        document.getElementById('addClassAlert').innerHTML = '';
+                    }, 3000);
+
+                } else {
+                    showAlert('addStudentAlert', responseData.message || 'Error adding student', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error:', error)
+                showAlert('addStudentAlert', 'Network error ocurred', 'danger')
+            }
+        }
+
+
+        // Clear the class modal upon closing.
+        document.getElementById('studentModal').addEventListener('hidden.bs.modal', () => {
+            closeModal('studentModalForm', 'addStudentAlert')
+        });
 
 
 
