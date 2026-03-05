@@ -2228,7 +2228,7 @@
                         const td = document.createElement('td');
                         td.colSpan = 7;
                         td.className = 'text-center text-muted';
-                        td.textContent = 'No Classes Found';
+                        td.textContent = 'No students Found';
                         row.appendChild(td);
                         containerWrapper.appendChild(row)
                         return;
@@ -2619,13 +2619,15 @@
 
                     classes.forEach(selectedClass => {
 
-                        classesMap[selectedClass.id] = selectedClass;
-
                         //Convert the string from the backend to a JS date object and remove the Time.
                         selectedClass.month = new Date(selectedClass.month).toISOString().slice(0, 10);
 
+                        const mapKey = `${selectedClass.id}_${selectedClass.month}`;
+                        classesMap[mapKey] = selectedClass;
+
                         const row = document.createElement('tr');
                         row.dataset.id = selectedClass.id;
+                        row.dataset.mapKey = mapKey;
 
                         const fields = [
                             selectedClass.name,
@@ -2671,7 +2673,7 @@
 
             if (editBtn) {
                 const row = editBtn.closest('tr');
-                const classId = row.dataset.id;
+                const classId = row.dataset.mapKey;
                 const selectedClass = classesMap[classId];
                 console.log(`Clicked edit button for class id: ${classId}`)
                 showEditClassModal(selectedClass);
@@ -2679,7 +2681,7 @@
 
             if (rosterBtn) {
                 const row = rosterBtn.closest('tr');
-                const classId = row.dataset.id;
+                const classId = row.dataset.mapKey;
                 const selectedClass = classesMap[classId];
                 console.log(`Clicked roster button for class id: ${classId}`)
                 showRosterModal(selectedClass);

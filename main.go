@@ -92,7 +92,7 @@ func main() {
 	mux.HandleFunc("POST /classes", class.CreateClass(myDb))
 
 	// Roster Endpoints
-	mux.HandleFunc("Get /roster/{class_id}", roster.GetRoster(myDb))
+	mux.HandleFunc("GET /roster/{class_id}", roster.GetRoster(myDb))
 
 	// Calendar Endpoints
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
