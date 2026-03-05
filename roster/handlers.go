@@ -66,7 +66,7 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
-				Message: fmt.Sprintf("Error: Class id required", err),
+				Message: "Error: Class id required",
 				Code:    http.StatusBadRequest,
 			})
 			return
@@ -76,7 +76,7 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
-				Message: fmt.Sprintf("Error: month required in YYYY-MM-DD format", err),
+				Message: "Error: month required in YYYY-MM-DD format",
 				Code:    http.StatusBadRequest,
 			})
 		}
@@ -85,7 +85,7 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
-				Message: fmt.Sprintf("Error: class date required in YYYY-MM-DD format", err),
+				Message: "Error: class date required in YYYY-MM-DD format",
 				Code:    http.StatusBadRequest,
 			})
 		}

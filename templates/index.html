@@ -1542,11 +1542,11 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Mondays with Matthew Moore- Class Roster</h5>
+                    <h5 class="modal-title" id="rosterModalTitle">Class Roster</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted">3 students enrolled</p>
+                    <p class="text-muted" id="rosterEnrolledStudents">Students enrolled</p>
 
                     <h6>Session: March 2, 2026</h6>
                     <table class="table table-sm">
@@ -1558,31 +1558,14 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>Alex Zolad</td>
-                                <td>Alex@gmail.com</td>
-                                <td><span class="badge bg-primary">Enrolled</span></td>
-                                <td><button class="btn btn-sm btn-outline-danger">Remove</button></td>
-                            </tr>
-                            <tr>
-                                <td>Megan Chang</td>
-                                <td>Megan@gmail.com</td>
-                                <td><span class="badge bg-primary">Enrolled</span></td>
-                                <td><button class="btn btn-sm btn-outline-danger">Remove</button></td>
-                            </tr>
-                            <tr>
-                                <td>Anze Kopitar</td>
-                                <td>Kopi@gmail.com</td>
-                                <td><span class="badge bg-primary">Enrolled</span></td>
-                                <td><button class="btn btn-sm btn-outline-danger">Remove</button></td>
-                            </tr>
+                        <tbody id="rosterTableBody">
+                            <!-- Insert dynamic content here -->
                         </tbody>
                     </table>
 
                     <div class="mt-4">
                         <h6>Select Different Session:</h6>
-                        <select class="form-select">
+                        <select class="form-select" id="rosterSessionSelect">
                             <option selected>March 2, 2026</option>
                             <option>March 9, 2026</option>
                             <option>March 16, 2026</option>
@@ -2192,220 +2175,308 @@
 
 
 
-        function showRosterModal() {
+        function showRosterModal(selectedClass) {
+
+            const classId = selectedClass.id;
+            const monthValue = new Date(selectedClass.month).toISOString().split('T')[0];
+            const classDate = selectedClass.sessionDates[0];
+            const sessionDates = selectedClass.sessionDates;
+
+            const sessionDropDown = document.getElementById('rosterSessionSelect');
+            sessionDropDown.innerHTML = '';
+            sessionDropDown.onchange = null;
+
+            sessionDates.forEach(date => {
+                const option = document.createElement('option')
+                option.value = date;
+                option.innerHTML = date;
+                sessionDropDown.appendChild(option)
+            });
+
+            sessionDropDown.onchange = () => {
+                renderRoster(classId, monthValue, sessionDropDown.value);
+            };
+
+            renderRoster(classId, monthValue, classDate);
+
             new bootstrap.Modal(document.getElementById('rosterModal')).show();
         }
 
-        function showAddStudentModal() {
-            document.getElementById('studentModalTitle').textContent = 'Add New Student';
-            new bootstrap.Modal(document.getElementById('studentModal')).show();
-        }
-
-        function showEditStudentModal() {
-            document.getElementById('studentModalTitle').textContent = 'Edit Student';
-            new bootstrap.Modal(document.getElementById('studentModal')).show();
-        }
-
-        function removeClass(className) {
-            if (confirm('Remove ' + className + ' from this day? This will notify enrolled students.')) {
-                alert(className + ' removed from this day');
-                // In real implementation, this would update the calendar and database
-            }
-        }
+        function renderRoster(classId, month, classDate) {
+            console.log(`Render Roster for ID: ${classId}, Month: ${month}, Date: ${classDate}`);
 
 
-        document.addEventListener('DOMContentLoaded', () => {
-
-            const monthFilter = document.getElementById('monthFilter');
-            const month = document.getElementById('monthFilter').value
-            console.log(month)
-
-            const RefreshClasses = async (month) => {
-                await renderEnrolledClasses(month, student_id = 1);
-                console.log("Enrolled classses:", currentEnrolledClasses)
-                await renderClasses(month);
-                RenderManageClassesTable();
-                populateMonthDropdown('classModalMonthSelect');
-            }
-
-            RefreshClasses(month);
-            //TODO need to separate the admin and student views- no need to populate the admin view for a student login. Should probably completely separate the two.
+            const apiEndpoint = `${base_url}/roster/${classId}?month=${month}&class_date=${classDate}`;
 
 
-            // Re-render the classes when changing the month. 
-            monthFilter.addEventListener('change', (event) => {
-                // This function will execute when a new option is selected
-                const selectedMonth = event.target.value;
-                RefreshClasses(selectedMonth)
-                console.log('Selected Month:', selectedMonth);
+            fetch(apiEndpoint)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error occurred');
+                    return response.json();
+                })
+                .then(data => {
+                    const { class_name, enrolled_count, session_dates, students } = data;
 
-            });
+                    document.getElementById('rosterModalTitle').textContent = `${class_name} Class Roster`
+                    document.getElementById('rosterEnrolledStudents').textContent = `${enrolled_count} students enrolled`
 
-            // TODO replace this with actual logged in student's id.
-            renderStudentCalendar(studentId = 1);
-            window.studentCalendarInitialized = true;
+                    const containerWrapper = document.getElementById('rosterTableBody');
+                    containerWrapper.innerHTML = '';
 
-            renderAdminCalendar();
-            window.AdminCalendarInitialized = true;
-
-            renderManageStudentsTable();
-            window.ManageStudentsInitialized = true;
-
-
-            // Call March 2026
-            // generateCalendar(2026, 2);
-
-
-            const navLinks = document.querySelectorAll('.nav-link');
-            const tabContents = document.querySelectorAll('.tab-content');
-            const pageTitle = document.getElementById('pageTitle');
-            const sidebar = document.getElementById('sidebar');
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const mobileOverlay = document.getElementById('mobileOverlay');
-
-            // Mobile menu toggle
-            if (mobileMenuBtn) {
-                mobileMenuBtn.addEventListener('click', function () {
-                    sidebar.classList.toggle('show');
-                    mobileOverlay.classList.toggle('show');
-                });
-            }
-
-            // Close mobile menu when overlay is clicked
-            if (mobileOverlay) {
-                mobileOverlay.addEventListener('click', function () {
-                    sidebar.classList.remove('show');
-                    mobileOverlay.classList.remove('show');
-                });
-            }
-
-            // Tab navigation
-            navLinks.forEach(link => {
-                if (link.hasAttribute('data-bs-toggle')) return;
-
-                link.addEventListener('click', function (e) {
-
-                    const actualLink = e.target.closest('.nav-link');
-                    if (!actualLink) return;
-
-                    if (actualLink.getAttribute('href') === '#') {
-                        e.preventDefault();
+                    if (!students.length) {
+                        const row = document.createElement('tr');
+                        const td = document.createElement('td');
+                        td.colSpan = 7;
+                        td.className = 'text-center text-muted';
+                        td.textContent = 'No Classes Found';
+                        row.appendChild(td);
+                        containerWrapper.appendChild(row)
+                        return;
                     }
 
-                    // Identify the Target ID
-                    // This checks BOTH styles of attributes
-                    const targetId = actualLink.getAttribute('data-tab') ||
-                        (actualLink.getAttribute('data-bs-target') ? actualLink.getAttribute('data-bs-target').replace('#', '') : null);
+                    students.forEach(student => {
+                        const row = document.createElement('tr');
+                        row.dataset.id = student.id
 
-                    if (!targetId) return;
+                        const studentName = document.createElement('td');
+                        studentName.textContent = student.name ?? '';
+                        row.appendChild(studentName)
 
-                    // Clear active class ONLY within the menu you clicked (Sidebar vs Top Tabs)
-                    const parentMenu = this.closest('.nav-tabs') || this.closest('.nav') || this.closest('.sidebar');
-                    if (parentMenu) {
-                        parentMenu.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                    }
-                    this.classList.add('active');
+                        const studentEmail = document.createElement('td');
+                        studentEmail.textContent = student.email ?? '';
+                        row.appendChild(studentEmail)
 
-                    // Close mobile overlays
-                    if (sidebar) sidebar.classList.remove('show');
-                    if (mobileOverlay) mobileOverlay.classList.remove('show');
+                        const studentStatus = document.createElement('td');
+                        const badgeColor = {
+                            'Enrolled': 'bg-primary',
+                            'Away': 'bg-danger',
+                        }[student.status] ?? 'bg-primary';
+                        studentStatus.innerHTML = `<span class="badge ${badgeColor}">${student.status}</span>`;
+                        row.appendChild(studentStatus)
 
-                    // Toggle visibility of panes
-                    // Target both Admin sections and Student panes
-                    const allPanes = document.querySelectorAll('.tab-pane, #calendarSection, #classesSection, #studentsSection, #pendingSection');
-                    allPanes.forEach(pane => {
-                        pane.classList.remove('active', 'show');
-                        pane.style.display = 'none';
+                        const button = document.createElement('td');
+                        button.innerHTML = `<button class="btn btn-sm btn-outline-danger removeFromRosterBtn">Remove</button>`
+                        row.appendChild(button)
+
+                        containerWrapper.appendChild(row);
                     });
-
-                    const selectedPane = document.getElementById(targetId);
-                    if (selectedPane) {
-                        selectedPane.classList.add('active', 'show');
-                        selectedPane.style.display = 'block';
-                    }
-
-                    // Update the Header Title
-                    const span = this.querySelector('span') || this;
-                    if (pageTitle && span) {
-                        pageTitle.textContent = span.textContent.trim();
-                    }
-
-                    // Handle both Calendars based on their unique IDs
-                    setTimeout(() => {
-                        if (targetId === 'calendar-pane') {
-                            console.log("Attempting to resize Student Calendar...");
-                            if (window.studentCalendar) {
-                                window.studentCalendar.updateSize();
-                                console.log("Student Calendar Resized Success!");
-                            }
-                        } else if (targetId === 'calendar') {
-                            console.log("Attempting to resize Admin Calendar...");
-                            if (window.adminCalendar) {
-                                window.adminCalendar.updateSize();
-                            }
-                        }
-                    }, 150);
+                }).catch(error => {
+                    console.error('Error fetching data:', error);
+                    const containerWrapper = document.getElementById('rosterTableBody');
+                    containerWrapper.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Failed to load roster.</td></tr>`;
                 });
+
+
+            function showAddStudentModal() {
+                document.getElementById('studentModalTitle').textContent = 'Add New Student';
+                new bootstrap.Modal(document.getElementById('studentModal')).show();
+            }
+
+            function showEditStudentModal() {
+                document.getElementById('studentModalTitle').textContent = 'Edit Student';
+                new bootstrap.Modal(document.getElementById('studentModal')).show();
+            }
+
+            function removeClass(className) {
+                if (confirm('Remove ' + className + ' from this day? This will notify enrolled students.')) {
+                    alert(className + ' removed from this day');
+                    // In real implementation, this would update the calendar and database
+                }
+            }
+
+
+            document.addEventListener('DOMContentLoaded', () => {
+
+                const monthFilter = document.getElementById('monthFilter');
+                const month = document.getElementById('monthFilter').value
+                console.log(month)
+
+                const RefreshClasses = async (month) => {
+                    await renderEnrolledClasses(month, student_id = 1);
+                    console.log("Enrolled classses:", currentEnrolledClasses)
+                    await renderClasses(month);
+                    RenderManageClassesTable();
+                    populateMonthDropdown('classModalMonthSelect');
+                }
+
+                RefreshClasses(month);
+                //TODO need to separate the admin and student views- no need to populate the admin view for a student login. Should probably completely separate the two.
+
+
+                // Re-render the classes when changing the month. 
+                monthFilter.addEventListener('change', (event) => {
+                    // This function will execute when a new option is selected
+                    const selectedMonth = event.target.value;
+                    RefreshClasses(selectedMonth)
+                    console.log('Selected Month:', selectedMonth);
+
+                });
+
+                // TODO replace this with actual logged in student's id.
+                renderStudentCalendar(studentId = 1);
+                window.studentCalendarInitialized = true;
+
+                renderAdminCalendar();
+                window.AdminCalendarInitialized = true;
+
+                renderManageStudentsTable();
+                window.ManageStudentsInitialized = true;
+
+
+                // Call March 2026
+                // generateCalendar(2026, 2);
+
+
+                const navLinks = document.querySelectorAll('.nav-link');
+                const tabContents = document.querySelectorAll('.tab-content');
+                const pageTitle = document.getElementById('pageTitle');
+                const sidebar = document.getElementById('sidebar');
+                const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+                const mobileOverlay = document.getElementById('mobileOverlay');
+
+                // Mobile menu toggle
+                if (mobileMenuBtn) {
+                    mobileMenuBtn.addEventListener('click', function () {
+                        sidebar.classList.toggle('show');
+                        mobileOverlay.classList.toggle('show');
+                    });
+                }
+
+                // Close mobile menu when overlay is clicked
+                if (mobileOverlay) {
+                    mobileOverlay.addEventListener('click', function () {
+                        sidebar.classList.remove('show');
+                        mobileOverlay.classList.remove('show');
+                    });
+                }
+
+                // Tab navigation
+                navLinks.forEach(link => {
+                    if (link.hasAttribute('data-bs-toggle')) return;
+
+                    link.addEventListener('click', function (e) {
+
+                        const actualLink = e.target.closest('.nav-link');
+                        if (!actualLink) return;
+
+                        if (actualLink.getAttribute('href') === '#') {
+                            e.preventDefault();
+                        }
+
+                        // Identify the Target ID
+                        // This checks BOTH styles of attributes
+                        const targetId = actualLink.getAttribute('data-tab') ||
+                            (actualLink.getAttribute('data-bs-target') ? actualLink.getAttribute('data-bs-target').replace('#', '') : null);
+
+                        if (!targetId) return;
+
+                        // Clear active class ONLY within the menu you clicked (Sidebar vs Top Tabs)
+                        const parentMenu = this.closest('.nav-tabs') || this.closest('.nav') || this.closest('.sidebar');
+                        if (parentMenu) {
+                            parentMenu.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                        }
+                        this.classList.add('active');
+
+                        // Close mobile overlays
+                        if (sidebar) sidebar.classList.remove('show');
+                        if (mobileOverlay) mobileOverlay.classList.remove('show');
+
+                        // Toggle visibility of panes
+                        // Target both Admin sections and Student panes
+                        const allPanes = document.querySelectorAll('.tab-pane, #calendarSection, #classesSection, #studentsSection, #pendingSection');
+                        allPanes.forEach(pane => {
+                            pane.classList.remove('active', 'show');
+                            pane.style.display = 'none';
+                        });
+
+                        const selectedPane = document.getElementById(targetId);
+                        if (selectedPane) {
+                            selectedPane.classList.add('active', 'show');
+                            selectedPane.style.display = 'block';
+                        }
+
+                        // Update the Header Title
+                        const span = this.querySelector('span') || this;
+                        if (pageTitle && span) {
+                            pageTitle.textContent = span.textContent.trim();
+                        }
+
+                        // Handle both Calendars based on their unique IDs
+                        setTimeout(() => {
+                            if (targetId === 'calendar-pane') {
+                                console.log("Attempting to resize Student Calendar...");
+                                if (window.studentCalendar) {
+                                    window.studentCalendar.updateSize();
+                                    console.log("Student Calendar Resized Success!");
+                                }
+                            } else if (targetId === 'calendar') {
+                                console.log("Attempting to resize Admin Calendar...");
+                                if (window.adminCalendar) {
+                                    window.adminCalendar.updateSize();
+                                }
+                            }
+                        }, 150);
+                    });
+                });
+
+                // Target the specific calendar tab button
+                const calendarTabBtn = document.getElementById('calendar-tab');
+
+                if (calendarTabBtn) {
+                    calendarTabBtn.addEventListener('shown.bs.tab', function () {
+
+                        // Check if the calendar instance exists
+                        if (studentCalendar) {
+                            // Small timeout to ensure the CSS 'fade' transition is finished
+                            setTimeout(() => {
+                                studentCalendar.updateSize();
+                            }, 50);
+                        } else {
+                            console.error("studentCalendar is not initialized yet.");
+                        }
+                    });
+                }
             });
 
-            // Target the specific calendar tab button
-            const calendarTabBtn = document.getElementById('calendar-tab');
+            async function renderClasses(month) {
+                const containerWrapper = document.getElementById('availableClassesContainer');
+                // const baseUrl = 'http://localhost:8080'
+                const apiEndpoint = baseUrl + '/classes' + '?' + 'month=' + month
 
-            if (calendarTabBtn) {
-                calendarTabBtn.addEventListener('shown.bs.tab', function () {
 
-                    // Check if the calendar instance exists
-                    if (studentCalendar) {
-                        // Small timeout to ensure the CSS 'fade' transition is finished
-                        setTimeout(() => {
-                            studentCalendar.updateSize();
-                        }, 50);
-                    } else {
-                        console.error("studentCalendar is not initialized yet.");
+                try {
+                    const response = await fetch(apiEndpoint);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`)
                     }
-                });
-            }
-        });
 
-        async function renderClasses(month) {
-            const containerWrapper = document.getElementById('availableClassesContainer');
-            // const baseUrl = 'http://localhost:8080'
-            const apiEndpoint = baseUrl + '/classes' + '?' + 'month=' + month
+                    const classes = await (response.json());
 
 
-            try {
-                const response = await fetch(apiEndpoint);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`)
-                }
+                    // Clear existing classes
+                    containerWrapper.innerHTML = '';
 
-                const classes = await (response.json());
+                    if (!classes || classes.length === 0) {
+                        containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>'
+                        return
+                    }
 
+                    classes.forEach(selectedClass => {
+                        console.log(selectedClass)
+                        const isAlreadyEnrolled = currentEnrolledClasses.includes(selectedClass.id);
 
-                // Clear existing classes
-                containerWrapper.innerHTML = '';
+                        let enrollBtnHtml = '';
 
-                if (!classes || classes.length === 0) {
-                    containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>'
-                    return
-                }
-
-                classes.forEach(selectedClass => {
-                    console.log(selectedClass)
-                    const isAlreadyEnrolled = currentEnrolledClasses.includes(selectedClass.id);
-
-                    let enrollBtnHtml = '';
-
-                    if (isAlreadyEnrolled) {
-                        console.log("Is enrolled!")
-                        enrollBtnHtml = `
+                        if (isAlreadyEnrolled) {
+                            console.log("Is enrolled!")
+                            enrollBtnHtml = `
                                             <button class="btn btn-primary w-100" onclick="showEnrollModal(${selectedClass.name})">
                                             <i class="bi bi-check-circle"></i> Register for next month
                                             </button>`
-                    }
-                    else {
-                        console.log("Not enrolled!")
-                        enrollBtnHtml = `                            
+                        }
+                        else {
+                            console.log("Not enrolled!")
+                            enrollBtnHtml = `                            
                                             <button class="btn btn-secondary w-100">
                                                 <i class="bi bi-lock"></i> Requires Approval
                                             </button>
@@ -2413,19 +2484,19 @@
                                                 <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
                                             </button>`
 
-                    }
+                        }
 
-                    // TODO- may want to update this show request approval modal to selectedClass.id instead of name.
+                        // TODO- may want to update this show request approval modal to selectedClass.id instead of name.
 
-                    var sessionDatesHtml = ``;
-                    selectedClass.session_dates.forEach(session_date => {
-                        const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-                        sessionDatesHtml += dateBadge;
-                    });
+                        var sessionDatesHtml = ``;
+                        selectedClass.session_dates.forEach(session_date => {
+                            const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+                            sessionDatesHtml += dateBadge;
+                        });
 
-                    console.log(sessionDatesHtml);
+                        console.log(sessionDatesHtml);
 
-                    const containerHtml = `
+                        const containerHtml = `
                                 <div class="col-md-6 col-lg-4">
                                     <div class="card class-card border-primary">
                                         <div class="card-body">
@@ -2442,54 +2513,54 @@
                                         </div>
                                     </div>
                                 </div>`
-                    // Append the new HTML to the wrapper
-                    containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
-                });
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                containerWrapper.innerHTML = '<p class="text-danger">Failed to load classes.</p>';
-            }
-        }
-
-        let currentEnrolledClasses = [];
-
-        async function renderEnrolledClasses(month, student_id) {
-            const containerWrapper = document.getElementById('enrolledClassesContainer');
-            const baseUrl = 'http://localhost:8080'
-            //TODO replace this student_id with the logged in student's id
-            const apiEndpoint = baseUrl + '/classes' + '/' + student_id + '?' + 'month=' + month
-
-            try {
-                const response = await fetch(apiEndpoint);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const classes = await (response.json());
-
-                // Clear existing classes
-                containerWrapper.innerHTML = '';
-
-                if (!classes || classes.length === 0) {
-                    currentEnrolledClasses = [];
-                    containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>';
-                    return
-                }
-
-                currentEnrolledClasses = classes.map(selectedClass => selectedClass.id);
-
-                classes.forEach(selectedClass => {
-                    console.log(selectedClass)
-
-                    var sessionDatesHtml = ``;
-                    selectedClass.session_dates.forEach(session_date => {
-                        const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-                        sessionDatesHtml += dateBadge;
+                        // Append the new HTML to the wrapper
+                        containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
                     });
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    containerWrapper.innerHTML = '<p class="text-danger">Failed to load classes.</p>';
+                }
+            }
 
-                    console.log(sessionDatesHtml);
+            let currentEnrolledClasses = [];
 
-                    const containerHtml = `
+            async function renderEnrolledClasses(month, student_id) {
+                const containerWrapper = document.getElementById('enrolledClassesContainer');
+                const baseUrl = 'http://localhost:8080'
+                //TODO replace this student_id with the logged in student's id
+                const apiEndpoint = baseUrl + '/classes' + '/' + student_id + '?' + 'month=' + month
+
+                try {
+                    const response = await fetch(apiEndpoint);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const classes = await (response.json());
+
+                    // Clear existing classes
+                    containerWrapper.innerHTML = '';
+
+                    if (!classes || classes.length === 0) {
+                        currentEnrolledClasses = [];
+                        containerWrapper.innerHTML = '<div class="col-12"><p class="text-muted">No classes available for this month.</p></div>';
+                        return
+                    }
+
+                    currentEnrolledClasses = classes.map(selectedClass => selectedClass.id);
+
+                    classes.forEach(selectedClass => {
+                        console.log(selectedClass)
+
+                        var sessionDatesHtml = ``;
+                        selectedClass.session_dates.forEach(session_date => {
+                            const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+                            sessionDatesHtml += dateBadge;
+                        });
+
+                        console.log(sessionDatesHtml);
+
+                        const containerHtml = `
                                 <div class="col-md-6 col-lg-4 mb-5">
                                     <div class="card class-card border-primary">
                                         <div class="card-body">
@@ -2510,69 +2581,69 @@
                                     </div>
                                 </div>`
 
-                    // Append the new HTML to the wrapper
-                    containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
-                });
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
+                        // Append the new HTML to the wrapper
+                        containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
+                    });
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
+                }
             }
-        }
 
 
-        function RenderManageClassesTable() {
-            console.log("Render Manage Classes Table")
-            const containerWrapper = document.getElementById('ManageClassesTableBody');
-            const apiEndpoint = baseUrl + '/classes/all'
-            // Clear existing classes
-            containerWrapper.innerHTML = '';
+            function RenderManageClassesTable() {
+                console.log("Render Manage Classes Table")
+                const containerWrapper = document.getElementById('ManageClassesTableBody');
+                const apiEndpoint = baseUrl + '/classes/all'
+                // Clear existing classes
+                containerWrapper.innerHTML = '';
 
-            fetch(apiEndpoint)
-                .then(response => response.json())
-                .then(classes => {
+                fetch(apiEndpoint)
+                    .then(response => response.json())
+                    .then(classes => {
 
-                    if (!classes.length) {
-                        const row = document.createElement('tr');
-                        const td = document.createElement('td');
-                        td.colSpan = 7;
-                        td.className = 'text-center text-muted';
-                        td.textContent = 'No Classes Found';
-                        row.appendChild(td);
-                        containerWrapper.appendChild(row)
-                        return;
-                    }
-
-                    // Reset classesMap
-                    classesMap = {};
-
-                    classes.forEach(selectedClass => {
-
-                        classesMap[selectedClass.id] = selectedClass;
-
-                        //Convert the string from the backend to a JS date object and remove the Time.
-                        selectedClass.month = new Date(selectedClass.month).toISOString().slice(0, 10);
-
-                        const row = document.createElement('tr');
-                        row.dataset.id = selectedClass.id;
-
-                        const fields = [
-                            selectedClass.name,
-                            selectedClass.teacher,
-                            selectedClass.day_of_week,
-                            selectedClass.time,
-                            selectedClass.month,
-                            selectedClass.enrolledCount,
-                        ];
-
-                        fields.forEach(value => {
+                        if (!classes.length) {
+                            const row = document.createElement('tr');
                             const td = document.createElement('td');
-                            td.textContent = value ?? '';
+                            td.colSpan = 7;
+                            td.className = 'text-center text-muted';
+                            td.textContent = 'No Classes Found';
                             row.appendChild(td);
-                        });
+                            containerWrapper.appendChild(row)
+                            return;
+                        }
 
-                        const buttonsTd = document.createElement('td');
+                        // Reset classesMap
+                        classesMap = {};
 
-                        buttonsTd.innerHTML = `
+                        classes.forEach(selectedClass => {
+
+                            classesMap[selectedClass.id] = selectedClass;
+
+                            //Convert the string from the backend to a JS date object and remove the Time.
+                            selectedClass.month = new Date(selectedClass.month).toISOString().slice(0, 10);
+
+                            const row = document.createElement('tr');
+                            row.dataset.id = selectedClass.id;
+
+                            const fields = [
+                                selectedClass.name,
+                                selectedClass.teacher,
+                                selectedClass.day_of_week,
+                                selectedClass.time,
+                                selectedClass.month,
+                                selectedClass.enrolledCount,
+                            ];
+
+                            fields.forEach(value => {
+                                const td = document.createElement('td');
+                                td.textContent = value ?? '';
+                                row.appendChild(td);
+                            });
+
+                            const buttonsTd = document.createElement('td');
+
+                            buttonsTd.innerHTML = `
                                             <button class="btn btn-sm btn-outline-primary me-1 editClassButton">
                                                 <i class="bi bi-pencil"></i></button>
                                             <button class="btn btn-sm btn-outline-info me-1 showRosterButton">
@@ -2580,242 +2651,242 @@
                                             <button class="btn btn-sm btn-outline-danger deleteClassButton"><i
                                                     class="bi bi-trash"></i></button>
                                 `
-                        row.appendChild(buttonsTd);
-                        containerWrapper.appendChild(row);
+                            row.appendChild(buttonsTd);
+                            containerWrapper.appendChild(row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
                     });
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
-                });
-        }
-
-        // Event listener for Manage Classes Table buttons
-        const manageClassesContainerWrapper = document.getElementById('ManageClassesTableBody');
-        manageClassesContainerWrapper.addEventListener('click', (event) => {
-            const editBtn = event.target.closest('.editClassButton');
-            const rosterBtn = event.target.closest('.showRosterButton');
-            const deletBtn = event.target.closest('.deleteClassButton');
-
-            if (editBtn) {
-                const row = editBtn.closest('tr');
-                const classId = row.dataset.id;
-                const selectedClass = classesMap[classId];
-                console.log(`Clicked edit button for class id: ${classId}`)
-                showEditClassModal(selectedClass);
             }
 
-            if (rosterBtn) {
-                const row = rosterBtn.closest('tr');
-                const classId = row.dataset.id;
-                const selectedClass = classesMap[classId];
-                console.log(`Clicked roster button for class id: ${classId}`)
-                showRosterModal(selectedClass);
-            }
+            // Event listener for Manage Classes Table buttons
+            const manageClassesContainerWrapper = document.getElementById('ManageClassesTableBody');
+            manageClassesContainerWrapper.addEventListener('click', (event) => {
+                const editBtn = event.target.closest('.editClassButton');
+                const rosterBtn = event.target.closest('.showRosterButton');
+                const deletBtn = event.target.closest('.deleteClassButton');
 
-            if (deletBtn) {
-                const row = deletBtn.closest('tr');
-                const classId = row.dataset.id;
-                deleteClass(classId);
-            }
-        });
+                if (editBtn) {
+                    const row = editBtn.closest('tr');
+                    const classId = row.dataset.id;
+                    const selectedClass = classesMap[classId];
+                    console.log(`Clicked edit button for class id: ${classId}`)
+                    showEditClassModal(selectedClass);
+                }
 
-        // TODO- Build the delete function
+                if (rosterBtn) {
+                    const row = rosterBtn.closest('tr');
+                    const classId = row.dataset.id;
+                    const selectedClass = classesMap[classId];
+                    console.log(`Clicked roster button for class id: ${classId}`)
+                    showRosterModal(selectedClass);
+                }
 
-        function deleteClass(classId) {
-            console.log(`Delete button clicked! Delete class with id ${classId}`)
-            return
-        }
+                if (deletBtn) {
+                    const row = deletBtn.closest('tr');
+                    const classId = row.dataset.id;
+                    deleteClass(classId);
+                }
+            });
 
-        let adminCalendar;
+            // TODO- Build the delete function
 
-        function renderAdminCalendar() {
-            const apiEndpoint = baseUrl + '/calendarEvents'
-            var calendarEl = document.getElementById('fullcalendar');
-
-            if (!calendarEl) {
+            function deleteClass(classId) {
+                console.log(`Delete button clicked! Delete class with id ${classId}`)
                 return
             }
 
-            fetch(apiEndpoint)
-                .then(response => {
-                    if (!response.ok) throw new Error('Endpoint not found');
-                    return response.json();
-                })
+            let adminCalendar;
 
-                .then(calendarEvents => {
-                    let events = [];
-                    console.log("Calendar events:")
-                    console.log(calendarEvents)
+            function renderAdminCalendar() {
+                const apiEndpoint = baseUrl + '/calendarEvents'
+                var calendarEl = document.getElementById('fullcalendar');
 
-                    if (calendarEvents !== null && calendarEvents !== undefined) {
-                        if (calendarEvents.scheduledClasses !== null && calendarEvents.scheduledClasses !== undefined) {
+                if (!calendarEl) {
+                    return
+                }
 
-                            calendarEvents.scheduledClasses.forEach(calEvent => {
-                                calEvent.session_dates.forEach(dateStr => {
-                                    events.push({
-                                        title: `${calEvent.name}- ${calEvent.enrolledCount}/${calEvent.capacity}`,
-                                        start: dateStr,
-                                        allDay: true,
-                                        className: 'fc-event-basic',
-                                        // color: calEvent.colorTag,
-                                        extendedProps: {
-                                            "enrolledCount": calEvent.enrolledCount,
-                                            "capacity": calEvent.capacity
-                                        }
+                fetch(apiEndpoint)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Endpoint not found');
+                        return response.json();
+                    })
 
+                    .then(calendarEvents => {
+                        let events = [];
+                        console.log("Calendar events:")
+                        console.log(calendarEvents)
+
+                        if (calendarEvents !== null && calendarEvents !== undefined) {
+                            if (calendarEvents.scheduledClasses !== null && calendarEvents.scheduledClasses !== undefined) {
+
+                                calendarEvents.scheduledClasses.forEach(calEvent => {
+                                    calEvent.session_dates.forEach(dateStr => {
+                                        events.push({
+                                            title: `${calEvent.name}- ${calEvent.enrolledCount}/${calEvent.capacity}`,
+                                            start: dateStr,
+                                            allDay: true,
+                                            className: 'fc-event-basic',
+                                            // color: calEvent.colorTag,
+                                            extendedProps: {
+                                                "enrolledCount": calEvent.enrolledCount,
+                                                "capacity": calEvent.capacity
+                                            }
+
+                                        })
                                     })
                                 })
-                            })
+                            }
                         }
-                    }
-                    console.log("Processed events:", events)
-                    return events;
-                })
-                .catch(error => {
-                    console.warn("Api unavailable. Rendering empty calendar", error);
-                    return [];
-                })
+                        console.log("Processed events:", events)
+                        return events;
+                    })
+                    .catch(error => {
+                        console.warn("Api unavailable. Rendering empty calendar", error);
+                        return [];
+                    })
 
-                .then(events => {
+                    .then(events => {
 
-                    adminCalendar = new FullCalendar.Calendar(calendarEl, {
-                        initialView: 'dayGridMonth',
-                        handleWindowResize: true,
-                        windowResizeDelay: 200,
-                        selectable: true,
-                        headerToolbar: {
-                            left: 'prev, next, today',
-                            center: 'title',
-                            right: 'dayGridMonth, timeGridWeek'
-                        },
-                        // height: 'auto',
-                        events: events,
-                        eventClick: function (info) {
-                            console.log(info.event)
-                            alert(`Class: 
+                        adminCalendar = new FullCalendar.Calendar(calendarEl, {
+                            initialView: 'dayGridMonth',
+                            handleWindowResize: true,
+                            windowResizeDelay: 200,
+                            selectable: true,
+                            headerToolbar: {
+                                left: 'prev, next, today',
+                                center: 'title',
+                                right: 'dayGridMonth, timeGridWeek'
+                            },
+                            // height: 'auto',
+                            events: events,
+                            eventClick: function (info) {
+                                console.log(info.event)
+                                alert(`Class: 
                             ${info.event.title}
                             Enrolled:
                              ${info.event.extendedProps.enrolledCount}/${info.event.extendedProps.capacity}`);
-                        },
-                    });
-                    adminCalendar.render()
-                    window.mainCalendarInitialized = true;
-                    adminCalendar.updateSize();
+                            },
+                        });
+                        adminCalendar.render()
+                        window.mainCalendarInitialized = true;
+                        adminCalendar.updateSize();
 
-                })
-        }
-
-        //Initialize the var in the global scope so it can be accessed outside this function
-
-        let studentCalendar;
-
-        function renderStudentCalendar(studentId) {
-            const apiEndpoint = baseUrl + `/calendarEvents/${studentId}`
-            console.log("STUDENT CALENDAR API ENDPOINT:")
-            console.log(apiEndpoint)
-            var calendarEl = document.getElementById('studentFullCalendar');
-
-            if (!calendarEl) {
-                return
+                    })
             }
 
-            fetch(apiEndpoint)
-                .then(response => {
-                    if (!response.ok) throw new Error('Endpoint not found');
-                    return response.json();
-                })
+            //Initialize the var in the global scope so it can be accessed outside this function
 
-                .then(calendarEvents => {
-                    let events = [];
-                    console.log("Student Calendar events:")
-                    console.log(calendarEvents)
+            let studentCalendar;
 
-                    if (calendarEvents !== null && calendarEvents !== undefined) {
-                        if (calendarEvents.scheduledClasses !== null && calendarEvents.scheduledClasses !== undefined) {
+            function renderStudentCalendar(studentId) {
+                const apiEndpoint = baseUrl + `/calendarEvents/${studentId}`
+                console.log("STUDENT CALENDAR API ENDPOINT:")
+                console.log(apiEndpoint)
+                var calendarEl = document.getElementById('studentFullCalendar');
 
-                            calendarEvents.scheduledClasses.forEach(calEvent => {
-                                calEvent.session_dates.forEach(dateStr => {
-                                    events.push({
-                                        title: `${calEvent.name}`,
-                                        start: dateStr,
-                                        allDay: true,
-                                        className: 'fc-event-basic',
-                                        // color: calEvent.colorTag,
+                if (!calendarEl) {
+                    return
+                }
+
+                fetch(apiEndpoint)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Endpoint not found');
+                        return response.json();
+                    })
+
+                    .then(calendarEvents => {
+                        let events = [];
+                        console.log("Student Calendar events:")
+                        console.log(calendarEvents)
+
+                        if (calendarEvents !== null && calendarEvents !== undefined) {
+                            if (calendarEvents.scheduledClasses !== null && calendarEvents.scheduledClasses !== undefined) {
+
+                                calendarEvents.scheduledClasses.forEach(calEvent => {
+                                    calEvent.session_dates.forEach(dateStr => {
+                                        events.push({
+                                            title: `${calEvent.name}`,
+                                            start: dateStr,
+                                            allDay: true,
+                                            className: 'fc-event-basic',
+                                            // color: calEvent.colorTag,
+                                        })
                                     })
                                 })
-                            })
+                            }
                         }
-                    }
-                    console.log("Processed student events:", events)
-                    return events;
-                })
-                .catch(error => {
-                    console.warn("Api unavailable. Rendering empty calendar", error);
-                    return [];
-                })
+                        console.log("Processed student events:", events)
+                        return events;
+                    })
+                    .catch(error => {
+                        console.warn("Api unavailable. Rendering empty calendar", error);
+                        return [];
+                    })
 
-                .then(events => {
+                    .then(events => {
 
-                    studentCalendar = new FullCalendar.Calendar(calendarEl, {
-                        initialView: 'dayGridMonth',
-                        handleWindowResize: true,
-                        windowResizeDelay: 200,
-                        selectable: true,
-                        headerToolbar: {
-                            left: 'prev, next, today',
-                            center: 'title',
-                            right: 'dayGridMonth, timeGridWeek'
-                        },
-                        // height: 'auto',
-                        events: events,
-                        eventClick: function (info) {
-                            console.log(info.event)
-                            alert(`Class: 
+                        studentCalendar = new FullCalendar.Calendar(calendarEl, {
+                            initialView: 'dayGridMonth',
+                            handleWindowResize: true,
+                            windowResizeDelay: 200,
+                            selectable: true,
+                            headerToolbar: {
+                                left: 'prev, next, today',
+                                center: 'title',
+                                right: 'dayGridMonth, timeGridWeek'
+                            },
+                            // height: 'auto',
+                            events: events,
+                            eventClick: function (info) {
+                                console.log(info.event)
+                                alert(`Class: 
                             ${info.event.title}
                             Enrolled:
                              ${info.event.extendedProps.enrolledCount}/${info.event.extendedProps.capacity}`);
-                        },
-                    });
-                    studentCalendar.render()
-                    window.studentCalendarInitialized = true;
-                    studentCalendar.updateSize();
+                            },
+                        });
+                        studentCalendar.render()
+                        window.studentCalendarInitialized = true;
+                        studentCalendar.updateSize();
 
-                })
-        }
+                    })
+            }
 
 
-        function renderManageStudentsTable() {
-            console.log("Render manage students table")
-            const containerWrapper = document.getElementById('ManageStudentsTableBody')
-            const apiEndpoint = baseUrl + '/students/enrollment'
+            function renderManageStudentsTable() {
+                console.log("Render manage students table")
+                const containerWrapper = document.getElementById('ManageStudentsTableBody')
+                const apiEndpoint = baseUrl + '/students/enrollment'
 
-            // Clear existing students
-            containerWrapper.innerHTML = '';
+                // Clear existing students
+                containerWrapper.innerHTML = '';
 
-            fetch(apiEndpoint)
-                .then(response => response.json())
-                .then(students => {
-                    if (students !== null && students !== undefined) {
-                        students.forEach(student => {
+                fetch(apiEndpoint)
+                    .then(response => response.json())
+                    .then(students => {
+                        if (students !== null && students !== undefined) {
+                            students.forEach(student => {
 
-                            var studentClasses = student.enrolledClasses.join(', ');
-                            if (studentClasses.length < 1) {
-                                studentClasses = "No classses enrolled"
-                            }
+                                var studentClasses = student.enrolledClasses.join(', ');
+                                if (studentClasses.length < 1) {
+                                    studentClasses = "No classses enrolled"
+                                }
 
-                            var studentStatusl;
+                                var studentStatusl;
 
-                            if (student.active === true) {
-                                studentStatus = 'Active'
+                                if (student.active === true) {
+                                    studentStatus = 'Active'
 
-                            } else {
-                                studentStatus = 'Inactive'
-                            }
+                                } else {
+                                    studentStatus = 'Inactive'
+                                }
 
-                            const row = document.createElement('tr');
+                                const row = document.createElement('tr');
 
-                            row.innerHTML = `
+                                row.innerHTML = `
                                     <tr>
                                         <td>${student.name}</td>
                                         <td>${student.email}</td>
@@ -2836,286 +2907,286 @@
                                     </tr>
                             `
 
-                            containerWrapper.appendChild(row);
-                        });
-                        // TODO may need to adjust state management heere- window.initialized etc..
+                                containerWrapper.appendChild(row);
+                            });
+                            // TODO may need to adjust state management heere- window.initialized etc..
 
-                    } else {
-                        containerWrapper.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No Students Found.</td></tr>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
-
-                });
-        }
-
-        const holidays = {
-            '2026-03-17': 'St. Patrick\'s Day'
-        };
-
-        const selectedDates = ['2026-03-02', '2026-03-09', '2026-03-16', '2026-03-23'];
-
-        function generateCalendar(year, month) {
-            const tbody = document.getElementById('editCalendarBody');
-            tbody.innerHTML = '';
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const prevMonthLastDay = new Date(year, month, 0).getDate();
-
-            let date = 1;
-            let nextMonthDate = 1;
-
-            for (let i = 0; i < 6; i++) {
-                let row = document.createElement('tr');
-
-                for (let j = 0; j < 7; j++) {
-                    let cell = document.createElement('td');
-                    cell.classList.add('calendar-day');
-
-                    if (i === 0 && j < firstDay) {
-                        cell.classList.add('other-month');
-                        cell.innerHTML = `<div class="day-number">${prevMonthLastDay - firstDay + j + 1}</div>`;
-                    } else if (date > daysInMonth) {
-                        cell.classList.add('other-month');
-                        cell.innerHTML = `<div class="day-number">${nextMonthDate++}</div>`;
-                    } else {
-                        const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-                        cell.setAttribute('onclick', `toggleClassDate(this, '${fullDate}')`);
-
-                        let content = `<div class="day-number">${date}</div>`;
-
-                        //  Check for Holidays
-                        if (holidays[fullDate]) {
-                            cell.classList.add('holiday');
-                            content += `<span class="badge class-badge bg-danger">${holidays[fullDate]}</span>`;
+                        } else {
+                            containerWrapper.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No Students Found.</td></tr>';
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
 
-                        // Check for Selected Dates
-                        if (selectedDates.includes(fullDate)) {
-                            cell.classList.add('has-class');
-                            content += `<span class="badge class-badge bg-primary"><i class="bi bi-check-circle"></i> Selected</span>`;
+                    });
+            }
+
+            const holidays = {
+                '2026-03-17': 'St. Patrick\'s Day'
+            };
+
+            const selectedDates = ['2026-03-02', '2026-03-09', '2026-03-16', '2026-03-23'];
+
+            function generateCalendar(year, month) {
+                const tbody = document.getElementById('editCalendarBody');
+                tbody.innerHTML = '';
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+                let date = 1;
+                let nextMonthDate = 1;
+
+                for (let i = 0; i < 6; i++) {
+                    let row = document.createElement('tr');
+
+                    for (let j = 0; j < 7; j++) {
+                        let cell = document.createElement('td');
+                        cell.classList.add('calendar-day');
+
+                        if (i === 0 && j < firstDay) {
+                            cell.classList.add('other-month');
+                            cell.innerHTML = `<div class="day-number">${prevMonthLastDay - firstDay + j + 1}</div>`;
+                        } else if (date > daysInMonth) {
+                            cell.classList.add('other-month');
+                            cell.innerHTML = `<div class="day-number">${nextMonthDate++}</div>`;
+                        } else {
+                            const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                            cell.setAttribute('onclick', `toggleClassDate(this, '${fullDate}')`);
+
+                            let content = `<div class="day-number">${date}</div>`;
+
+                            //  Check for Holidays
+                            if (holidays[fullDate]) {
+                                cell.classList.add('holiday');
+                                content += `<span class="badge class-badge bg-danger">${holidays[fullDate]}</span>`;
+                            }
+
+                            // Check for Selected Dates
+                            if (selectedDates.includes(fullDate)) {
+                                cell.classList.add('has-class');
+                                content += `<span class="badge class-badge bg-primary"><i class="bi bi-check-circle"></i> Selected</span>`;
+                            }
+
+                            cell.innerHTML = content;
+                            date++;
                         }
-
-                        cell.innerHTML = content;
-                        date++;
+                        row.appendChild(cell);
                     }
-                    row.appendChild(cell);
+                    tbody.appendChild(row);
+                    if (date > daysInMonth && i >= 4) break;
                 }
-                tbody.appendChild(row);
-                if (date > daysInMonth && i >= 4) break;
-            }
-        }
-
-        function populateMonthDropdown(ElementId) {
-            const monthDropdown = document.getElementById(ElementId)
-
-            monthDropdown.innerHTML = '';
-
-            const monthOptions = [];
-            const currentDate = new Date();
-
-            for (let i = 0; i < 3; i++) {
-                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
-                const label = date.toLocaleString('default', { month: 'long', year: 'numeric' })
-                const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
-                monthOptions.push({ label, value });
             }
 
-            monthOptions.forEach(month => {
-                const option = document.createElement('option')
-                option.value = month.value;
-                option.innerHTML = month.label;
-                monthDropdown.appendChild(option);
+            function populateMonthDropdown(ElementId) {
+                const monthDropdown = document.getElementById(ElementId)
+
+                monthDropdown.innerHTML = '';
+
+                const monthOptions = [];
+                const currentDate = new Date();
+
+                for (let i = 0; i < 3; i++) {
+                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+                    const label = date.toLocaleString('default', { month: 'long', year: 'numeric' })
+                    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
+                    monthOptions.push({ label, value });
+                }
+
+                monthOptions.forEach(month => {
+                    const option = document.createElement('option')
+                    option.value = month.value;
+                    option.innerHTML = month.label;
+                    monthDropdown.appendChild(option);
+                });
+            }
+
+
+            // SUBMIT Functions
+
+            // Event listener for the Class Modal Add Class button
+            document.getElementById('classModalForm').addEventListener('submit', classFormSubmit);
+
+
+            // Clear the class modal upon closing.
+            document.getElementById('classModal').addEventListener('hidden.bs.modal', () => {
+                closeModal('classModalForm', 'addClassAlert')
             });
-        }
 
+            async function classFormSubmit(c) {
+                console.log("class form submit!")
+                c.preventDefault();
 
-        // SUBMIT Functions
+                const form = c.target
+                const mode = form.dataset.mode
+                const classId = form.dataset.id
 
-        // Event listener for the Class Modal Add Class button
-        document.getElementById('classModalForm').addEventListener('submit', classFormSubmit);
+                console.log("Current mode is:", mode);
 
-
-        // Clear the class modal upon closing.
-        document.getElementById('classModal').addEventListener('hidden.bs.modal', () => {
-            closeModal('classModalForm', 'addClassAlert')
-        });
-
-        async function classFormSubmit(c) {
-            console.log("class form submit!")
-            c.preventDefault();
-
-            const form = c.target
-            const mode = form.dataset.mode
-            const classId = form.dataset.id
-
-            console.log("Current mode is:", mode);
-
-            if (mode === 'add') {
-                console.log("add!")
-                await createClass(c);
-            } else {
-                await updateClass(c, classId);
-            }
-        }
-
-        async function createClass(form) {
-            const sessionDatesInput = document.querySelectorAll('input[name="sessionDate"]');
-
-            const sessionDates = Array.from(sessionDatesInput)
-                .filter(date => date.value) //ignores empty fields
-                .map(date => date.valueAsDate);
-
-            const monthSelect = document.getElementById('classModalMonthSelect').value
-
-            if (monthSelect) {
-                const monthAsDate = new Date(monthSelect);
-                formattedMonth = monthAsDate.toISOString();
-            }
-
-
-            const newClass = {
-                name: document.getElementById('classModalName').value,
-                teacher: document.getElementById('classModalTeacher').value,
-                day_of_week: document.getElementById('classModalWeekday').value,
-                time: document.getElementById('classModalTime').value,
-                description: document.getElementById('classModalDescription').value,
-                ...(formattedMonth && { month: formattedMonth }),
-                capacity: document.getElementById('classModalCapacity').valueAsNumber,
-                session_dates: sessionDates,
-            }
-            endDate = document.getElementById('classModalEndDate').valueAsDate
-            if (endDate) {
-                newClass.endDate = endDate
-            }
-            console.log(newClass)
-
-            try {
-                const resp = await fetch(`/classes`, {
-                    method: 'POST',
-                    headers: { 'Content-type': 'application/json' },
-                    body: JSON.stringify(newClass)
-                });
-
-                const responseData = await resp.json();
-                console.log(responseData)
-
-                if (resp.ok) {
-                    const responseString = JSON.stringify(responseData, null, 2)
-                    console.log(responseString)
-                    showAlert('addClassAlert', `Customer Added successfully: <pre><code>${responseString}</pre></code>`, 'success');
-
-
-                    //Re-render class list with new additions
-                    RenderManageClassesTable();
-
-                    timerId = setTimeout(() => {
-                        document.getElementById('addClassAlert').innerHTML = '';
-                    }, 3000);
-
+                if (mode === 'add') {
+                    console.log("add!")
+                    await createClass(c);
                 } else {
-                    showAlert('addClassAlert', responseData.message || 'Error adding class', 'danger');
+                    await updateClass(c, classId);
+                }
+            }
+
+            async function createClass(form) {
+                const sessionDatesInput = document.querySelectorAll('input[name="sessionDate"]');
+
+                const sessionDates = Array.from(sessionDatesInput)
+                    .filter(date => date.value) //ignores empty fields
+                    .map(date => date.valueAsDate);
+
+                const monthSelect = document.getElementById('classModalMonthSelect').value
+
+                if (monthSelect) {
+                    const monthAsDate = new Date(monthSelect);
+                    formattedMonth = monthAsDate.toISOString();
                 }
 
-            } catch (error) {
-                console.error('Error:', error)
-                showAlert('addClassAlert', 'Network error occurred', 'danger');
+
+                const newClass = {
+                    name: document.getElementById('classModalName').value,
+                    teacher: document.getElementById('classModalTeacher').value,
+                    day_of_week: document.getElementById('classModalWeekday').value,
+                    time: document.getElementById('classModalTime').value,
+                    description: document.getElementById('classModalDescription').value,
+                    ...(formattedMonth && { month: formattedMonth }),
+                    capacity: document.getElementById('classModalCapacity').valueAsNumber,
+                    session_dates: sessionDates,
+                }
+                endDate = document.getElementById('classModalEndDate').valueAsDate
+                if (endDate) {
+                    newClass.endDate = endDate
+                }
+                console.log(newClass)
+
+                try {
+                    const resp = await fetch(`/classes`, {
+                        method: 'POST',
+                        headers: { 'Content-type': 'application/json' },
+                        body: JSON.stringify(newClass)
+                    });
+
+                    const responseData = await resp.json();
+                    console.log(responseData)
+
+                    if (resp.ok) {
+                        const responseString = JSON.stringify(responseData, null, 2)
+                        console.log(responseString)
+                        showAlert('addClassAlert', `Customer Added successfully: <pre><code>${responseString}</pre></code>`, 'success');
+
+
+                        //Re-render class list with new additions
+                        RenderManageClassesTable();
+
+                        timerId = setTimeout(() => {
+                            document.getElementById('addClassAlert').innerHTML = '';
+                        }, 3000);
+
+                    } else {
+                        showAlert('addClassAlert', responseData.message || 'Error adding class', 'danger');
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error)
+                    showAlert('addClassAlert', 'Network error occurred', 'danger');
+                }
             }
-        }
 
-        async function updateClass(form, classId) {
+            async function updateClass(form, classId) {
 
-            //TODO - May want to go through this later and only send the values that are updated. For now it seems simpler to send it all.
+                //TODO - May want to go through this later and only send the values that are updated. For now it seems simpler to send it all.
 
-            const sessionDatesInput = document.querySelectorAll('input[name="sessionDate"]');
+                const sessionDatesInput = document.querySelectorAll('input[name="sessionDate"]');
 
-            const sessionDates = Array.from(sessionDatesInput)
-                .filter(date => date.value) //ignores empty fields
-                .map(date => date.valueAsDate);
+                const sessionDates = Array.from(sessionDatesInput)
+                    .filter(date => date.value) //ignores empty fields
+                    .map(date => date.valueAsDate);
 
-            const monthSelect = document.getElementById('classModalMonthSelect').value
+                const monthSelect = document.getElementById('classModalMonthSelect').value
 
-            if (monthSelect) {
-                const monthAsDate = new Date(monthSelect);
-                formattedMonth = monthAsDate.toISOString();
-            }
-
-
-            const classUpdateRequest = {
-                name: document.getElementById('classModalName').value,
-                teacher: document.getElementById('classModalTeacher').value,
-                day_of_week: document.getElementById('classModalWeekday').value,
-                time: document.getElementById('classModalTime').value,
-                description: document.getElementById('classModalDescription').value,
-                ...(formattedMonth && { month: formattedMonth }),
-                capacity: document.getElementById('classModalCapacity').valueAsNumber,
-                session_dates: sessionDates,
-            }
-            endDate = document.getElementById('classModalEndDate').valueAsDate
-            if (endDate) {
-                classUpdateRequest.endDate = endDate
-            }
-            console.log(classUpdateRequest)
-
-            try {
-                const resp = await fetch(`/classes/${classId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-type': 'application/json' },
-                    body: JSON.stringify(classUpdateRequest)
-                });
-
-                const responseData = await resp.json();
-                console.log(responseData)
-
-                if (resp.ok) {
-                    const responseString = JSON.stringify(responseData, null, 2)
-                    console.log(responseString)
-                    showAlert('addClassAlert', `Customer edited successfully: <pre><code>${responseString}</pre></code>`, 'success');
-
-
-                    //Re-render class list with new additions
-                    RenderManageClassesTable();
-
-                    timerId = setTimeout(() => {
-                        document.getElementById('addClassAlert').innerHTML = '';
-                    }, 3000);
-
-                } else {
-                    showAlert('addClassAlert', responseData.message || 'Error editing class', 'danger');
+                if (monthSelect) {
+                    const monthAsDate = new Date(monthSelect);
+                    formattedMonth = monthAsDate.toISOString();
                 }
 
-            } catch (error) {
-                console.error('Error:', error)
-                showAlert('addClassAlert', 'Network error occurred', 'danger');
+
+                const classUpdateRequest = {
+                    name: document.getElementById('classModalName').value,
+                    teacher: document.getElementById('classModalTeacher').value,
+                    day_of_week: document.getElementById('classModalWeekday').value,
+                    time: document.getElementById('classModalTime').value,
+                    description: document.getElementById('classModalDescription').value,
+                    ...(formattedMonth && { month: formattedMonth }),
+                    capacity: document.getElementById('classModalCapacity').valueAsNumber,
+                    session_dates: sessionDates,
+                }
+                endDate = document.getElementById('classModalEndDate').valueAsDate
+                if (endDate) {
+                    classUpdateRequest.endDate = endDate
+                }
+                console.log(classUpdateRequest)
+
+                try {
+                    const resp = await fetch(`/classes/${classId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-type': 'application/json' },
+                        body: JSON.stringify(classUpdateRequest)
+                    });
+
+                    const responseData = await resp.json();
+                    console.log(responseData)
+
+                    if (resp.ok) {
+                        const responseString = JSON.stringify(responseData, null, 2)
+                        console.log(responseString)
+                        showAlert('addClassAlert', `Customer edited successfully: <pre><code>${responseString}</pre></code>`, 'success');
+
+
+                        //Re-render class list with new additions
+                        RenderManageClassesTable();
+
+                        timerId = setTimeout(() => {
+                            document.getElementById('addClassAlert').innerHTML = '';
+                        }, 3000);
+
+                    } else {
+                        showAlert('addClassAlert', responseData.message || 'Error editing class', 'danger');
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error)
+                    showAlert('addClassAlert', 'Network error occurred', 'danger');
+                }
             }
-        }
 
 
 
 
 
-        // Utility functions
+            // Utility functions
 
-        function showAlert(elementId, message, type) {
-            const alert = document.getElementById(elementId);
-            alert.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            function showAlert(elementId, message, type) {
+                const alert = document.getElementById(elementId);
+                alert.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
                                 ${message}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" ></button>
                             </div>`;
-        }
-
-        function closeModal(formId, alertId) {
-            // Clear the form
-            // Only reset if formId was provided AND the element exists
-            if (formId) {
-                const form = document.getElementById(formId);
-                if (form) form.reset();
             }
-            document.getElementById(alertId).innerHTML = '';
-        }
+
+            function closeModal(formId, alertId) {
+                // Clear the form
+                // Only reset if formId was provided AND the element exists
+                if (formId) {
+                    const form = document.getElementById(formId);
+                    if (form) form.reset();
+                }
+                document.getElementById(alertId).innerHTML = '';
+            }
 
 
     </script>
