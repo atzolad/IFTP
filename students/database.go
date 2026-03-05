@@ -44,13 +44,13 @@ func dbGetStudentsWithEnrollment(ctx context.Context, myDb *db.MyDatabase) ([]St
 	return students, nil
 }
 
-// func InsertStudent(ctx context.Context, myDb *db.MyDatabase, s *Student) error {
-// 	_, err := myDb.Pool.Exec(ctx,
-// 		"INSERT INTO students(name, email) VALUES($1, $2) RETURNING id",
-// 		s.Name, s.Email)
+func dbAddStudent(ctx context.Context, myDb *db.MyDatabase, s *Student) error {
+	_, err := myDb.Pool.Exec(ctx,
+		"INSERT INTO students(name, email, active) VALUES($1, $2, true)",
+		s.Name, s.Email)
 
-// 	return err
-// }
+	return err
+}
 
 // func UpdateStudentDB(ctx context.Context, myDb *db.MyDatabase, id int, s *Student) (*Student, error) {
 // 	updates := []string{}

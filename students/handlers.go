@@ -3,8 +3,11 @@ package students
 import (
 	"IFTP/db"
 	"IFTP/utils"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 )
 
 type Student struct {
@@ -13,6 +16,11 @@ type Student struct {
 	Email           string   `db:"email" json:"email"`
 	Active          bool     `db:"active" json:"active"`
 	EnrolledClasses []string `db:"enrolled_classes" json:"enrolledClasses"`
+}
+
+func (s *Student) Sanitize() {
+	s.Name = strings.TrimSpace(s.Name)
+	s.Email = strings.ToLower(strings.TrimSpace(s.Email))
 }
 
 func GetStudents(myDb *db.MyDatabase) http.HandlerFunc {
@@ -47,35 +55,39 @@ func GetStudentsWithEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-// // AddStudent adds a user from JSON received in the request body.
-// func AddStudent(myDb *db.MyDatabase) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
+func AddStudent(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		ctx := r.Context()
+		ctx := r.Context()
 
-// 		var newStudent Student
+		var newStudent Student
 
-// 		if err := json.NewDecoder(r.Body).Decode(&newStudent); err != nil {
-// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-// 				Status:  "error",
-// 				Message: fmt.Sprintf("Error decoding student info: %v", err),
-// 				Code:    http.StatusInternalServerError,
-// 			})
-// 		}
+		if err := json.NewDecoder(r.Body).Decode(&newStudent); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error decoding student info: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			log.Printf("Error decoding student info: %v", err)
+			return
+		}
 
-// 		if err := InsertStudent(ctx, myDb, &newStudent); err != nil {
-// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-// 				Status:  "error",
-// 				Message: fmt.Sprintf("Error adding student to db: %v", err),
-// 				Code:    http.StatusInternalServerError,
-// 			})
-// 			return
-// 		}
+		newStudent.Sanitize()
 
-// 		utils.WriteJSONResponse(w, http.StatusOK, "Successfully added student to db")
-// 		fmt.Printf("Successfully created new student: %v", newStudent)
-// 	}
-// }
+		if err := dbAddStudent(ctx, myDb, &newStudent); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error adding student to db: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			log.Printf("Error adding student to db: %v", err)
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, "Successfully added student to db")
+		log.Printf("Successfully created new student: %v", newStudent.Name)
+	}
+}
 
 // // Update Student updates the student details based on the JSON received in the request body.
 // func UpdateStudent(myDb *db.MyDatabase) gin.HandlerFunc {

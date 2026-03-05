@@ -101,7 +101,7 @@ func main() {
 	// Student Endpoints
 	mux.HandleFunc("GET /students", students.GetStudents(myDb))
 	mux.HandleFunc("GET /students/enrollment", students.GetStudentsWithEnrollment(myDb))
-	// mux.HandleFunc("Post" /students, students.AddStudent(myDb))
+	mux.HandleFunc("POST /students", students.AddStudent(myDb))
 
 	log.Printf("Server starting on :%v", port)
 	if err := http.ListenAndServe(":"+port, wrappedMux); err != nil {
