@@ -62,7 +62,7 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 		classDateStr := r.FormValue("class_date")
 		classIdStr := r.PathValue("class_id")
 
-		log.Printf("month: %v, class_date: %v, class_id: %v", monthStr, classDateStr, classDateStr)
+		log.Printf("month: %v, class_date: %v, class_id: %v", monthStr, classDateStr, classIdStr)
 
 		classId, err := strconv.Atoi(classIdStr)
 		if err != nil {

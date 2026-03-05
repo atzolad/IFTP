@@ -37,11 +37,11 @@ func dbGetRoster(ctx context.Context, myDb *db.MyDatabase, classId int, month ti
         ) FILTER (WHERE s.id IS NOT NULL), 
         '[]'
     ) AS students
-	FROM class c
+	FROM classes c
 	LEFT JOIN ROSTER r ON r.class_id = c.id AND r.class_date = $3
 	LEFT JOIN Students s ON s.id = r.student_id
 	WHERE c.id = $1
-	GROUP BY c.name;`, classId, month, class_date).Scan(&roster.ClassName, &roster.Students, &roster.EnrolledCount, &roster.SessionDates)
+	GROUP BY c.name;`, classId, month, class_date).Scan(&roster.ClassName, &roster.SessionDates, &roster.EnrolledCount, &roster.Students)
 
 	return roster, err
 }

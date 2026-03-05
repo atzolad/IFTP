@@ -21,7 +21,7 @@ func dbListClasses(ctx context.Context, myDb *db.MyDatabase) ([]Class, error) {
 		COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
 		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id
-		LEFT JOIN roster AS r ON r.class_id = c.id
+		LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date
 		WHERE active = True
 		GROUP BY cs.month, c.id
 		ORDER  BY cs.month DESC`)
@@ -60,7 +60,7 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 		fmt.Fprintf(&query, " AND month = $%d ", len(args))
 	}
 
-	query.WriteString(`
+	query.WriteString(` 
 			LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date
 			WHERE c.active = True`)
 
