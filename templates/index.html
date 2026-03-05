@@ -2265,25 +2265,26 @@
                     const containerWrapper = document.getElementById('rosterTableBody');
                     containerWrapper.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Failed to load roster.</td></tr>`;
                 });
+        }
 
 
-            function showAddStudentModal() {
-                document.getElementById('studentModalTitle').textContent = 'Add New Student';
-                new bootstrap.Modal(document.getElementById('studentModal')).show();
-            }
+        function showAddStudentModal() {
+            document.getElementById('studentModalTitle').textContent = 'Add New Student';
+            new bootstrap.Modal(document.getElementById('studentModal')).show();
+        }
 
-            function showEditStudentModal() {
-                document.getElementById('studentModalTitle').textContent = 'Edit Student';
-                new bootstrap.Modal(document.getElementById('studentModal')).show();
-            }
+        function showEditStudentModal() {
+            document.getElementById('studentModalTitle').textContent = 'Edit Student';
+            new bootstrap.Modal(document.getElementById('studentModal')).show();
+        }
 
-            function removeClass(className) {
-                if (confirm('Remove ' + className + ' from this day? This will notify enrolled students.')) {
-                    alert(className + ' removed from this day');
-                    // In real implementation, this would update the calendar and database
-                }
+        function removeClass(className) {
+            if (confirm('Remove ' + className + ' from this day? This will notify enrolled students.')) {
+                alert(className + ' removed from this day');
+                // In real implementation, this would update the calendar and database
             }
         }
+
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2640,7 +2641,8 @@
 
                         fields.forEach(value => {
                             const td = document.createElement('td');
-                            td.textContent = value ?? '';
+                            const displayValue = (value === '0001-01-01') ? 'No class scheduled' : (value ?? '');
+                            td.textContent = displayValue;
                             row.appendChild(td);
                         });
 
