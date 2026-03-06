@@ -70,8 +70,6 @@ func (c Class) MarshalJSON() ([]byte, error) {
 	})
 }
 
-var ErrNoFieldsToUpdate = errors.New("no fields to update")
-
 func formatTimeSlice(dates []time.Time) []string {
 	if len(dates) == 0 {
 		return []string{}
@@ -414,7 +412,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 
 		}
 		if err != nil {
-			if errors.Is(err, ErrNoFieldsToUpdate) {
+			if errors.Is(err, utils.ErrNoFieldsToUpdate) {
 				utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 					Status:  "error",
 					Message: "Error updating class in database- not fields provided to update",

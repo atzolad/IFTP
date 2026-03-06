@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -13,6 +14,7 @@ type Student struct {
 	ID              int      `db:"id" json:"id"`
 	Name            string   `db:"name" json:"name"`
 	Email           string   `db:"email" json:"email"`
+	Notes           string   `db:"notes" json:"notes"`
 	Active          bool     `db:"active" json:"active"`
 	EnrolledClasses []string `db:"enrolled_classes" json:"enrolledClasses"`
 }
@@ -88,51 +90,54 @@ func AddStudent(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-// func UpdateStudent(myDb *db.MyDatabase) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
+func UpdateStudent(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		ctx := r.Context()
+		ctx := r.Context()
 
-// 		id := r.PathValue("student_id")
+		id := r.PathValue("student_id")
 
-// 		integerID, err := strconv.Atoi(id)
-// 		if err != nil {
-// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-// 				Status:  "error",
-// 				Message: "Invalid student id- must be an integer:",
-// 				Code:    http.StatusInternalServerError,
-// 			})
-// 			myDb.Logger.Printf("Error converting student id to int: %v", err)
-// 			return
-// 		}
+		integerID, err := strconv.Atoi(id)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Invalid student id- must be an integer:",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error converting student id to int: %v", err)
+			return
+		}
 
-// 		var updateStudent Student
+		var updateStudentReq Student
 
-// 		if err := json.NewDecoder(r.Body).Decode(&updateStudent); err != nil {
-// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-// 				Status:  "error",
-// 				Message: fmt.Sprintf("Error decoding student info: %v", err),
-// 				Code:    http.StatusInternalServerError,
-// 			})
-// 			myDb.Logger.Printf("Error decoding new student info from JSON: %v", err)
-// 			return
-// 		}
+		if err := json.NewDecoder(r.Body).Decode(&updateStudentReq); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error decoding student info: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error decoding new student info from JSON: %v", err)
+			return
+		}
 
-// 		updateStudent.Sanitize()
-// 		updateStudent.ID = integerID
+		updateStudentReq.Sanitize()
+		updateStudentReq.ID = integerID
 
-// 		returnedStudent, err := UpdateStudentDB(ctx, myDb, integerID, &updateStudent)
+		updatedStudent, err := dbUpdateStudent(ctx, myDb, &updateStudentReq)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error fetching classes from db",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error updating student in database: %v", err)
+			return
+		}
 
-// 		if err != nil {
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 			return
-// 		}
-
-// 		c.Header("content-type", "application/json")
-// 		c.JSON(http.StatusOK, returnedStudent)
-// 		fmt.Printf("Successfully updated student: %v \n", returnedStudent.Name)
-// 	}
-// }
+		utils.WriteJSONResponse(w, http.StatusOK, fmt.Sprintf("Successfully updated student: %v", updatedStudent.Name))
+		myDb.Logger.Printf("Successfully updated student: %v", updatedStudent.Name)
+	}
+}
 
 // // SoftDeleteStudent changes the Active status of the student to false, rather than permanently deleting.
 // func SoftDeleteStudent(myDb *db.MyDatabase) gin.HandlerFunc {

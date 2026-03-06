@@ -2,6 +2,7 @@ package class
 
 import (
 	"IFTP/db"
+	"IFTP/utils"
 	"context"
 	"fmt"
 	"strings"
@@ -221,7 +222,7 @@ func dbUpdateClass(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, er
 	}
 
 	if len(updates) == 0 {
-		return nil, ErrNoFieldsToUpdate
+		return nil, utils.ErrNoFieldsToUpdate
 	}
 
 	args = append(args, id)

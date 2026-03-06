@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -35,6 +36,8 @@ type ResponseData struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`
 }
+
+var ErrNoFieldsToUpdate = errors.New("no fields to update")
 
 func LoadTemplates() Templates {
 	tpl := Templates{

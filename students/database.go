@@ -2,7 +2,10 @@ package students
 
 import (
 	"IFTP/db"
+	"IFTP/utils"
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -46,54 +49,56 @@ func dbGetStudentsWithEnrollment(ctx context.Context, myDb *db.MyDatabase) ([]St
 
 func dbAddStudent(ctx context.Context, myDb *db.MyDatabase, s *Student) error {
 	_, err := myDb.Pool.Exec(ctx,
-		"INSERT INTO students(name, email, active) VALUES($1, $2, true)",
-		s.Name, s.Email)
+		"INSERT INTO students(name, email, notes, active) VALUES($1, $2, $3, true)",
+		s.Name, s.Email, s.Notes)
 
 	return err
 }
 
-// func UpdateStudentDB(ctx context.Context, myDb *db.MyDatabase, id int, s *Student) (*Student, error) {
-// 	updates := []string{}
-// 	args := []any{}
-// 	argCount := 1
+func dbUpdateStudent(ctx context.Context, myDb *db.MyDatabase, s *Student) (*Student, error) {
+	updates := []string{}
+	args := []any{}
 
-// 	if s.Name != "" {
-// 		updates = append(updates, fmt.Sprintf("name=$%d", argCount))
-// 		args = append(args, s.Name)
-// 		argCount++
-// 	}
+	if s.Name != "" {
+		updates = append(updates, fmt.Sprintf("name=$%d", len(args)))
+		args = append(args, s.Name)
+	}
 
-// 	if s.Email != "" {
-// 		updates = append(updates, fmt.Sprintf("email=$%d", argCount))
-// 		args = append(args, s.Email)
-// 		argCount++
-// 	}
+	if s.Email != "" {
+		updates = append(updates, fmt.Sprintf("email=$%d", len(args)))
+		args = append(args, s.Email)
+	}
 
-// 	if len(updates) == 0 {
-// 		return nil, fmt.Errorf("no fields to update")
-// 	}
+	if s.Notes != "" {
+		updates = append(updates, fmt.Sprintf("notes=$%d", len(args)))
+		args = append(args, s.Notes)
+	}
 
-// 	args = append(args, id)
-// 	// RETURNING gives you the updated row within one request to the DB
-// 	query := fmt.Sprintf("UPDATE students SET %s WHERE id=$%d AND active=true RETURNING id, name, email, active",
-// 		strings.Join(updates, ", "), argCount)
+	if len(updates) == 0 {
+		return nil, utils.ErrNoFieldsToUpdate
+	}
 
-// 	// var updated Student
-// 	rows, err := myDb.Pool.Query(ctx, query, args...)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	args = append(args, s.ID)
 
-// 	updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[Student])
-// 	if err != nil {
-// 		if err == pgx.ErrNoRows {
-// 			return nil, fmt.Errorf("active student with id %d not found", id)
-// 		}
-// 		return nil, err
-// 	}
+	// RETURNING gives you the updated row within one request to the DB
+	query := fmt.Sprintf("UPDATE students SET %s WHERE id=$%d AND active=true RETURNING id, name, email, notes, active",
+		strings.Join(updates, ", "), len(args))
 
-// 	return &updated, nil
-// }
+	rows, err := myDb.Pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedStudent, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[Student])
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("active student with id %d not found", s.ID)
+		}
+		return nil, err
+	}
+
+	return &updatedStudent, nil
+}
 
 // func SoftDeleteStudentDB(myDb *db.MyDatabase, id int) (string, error) {
 
