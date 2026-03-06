@@ -60,18 +60,18 @@ func dbUpdateStudent(ctx context.Context, myDb *db.MyDatabase, s *Student) (*Stu
 	args := []any{}
 
 	if s.Name != "" {
-		updates = append(updates, fmt.Sprintf("name=$%d", len(args)))
 		args = append(args, s.Name)
+		updates = append(updates, fmt.Sprintf("name=$%d", len(args)))
 	}
 
 	if s.Email != "" {
-		updates = append(updates, fmt.Sprintf("email=$%d", len(args)))
 		args = append(args, s.Email)
+		updates = append(updates, fmt.Sprintf("email=$%d", len(args)))
 	}
 
 	if s.Notes != "" {
-		updates = append(updates, fmt.Sprintf("notes=$%d", len(args)))
 		args = append(args, s.Notes)
+		updates = append(updates, fmt.Sprintf("notes=$%d", len(args)))
 	}
 
 	if len(updates) == 0 {
