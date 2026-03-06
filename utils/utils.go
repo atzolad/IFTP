@@ -79,11 +79,11 @@ func LoggingWrapper(next http.Handler) http.Handler {
 		bodyBytes, _ := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Refill the body for the next handler
 		// Log the request details
-		myDb.Logger.Printf("Request %s %s | Body  %s", r.Method, r.URL.Path, string(bodyBytes))
+		log.Printf("Request %s %s | Body  %s", r.Method, r.URL.Path, string(bodyBytes))
 		lw := &LogWriter{w, http.StatusOK}
 		next.ServeHTTP(lw, r)
 		//Log the Reponse details
-		myDb.Logger.Printf("Response: %s %s - Status: %d", r.Method, r.URL.Path, lw.statusCode)
+		log.Printf("Response: %s %s - Status: %d", r.Method, r.URL.Path, lw.statusCode)
 	})
 }
 
@@ -95,7 +95,7 @@ func WriteJSONResponse(w http.ResponseWriter, status int, data any) {
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		// Handle Encoding errors
-		myDb.Logger.Printf("failed to encode JSON response: %v", err)
+		log.Printf("failed to encode JSON response: %v", err)
 	}
 
 }

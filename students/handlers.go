@@ -6,10 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Student struct {
@@ -91,51 +88,51 @@ func AddStudent(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-func UpdateStudent(myDb *db.MyDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// func UpdateStudent(myDb *db.MyDatabase) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
 
-		ctx := r.Context()
+// 		ctx := r.Context()
 
-		id := r.PathValue("student_id")
+// 		id := r.PathValue("student_id")
 
-		integerID, err := strconv.Atoi(id)
-		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-				Status:  "error",
-				Message: "Invalid student id- must be an integer:",
-				Code:    http.StatusInternalServerError,
-			})
-			myDb.Logger.Printf("Error converting student id to int: %v", err)
-			return
-		}
+// 		integerID, err := strconv.Atoi(id)
+// 		if err != nil {
+// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+// 				Status:  "error",
+// 				Message: "Invalid student id- must be an integer:",
+// 				Code:    http.StatusInternalServerError,
+// 			})
+// 			myDb.Logger.Printf("Error converting student id to int: %v", err)
+// 			return
+// 		}
 
-		var updateStudent Student
+// 		var updateStudent Student
 
-		if err := json.NewDecoder(r.Body).Decode(&updateStudent); err != nil {
-			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-				Status:  "error",
-				Message: fmt.Sprintf("Error decoding student info: %v", err),
-				Code:    http.StatusInternalServerError,
-			})
-			myDb.Logger.Printf("Error decoding new student info from JSON: %v", err)
-			return
-		}
+// 		if err := json.NewDecoder(r.Body).Decode(&updateStudent); err != nil {
+// 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+// 				Status:  "error",
+// 				Message: fmt.Sprintf("Error decoding student info: %v", err),
+// 				Code:    http.StatusInternalServerError,
+// 			})
+// 			myDb.Logger.Printf("Error decoding new student info from JSON: %v", err)
+// 			return
+// 		}
 
-		updateStudent.Sanitize()
-		updateStudent.ID = integerID
+// 		updateStudent.Sanitize()
+// 		updateStudent.ID = integerID
 
-		returnedStudent, err := UpdateStudentDB(ctx, myDb, integerID, &updateStudent)
+// 		returnedStudent, err := UpdateStudentDB(ctx, myDb, integerID, &updateStudent)
 
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+// 		if err != nil {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 			return
+// 		}
 
-		c.Header("content-type", "application/json")
-		c.JSON(http.StatusOK, returnedStudent)
-		fmt.Printf("Successfully updated student: %v \n", returnedStudent.Name)
-	}
-}
+// 		c.Header("content-type", "application/json")
+// 		c.JSON(http.StatusOK, returnedStudent)
+// 		fmt.Printf("Successfully updated student: %v \n", returnedStudent.Name)
+// 	}
+// }
 
 // // SoftDeleteStudent changes the Active status of the student to false, rather than permanently deleting.
 // func SoftDeleteStudent(myDb *db.MyDatabase) gin.HandlerFunc {
