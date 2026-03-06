@@ -4,7 +4,6 @@ import (
 	"IFTP/db"
 	"IFTP/utils"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -62,7 +61,7 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 		classDateStr := r.FormValue("class_date")
 		classIdStr := r.PathValue("class_id")
 
-		log.Printf("month: %v, class_date: %v, class_id: %v", monthStr, classDateStr, classIdStr)
+		myDb.Logger.Printf("month: %v, class_date: %v, class_id: %v", monthStr, classDateStr, classIdStr)
 
 		classId, err := strconv.Atoi(classIdStr)
 		if err != nil {
@@ -99,12 +98,12 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: fmt.Sprintf("Error retrieving roster from db: %v", err),
 				Code:    http.StatusInternalServerError,
 			})
-			log.Printf("Error retrieving roster from db: %v", err)
+			myDb.Logger.Printf("Error retrieving roster from db: %v", err)
 			return
 		}
 
 		utils.WriteJSONResponse(w, http.StatusOK, fullRoster)
-		log.Printf("Successfully retrieved roster\n")
+		myDb.Logger.Printf("Successfully retrieved roster\n")
 	}
 }
 

@@ -79,11 +79,11 @@ func LoggingWrapper(next http.Handler) http.Handler {
 		bodyBytes, _ := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Refill the body for the next handler
 		// Log the request details
-		log.Printf("Request %s %s | Body  %s", r.Method, r.URL.Path, string(bodyBytes))
+		myDb.Logger.Printf("Request %s %s | Body  %s", r.Method, r.URL.Path, string(bodyBytes))
 		lw := &LogWriter{w, http.StatusOK}
 		next.ServeHTTP(lw, r)
 		//Log the Reponse details
-		log.Printf("Response: %s %s - Status: %d", r.Method, r.URL.Path, lw.statusCode)
+		myDb.Logger.Printf("Response: %s %s - Status: %d", r.Method, r.URL.Path, lw.statusCode)
 	})
 }
 
@@ -95,7 +95,7 @@ func WriteJSONResponse(w http.ResponseWriter, status int, data any) {
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		// Handle Encoding errors
-		log.Printf("failed to encode JSON response: %v", err)
+		myDb.Logger.Printf("failed to encode JSON response: %v", err)
 	}
 
 }
@@ -151,13 +151,13 @@ func ConvertStrDT(date string) (time.Time, error) {
 
 // 		user, err := gothic.CompleteUserAuth(w, r)
 // 		if err != nil {
-// 			log.Printf("Error completing user auth: %v", err)
+// 			myDb.Logger.Printf("Error completing user auth: %v", err)
 // 			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
 // 				Status:  "error",
 // 				Message: "Error completing user auth",
 // 				Code:    http.StatusInternalServerError,
 // 			})
-// 			log.Printf("Error completing user auth")
+// 			myDb.Logger.Printf("Error completing user auth")
 // 			return
 // 		}
 
@@ -170,7 +170,7 @@ func ConvertStrDT(date string) (time.Time, error) {
 // 		// store the user session
 // 		session, err := gothic.Store.New(r, "goth_session")
 // 		if err != nil {
-// 			log.Printf("Error storing user session: %v", err)
+// 			myDb.Logger.Printf("Error storing user session: %v", err)
 // 			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
 // 				Status:  "error",
 // 				Message: "Error storing user session",
@@ -181,7 +181,7 @@ func ConvertStrDT(date string) (time.Time, error) {
 
 // 		// Save user info into the database
 // 		// if err := DbInsertOrUpdateUser(myDb, user); err != nil {
-// 		// 	log.Printf("Error updating user in db: %v", err)
+// 		// 	myDb.Logger.Printf("Error updating user in db: %v", err)
 // 		// }
 
 // 		// Save user info in cookie- The entire user object is too big.
@@ -191,7 +191,7 @@ func ConvertStrDT(date string) (time.Time, error) {
 
 // 		// save the user session
 // 		if err = session.Save(r, w); err != nil {
-// 			log.Printf("Error saving user session: %v", err)
+// 			myDb.Logger.Printf("Error saving user session: %v", err)
 // 			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
 // 				Status:  "error",
 // 				Message: "Error saving user session",
@@ -212,7 +212,7 @@ func ConvertStrDT(date string) (time.Time, error) {
 // 		// Retrieve the session
 // 		session, err := gothic.Store.Get(r, "goth_session")
 // 		if err != nil {
-// 			log.Printf("Error retrieving user session: %v", err)
+// 			myDb.Logger.Printf("Error retrieving user session: %v", err)
 // 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
 // 				Status:  "error",
 // 				Message: "Error retrieving user session",
@@ -224,7 +224,7 @@ func ConvertStrDT(date string) (time.Time, error) {
 // 		// Get user data from session
 // 		user := session.Values["user"]
 // 		if user == nil {
-// 			log.Printf("Error: no authenticated user found: %v", err)
+// 			myDb.Logger.Printf("Error: no authenticated user found: %v", err)
 // 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
 // 				Status:  "error",
 // 				Message: "No authenticated user found",

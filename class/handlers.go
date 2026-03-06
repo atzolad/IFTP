@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -291,7 +290,7 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		defer tx.Rollback(ctx)
 
 		if err := dbCreateClass(ctx, tx, &newClass); err != nil {
-			log.Printf("Erorr adding class to db: %v", err)
+			myDb.Logger.Printf("Erorr adding class to db: %v", err)
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
 				Message: "Error adding Class to DB",
@@ -316,7 +315,7 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			br := tx.SendBatch(ctx, batch)
 
 			if err := br.Close(); err != nil {
-				log.Printf("Error batch scheduling session dates: %v", err)
+				myDb.Logger.Printf("Error batch scheduling session dates: %v", err)
 				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 					Status:  "error",
 					Message: "Error batch scheduling session dates",
@@ -337,10 +336,10 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 		if hasSessionDates {
 			utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class and scheduled session dates")
-			log.Printf("Successfully created new class with session dates: %v", newClass)
+			myDb.Logger.Printf("Successfully created new class with session dates: %v", newClass)
 		} else {
 			utils.WriteJSONResponse(w, http.StatusOK, "Successfully created new class")
-			log.Printf("Successfully created new class: %v", newClass)
+			myDb.Logger.Printf("Successfully created new class: %v", newClass)
 		}
 	}
 }
@@ -348,10 +347,6 @@ func CreateClass(myDb *db.MyDatabase) http.HandlerFunc {
 // Update Class updates the class details based on the JSON received in the request body.
 func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		if myDb == nil || myDb.Pool == nil {
-			log.Fatal("Database connection is not initialized")
-		}
 
 		ctx := r.Context()
 
@@ -363,7 +358,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: fmt.Sprintf("Invalid Class id- must be an integer: %v", err),
 				Code:    http.StatusBadRequest,
 			})
-			log.Printf("Invalid Class id- must be an integer: %v", err)
+			myDb.Logger.Printf("Invalid Class id- must be an integer: %v", err)
 			return
 		}
 
@@ -375,7 +370,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: fmt.Sprintf("Error Decoding Request: %v", err),
 				Code:    http.StatusBadRequest,
 			})
-			log.Printf("Error Decoding Request: %v", err)
+			myDb.Logger.Printf("Error Decoding Request: %v", err)
 			return
 		}
 
@@ -393,16 +388,15 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 					Message: "Invalid time format, expected HH:MM or HH:MM:SS",
 					Code:    http.StatusBadRequest,
 				})
-				log.Printf("Error updating class- invalid time format: %v", err)
+				myDb.Logger.Printf("Error updating class- invalid time format: %v", err)
 				return
 			}
 			updateRequest.Time = parsedTime.Format("15:04:05")
 		}
 
-		log.Printf("updateRequest Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
+		myDb.Logger.Printf("updateRequest Request- Name: %v, Teacher: %v, Day: %v, Time: %v, Description: %v, Month: %v, Capacity: %v, SessionDates: %v",
 			updateRequest.Name, updateRequest.Teacher, updateRequest.DayOfWeek, updateRequest.Time, updateRequest.Description, updateRequest.Month, updateRequest.Capacity, updateRequest.SessionDates)
 
-		log.Println("DEBUG: Starting transaction...")
 		tx, err := myDb.Pool.Begin(ctx)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
@@ -415,11 +409,9 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 
 		defer tx.Rollback(ctx)
 
-		log.Println("DEBUG: Calling dbUpdateClass...")
 		returnedClass, err := dbUpdateClass(ctx, tx, integerID, &updateRequest)
-		log.Println("DEBUG: dbUpdateClass finished")
 		if returnedClass == nil {
-			log.Println("WARNING: returnedClass is NIL")
+
 		}
 		if err != nil {
 			if errors.Is(err, ErrNoFieldsToUpdate) {
@@ -439,7 +431,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 
 			}
 
-			log.Printf("Error updating class in database: %v", err)
+			myDb.Logger.Printf("Error updating class in database: %v", err)
 			return
 		}
 
@@ -454,7 +446,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 					Message: "Error removing old session dates from db",
 					Code:    http.StatusInternalServerError,
 				})
-				log.Printf("Error removing old session dates from db: %v", err)
+				myDb.Logger.Printf("Error removing old session dates from db: %v", err)
 				return
 			}
 
@@ -471,7 +463,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 				br := tx.SendBatch(ctx, batch)
 
 				if err := br.Close(); err != nil {
-					log.Printf("Error batch scheduling session dates: %v", err)
+					myDb.Logger.Printf("Error batch scheduling session dates: %v", err)
 					utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 						Status:  "error",
 						Message: "Error batch scheduling session dates",
@@ -491,10 +483,10 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 		if hasSessionDates {
 			utils.WriteJSONResponse(w, http.StatusOK, updateRequest)
-			log.Printf("Successfully updated class with session dates: %v", updateRequest)
+			myDb.Logger.Printf("Successfully updated class with session dates: %v", updateRequest)
 		} else {
 			utils.WriteJSONResponse(w, http.StatusOK, updateRequest)
-			log.Printf("Successfully updated class: %v", updateRequest)
+			myDb.Logger.Printf("Successfully updated class: %v", updateRequest)
 		}
 	}
 }
