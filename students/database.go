@@ -12,7 +12,7 @@ import (
 
 func dbRetrieveStudents(ctx context.Context, myDb *db.MyDatabase) ([]Student, error) {
 	rows, err := myDb.Pool.Query(ctx,
-		"SELECT id, name, email, active FROM students WHERE active = true")
+		"SELECT id, name, email, notes, active FROM students WHERE active = true")
 	if err != nil {
 		return nil, err
 	}
@@ -28,11 +28,11 @@ func dbRetrieveStudents(ctx context.Context, myDb *db.MyDatabase) ([]Student, er
 
 func dbGetStudentsWithEnrollment(ctx context.Context, myDb *db.MyDatabase) ([]Student, error) {
 	rows, err := myDb.Pool.Query(ctx,
-		`SELECT s.id, s.name, s.email, s.active, COALESCE(ARRAY_AGG(DISTINCT c.name ORDER BY c.name) FILTER (WHERE c.name IS NOT NULL), '{}') AS enrolled_classes FROM students AS s 
+		`SELECT s.id, s.name, s.email, s.notes, s.active, COALESCE(ARRAY_AGG(DISTINCT c.name ORDER BY c.name) FILTER (WHERE c.name IS NOT NULL), '{}') AS enrolled_classes FROM students AS s 
 		LEFT JOIN roster AS r on r.student_id = s.id
 		LEFT JOIN classes AS c on r.class_id = c.id
 		WHERE s.active = true
-		GROUP BY s.name, s.id, s.email`)
+		GROUP BY s.name, s.id, s.email, s.notes`)
 
 	if err != nil {
 		return nil, err
