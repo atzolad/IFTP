@@ -2905,60 +2905,82 @@
 
                     students.forEach(student => {
 
-                        studentsMap[student.id] = student
+                        studentsMap[student.id] = student;
 
-                        var studentClasses = student.enrolledClasses.join(', ');
-                        if (studentClasses.length < 1) {
-                            studentClasses = "No classses enrolled"
-                        }
+                        const studentClasses = student.enrolledClasses.join(', ') || 'No classes enrolled';
+                        const studentStatus = student.active ? 'Active' : 'Inactive';
 
-                        var studentStatusl;
-
-                        if (student.active === true) {
-                            studentStatus = 'Active'
-
-                        } else {
-                            studentStatus = 'Inactive'
-                        }
 
                         const row = document.createElement('tr');
-                        row.dataset.id = students.id;
+                        row.dataset.id = student.id;
+
+                        const studentName = document.createElement('td');
+                        studentName.textContent = student.name ?? '';
+                        row.appendChild(studentName)
 
 
-                        row.innerHTML = `
-                                    <tr>
-                                        <td>${student.name}</td>
-                                        <td>${student.email}</td>
-                                        <td>${studentClasses}</td>
-                                            </td>
-                                            <td><span class="badge ${studentStatus === 'Active' ? ' bg-success' : 'bg-danger text-white'}">
-                                                ${studentStatus}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1 editStudentButton">
-                                                <i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-info me-1 studentEnrollmentButton">
-                                                <i class="bi bi-book"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger deleteStudentButton">
-                                                <i class="bi bi-trash"></i></button>
-                                        </td>
-                                    </tr>
-                            `
+                        const studentEmail = document.createElement('td');
+                        studentEmail.textContent = student.email ?? '';
+                        row.appendChild(studentEmail)
+
+                        const studentClassesRow = document.createElement('td');
+                        studentClassesRow.textContent = studentClasses;
+                        row.appendChild(studentClassesRow);
+
+                        const studentStatusCell = document.createElement('td');
+                        const badgeColor = studentStatus === 'Active' ? 'bg-success' : 'bg-danger text-white';
+                        studentStatusCell.innerHTML = `<span class="badge ${badgeColor}">${studentStatus}</span>`;
+                        row.appendChild(studentStatusCell);
+
+
+                        const editButton = document.createElement('td');
+                        editButton.innerHTML = `<button class="btn btn-sm btn-outline-primary me-1 editStudentButton">
+                                                <i class="bi bi-pencil"></i></button>`
+                        row.appendChild(editButton)
+
+                        const enrollmentButton = document.createElement('td');
+                        enrollmentButton.innerHTML = `<button class="btn btn-sm btn-outline-info me-1 studentEnrollmentButton">
+                                                <i class="bi bi-book"></i></button>`
+                        row.appendChild(enrollmentButton)
+
+                        const deleteButton = document.createElement('td');
+                        deleteButton.innerHTML = `<button class="btn btn-sm btn-outline-danger deleteStudentButton">
+                                                <i class="bi bi-trash"></i></button>`
+                        row.appendChild(deleteButton)
+
+
+
+                        // row.innerHTML = `
+                        //             <tr>
+                        //                 <td>${student.name}</td>
+                        //                 <td>${student.email}</td>
+                        //                 <td>${studentClasses}</td>
+                        //                     </td>
+                        //                     <td><span class="badge ${studentStatus === 'Active' ? ' bg-success' : 'bg-danger text-white'}">
+                        //                         ${studentStatus}
+                        //                     </span>
+                        //                 </td>
+                        //                 <td>
+                        //                     <button class="btn btn-sm btn-outline-primary me-1 editStudentButton">
+                        //                         <i class="bi bi-pencil"></i></button>
+                        //                     <button class="btn btn-sm btn-outline-info me-1 studentEnrollmentButton">
+                        //                         <i class="bi bi-book"></i></button>
+                        //                     <button class="btn btn-sm btn-outline-danger deleteStudentButton">
+                        //                         <i class="bi bi-trash"></i></button>
+                        //                 </td>
+                        //             </tr>
+                        //     `
 
                         containerWrapper.appendChild(row);
                     });
                     // TODO may need to adjust state management heere- window.initialized etc..
 
-                } else {
-                    containerWrapper.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No Students Found.</td></tr>';
-                }
                 })
-                .catch (error => {
-            console.error('Error fetching data:', error);
-            containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
 
-        });
+                });
         }
 
         // Event listener for Manage Students Table buttons
