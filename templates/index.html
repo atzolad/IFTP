@@ -2899,7 +2899,6 @@
                         return;
                     }
 
-
                     // Reset studentsMap
                     studentsMap = {};
 
@@ -2909,7 +2908,6 @@
 
                         const studentClasses = student.enrolledClasses.join(', ') || 'No classes enrolled';
                         const studentStatus = student.active ? 'Active' : 'Inactive';
-
 
                         const row = document.createElement('tr');
                         row.dataset.id = student.id;
@@ -2932,44 +2930,14 @@
                         studentStatusCell.innerHTML = `<span class="badge ${badgeColor}">${studentStatus}</span>`;
                         row.appendChild(studentStatusCell);
 
-
-                        const editButton = document.createElement('td');
-                        editButton.innerHTML = `<button class="btn btn-sm btn-outline-primary me-1 editStudentButton">
-                                                <i class="bi bi-pencil"></i></button>`
-                        row.appendChild(editButton)
-
-                        const enrollmentButton = document.createElement('td');
-                        enrollmentButton.innerHTML = `<button class="btn btn-sm btn-outline-info me-1 studentEnrollmentButton">
-                                                <i class="bi bi-book"></i></button>`
-                        row.appendChild(enrollmentButton)
-
-                        const deleteButton = document.createElement('td');
-                        deleteButton.innerHTML = `<button class="btn btn-sm btn-outline-danger deleteStudentButton">
+                        const buttons = document.createElement('td');
+                        buttons.innerHTML = `<button class="btn btn-sm btn-outline-primary me-1 editStudentButton">
+                                                <i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-sm btn-outline-info me-1 studentEnrollmentButton">
+                                                <i class="bi bi-book"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger deleteStudentButton">
                                                 <i class="bi bi-trash"></i></button>`
-                        row.appendChild(deleteButton)
-
-
-
-                        // row.innerHTML = `
-                        //             <tr>
-                        //                 <td>${student.name}</td>
-                        //                 <td>${student.email}</td>
-                        //                 <td>${studentClasses}</td>
-                        //                     </td>
-                        //                     <td><span class="badge ${studentStatus === 'Active' ? ' bg-success' : 'bg-danger text-white'}">
-                        //                         ${studentStatus}
-                        //                     </span>
-                        //                 </td>
-                        //                 <td>
-                        //                     <button class="btn btn-sm btn-outline-primary me-1 editStudentButton">
-                        //                         <i class="bi bi-pencil"></i></button>
-                        //                     <button class="btn btn-sm btn-outline-info me-1 studentEnrollmentButton">
-                        //                         <i class="bi bi-book"></i></button>
-                        //                     <button class="btn btn-sm btn-outline-danger deleteStudentButton">
-                        //                         <i class="bi bi-trash"></i></button>
-                        //                 </td>
-                        //             </tr>
-                        //     `
+                        row.appendChild(buttons)
 
                         containerWrapper.appendChild(row);
                     });
@@ -2992,7 +2960,7 @@
 
             if (editBtn) {
                 const row = editBtn.closest('tr');
-                const studentId = row.dataset.key;
+                const studentId = row.dataset.id;
                 const selectedStudent = studentsMap[studentId];
                 console.log(`Clicked edit button for class id: ${studentId}`)
                 showEditStudentModal(selectedStudent);
