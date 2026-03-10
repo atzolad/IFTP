@@ -2283,11 +2283,13 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById('studentModal')).show();
         }
 
-        function showEditStudentModal() {
+        function showEditStudentModal(selectedStudent) {
             document.getElementById('studentModalTitle').textContent = 'Edit Student';
             document.getElementById('studentModalAddBtn').textContent = 'Edit Student';
 
-
+            document.getElementById('studentModalName').value = selectedStudent.name || '';
+            document.getElementById('studentModalEmail').value = selectedStudent.email || '';
+            document.getElementById('studentModalNotes').value = selectedStudent.notes || '';
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('studentModal')).show();
 
@@ -2968,8 +2970,9 @@
 
             if (enrollmentBtn) {
                 const row = enrollmentBtn.closest('tr');
-                const classId = row.dataset.key;
-                const selectedClass = studentsMap[studentId];
+                const studentId = row.dataset.id;
+                const selectedStudent = studentsMap[studentId];
+                console.log(selectedStudent)
                 console.log(`Clicked enrollment button for student id: ${studentId}`)
                 // TODO build show student enrollment function.
                 // showStudentEnrollment(selectedStudent);
