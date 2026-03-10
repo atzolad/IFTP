@@ -1673,6 +1673,35 @@
         </div>
     </div>
 
+    <!-- Student Enrollment Modal -->
+    <!-- <div class="modal fade" id="studentEnrollmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="studentEnrollmentModalTitle">Student Enrollment</h5>
+                    
+
+                </div>
+            </div>
+        </div>
+     </div> -->
+
+
+
+    <!-- <td class="col-select">
+        <div class="form-check d-flex justify-content-center">
+            <input class="form-check-input item-checkbox-equipment" type="checkbox" value="${equipment.id}" id="check-${equipment.id}" data-status="${equipment.status}">
+        </div>
+    </td>
+    <td class="col-name">${equipment.name}</td>
+    <td class="text-center">${equipment.startDate}</td>
+    <td class="text-center">${equipment.endDate}</td>
+    </td>
+        <td class="text-center"><span id="status-${equipment.id}" class="badge ${equipment.status === 'Hold' ? ' bg-warning' : equipment.status === 'Booked' ? ' bg-success' : equipment.status === 'Completed' ? ' bg-secondary' : 'bg-danger text-white'}">
+            ${equipment.status}
+        </span>
+    </td> -->
+
     <!-- Calendar Edit Modal (For Pending Approvals) -->
     <div class="modal fade" id="calendarEditModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
@@ -2271,13 +2300,12 @@
         }
 
 
-        function showAddStudentModal(selectedStudent) {
+        function showAddStudentModal() {
 
             document.getElementById('studentModalTitle').textContent = 'Add New Student';
             document.getElementById('studentModalAddBtn').textContent = 'Add Student';
 
             document.getElementById('studentModalForm').dataset.mode = 'add'
-            document.getElementById('studentModalForm').dataset.id = selectedStudent.id
 
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('studentModal')).show();
@@ -2286,6 +2314,9 @@
         function showEditStudentModal(selectedStudent) {
             document.getElementById('studentModalTitle').textContent = 'Edit Student';
             document.getElementById('studentModalAddBtn').textContent = 'Edit Student';
+
+            document.getElementById('studentModalForm').dataset.id = selectedStudent.id
+            document.getElementById('studentModalForm').dataset.mode = 'edit'
 
             document.getElementById('studentModalName').value = selectedStudent.name || '';
             document.getElementById('studentModalEmail').value = selectedStudent.email || '';
@@ -2459,7 +2490,6 @@
 
         async function renderClasses(month) {
             const containerWrapper = document.getElementById('availableClassesContainer');
-            // const baseUrl = 'http://localhost:8080'
             const apiEndpoint = baseUrl + '/classes' + '?' + 'month=' + month
 
 
@@ -2481,7 +2511,6 @@
                 }
 
                 classes.forEach(selectedClass => {
-                    console.log(selectedClass)
                     const isAlreadyEnrolled = currentEnrolledClasses.includes(selectedClass.id);
 
                     let enrollBtnHtml = '';
