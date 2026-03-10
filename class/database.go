@@ -184,19 +184,16 @@ func dbUpdateClass(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, er
 	if c.Name != "" {
 		args = append(args, c.Name)
 		updates = append(updates, fmt.Sprintf("name=$%d", len(args)))
-
 	}
 
 	if c.Teacher != "" {
 		args = append(args, c.Teacher)
 		updates = append(updates, fmt.Sprintf("teacher=$%d", len(args)))
-
 	}
 
 	if c.DayOfWeek != "" {
 		args = append(args, c.DayOfWeek)
 		updates = append(updates, fmt.Sprintf("day_of_week=$%d", len(args)))
-
 	}
 
 	if c.Time != "" {

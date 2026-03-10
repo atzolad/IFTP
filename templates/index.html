@@ -2271,12 +2271,14 @@
         }
 
 
-        function showAddStudentModal() {
+        function showAddStudentModal(selectedStudent) {
 
             document.getElementById('studentModalTitle').textContent = 'Add New Student';
             document.getElementById('studentModalAddBtn').textContent = 'Add Student';
 
             document.getElementById('studentModalForm').dataset.mode = 'add'
+            document.getElementById('studentModalForm').dataset.id = selectedStudent.id
+
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('studentModal')).show();
         }
@@ -2284,6 +2286,8 @@
         function showEditStudentModal() {
             document.getElementById('studentModalTitle').textContent = 'Edit Student';
             document.getElementById('studentModalAddBtn').textContent = 'Edit Student';
+
+
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('studentModal')).show();
 
@@ -2883,26 +2887,45 @@
             fetch(apiEndpoint)
                 .then(response => response.json())
                 .then(students => {
-                    if (students !== null && students !== undefined) {
-                        students.forEach(student => {
 
-                            var studentClasses = student.enrolledClasses.join(', ');
-                            if (studentClasses.length < 1) {
-                                studentClasses = "No classses enrolled"
-                            }
+                    if (!students.length) {
+                        const row = document.createElement('tr');
+                        const td = document.createElement('td');
+                        td.colSpan = 7;
+                        td.className = 'text-center text-muted';
+                        td.textContent = 'No students Found';
+                        row.appendChild(td);
+                        containerWrapper.appendChild(row)
+                        return;
+                    }
 
-                            var studentStatusl;
 
-                            if (student.active === true) {
-                                studentStatus = 'Active'
+                    // Reset studentsMap
+                    studentsMap = {};
 
-                            } else {
-                                studentStatus = 'Inactive'
-                            }
+                    students.forEach(student => {
 
-                            const row = document.createElement('tr');
+                        studentsMap[student.id] = student
 
-                            row.innerHTML = `
+                        var studentClasses = student.enrolledClasses.join(', ');
+                        if (studentClasses.length < 1) {
+                            studentClasses = "No classses enrolled"
+                        }
+
+                        var studentStatusl;
+
+                        if (student.active === true) {
+                            studentStatus = 'Active'
+
+                        } else {
+                            studentStatus = 'Inactive'
+                        }
+
+                        const row = document.createElement('tr');
+                        row.dataset.id = students.id;
+
+
+                        row.innerHTML = `
                                     <tr>
                                         <td>${student.name}</td>
                                         <td>${student.email}</td>
@@ -2913,30 +2936,62 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1"
-                                                onclick="showEditStudentModal()"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-info me-1"
-                                                onclick="showStudentClassesModal()"><i class="bi bi-book"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger"><i
-                                                    class="bi bi-trash"></i></button>
+                                            <button class="btn btn-sm btn-outline-primary me-1 editStudentButton">
+                                                <i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-info me-1 studentEnrollmentButton">
+                                                <i class="bi bi-book"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger deleteStudentButton">
+                                                <i class="bi bi-trash"></i></button>
                                         </td>
                                     </tr>
                             `
 
-                            containerWrapper.appendChild(row);
-                        });
-                        // TODO may need to adjust state management heere- window.initialized etc..
+                        containerWrapper.appendChild(row);
+                    });
+                    // TODO may need to adjust state management heere- window.initialized etc..
 
-                    } else {
-                        containerWrapper.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No Students Found.</td></tr>';
-                    }
+                } else {
+                    containerWrapper.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No Students Found.</td></tr>';
+                }
                 })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
+                .catch (error => {
+            console.error('Error fetching data:', error);
+            containerWrapper.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Failed to load data.</td></tr>`;
 
-                });
+        });
         }
+
+        // Event listener for Manage Students Table buttons
+        const manageStudentsContainerWrapper = document.getElementById('ManageStudentsTableBody');
+        manageStudentsContainerWrapper.addEventListener('click', (event) => {
+            const editBtn = event.target.closest('.editStudentButton');
+            const enrollmentBtn = event.target.closest('.studentEnrollmentButton');
+            const deletBtn = event.target.closest('.deleteStudentButton');
+
+            if (editBtn) {
+                const row = editBtn.closest('tr');
+                const studentId = row.dataset.key;
+                const selectedStudent = studentsMap[studentId];
+                console.log(`Clicked edit button for class id: ${studentId}`)
+                showEditStudentModal(selectedStudent);
+            }
+
+            if (enrollmentBtn) {
+                const row = enrollmentBtn.closest('tr');
+                const classId = row.dataset.key;
+                const selectedClass = studentsMap[studentId];
+                console.log(`Clicked enrollment button for student id: ${studentId}`)
+                // TODO build show student enrollment function.
+                // showStudentEnrollment(selectedStudent);
+            }
+
+            if (deletBtn) {
+                const row = deletBtn.closest('tr');
+                const studentId = row.dataset.id;
+                // TODO build delete student function
+                // deleteStudent(studentId);
+            }
+        });
 
         const holidays = {
             '2026-03-17': 'St. Patrick\'s Day'
@@ -3241,7 +3296,45 @@
         }
 
         async function updateStudent(form, studentId) {
-            console.log("update student!")
+
+            //TODO - May want to go through this later and only send the values that are updated. For now it seems simpler to send it all.
+            console.log(`update student! with id: ${studentId}`)
+
+
+            const updateStudentReq = {
+                name: document.getElementById('studentModalName').value,
+                email: document.getElementById('studentModalEmail').value,
+                notes: document.getElementById('studentModalNotes').value,
+            }
+
+            try {
+                const resp = await fetch(`/students/${studentId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-type': 'application/json' },
+                    body: JSON.stringify(updateStudentReq)
+                });
+
+                const responseData = await resp.json();
+
+                if (resp.ok) {
+                    const responseString = JSON.stringify(responseData, null, 2)
+                    console.log(responseString)
+                    showAlert('addStudentAlert', `Student updated successfully: <pre><code>${responseString}</pre></code>`, 'success');
+
+                    renderManageStudentsTable();
+
+                    timerId = setTimeout(() => {
+                        document.getElementById('addClassAlert').innerHTML = '';
+                    }, 3000);
+
+                } else {
+                    showAlert('addStudentAlert', responseData.message || 'Error updating student', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error:', error)
+                showAlert('addStudentAlert', 'Network error ocurred', 'danger')
+            }
         }
 
 
