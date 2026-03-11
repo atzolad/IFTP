@@ -4,6 +4,8 @@ import (
 	"IFTP/db"
 	"context"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func dbGetRoster(ctx context.Context, myDb *db.MyDatabase, classId int, month time.Time, class_date time.Time) (GetRosterRequest, error) {
@@ -44,6 +46,30 @@ func dbGetRoster(ctx context.Context, myDb *db.MyDatabase, classId int, month ti
 	GROUP BY c.name;`, classId, month, class_date).Scan(&roster.ClassName, &roster.SessionDates, &roster.EnrolledCount, &roster.Students)
 
 	return roster, err
+}
+
+func dbGetStudentEnrollment(ctx context.Context, myDb *db.MyDatabase, studentId int, month time.Time) ([]StudentEnrollment, error) {
+
+	rows, err := myDb.Pool.Query(ctx, `
+	SELECT c.name as class_name, r.class_date, cs.month
+	FROM roster r
+	JOIN classes c on r.class_id = c.id
+	JOIN class_schedule cs on cs.class_id = r.class_id
+	AND cs.session_date = r.class_date
+	WHERE r.student_id = $1
+	AND cs.month = $2;
+	`, studentId, month)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	requestedStudentEnrollment, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[StudentEnrollment])
+	if err != nil {
+		return nil, err
+	}
+
+	return requestedStudentEnrollment, nil
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {

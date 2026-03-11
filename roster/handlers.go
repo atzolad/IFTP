@@ -51,6 +51,12 @@ type EnrollmentRequest struct {
 	ClassDates []string `json:"class_dates"`
 }
 
+type StudentEnrollment struct {
+	ClassName string    `db:"name" json:"class_name"`
+	ClassDate time.Time `db:"class_date" json:"class_date"`
+	Month     time.Time `db:"month" json:"month"`
+}
+
 // GetRoster responds with the overall enrolled class lists
 func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +109,51 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		utils.WriteJSONResponse(w, http.StatusOK, fullRoster)
+		myDb.Logger.Printf("Successfully retrieved roster\n")
+	}
+}
+
+func GetStudentEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+
+		monthStr := r.FormValue("month")
+		studentIdStr := r.PathValue("student_id")
+
+		myDb.Logger.Printf("Get student enrollment request- month: %v, student_id: %v", monthStr, studentIdStr)
+
+		studentId, err := strconv.Atoi(studentIdStr)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error: Student id required",
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		month, err := time.Parse("2006-01-02", monthStr)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error: month required in YYYY-MM-DD format",
+				Code:    http.StatusBadRequest,
+			})
+		}
+
+		studentEnrollment, err := dbGetStudentEnrollment(ctx, myDb, studentId, month)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error retrieving roster from db: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error retrieving roster from db: %v", err)
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, studentEnrollment)
 		myDb.Logger.Printf("Successfully retrieved roster\n")
 	}
 }
