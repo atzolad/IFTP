@@ -1674,17 +1674,44 @@
     </div>
 
     <!-- Student Enrollment Modal -->
-    <!-- <div class="modal fade" id="studentEnrollmentModal" tabindex="-1">
+    <div class="modal fade" id="studentEnrollmentModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="studentEnrollmentModalTitle">Student Enrollment</h5>
-                    
-
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Alert -->
+                    <div id="studentEnrollmentModalAlert"></div>
+                    <div class="row align-items-center mb-3">
+                        <div class="col-6">
+                            <h5 class="mb-0">Enrolled Classes</h5>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select" id="studentEnrollmentModalMonthFilter">
+                                <option value="2025-12-01" selected> December 2025</option>
+                                <option value="2026-01-01">January 2026</option>
+                                <option value="2026-02-01">February 2026</option>
+                                <option value="2026-03-01">March 2026</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Session</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentEnrollmentModalTableBody">
+                            <!-- Insert Dynamic Content Here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-     </div> -->
+    </div>
 
 
 
@@ -2326,6 +2353,19 @@
 
         }
 
+        function showStudentEnrollment(selectedStudent) {
+            document.getElementById('studentEnrollmentModalTitle').textContent = `Enrollment for ${selectedStudent.id}`
+
+            renderStudentEnrollment(selectedStudent.id)
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('studentEnrollmentModal')).show();
+
+        }
+
+        function renderStudentEnrollment(studentId) {
+            console.log(`Render student enrollment for id: ${studentId}`)
+        }
+
         function removeClass(className) {
             if (confirm('Remove ' + className + ' from this day? This will notify enrolled students.')) {
                 alert(className + ' removed from this day');
@@ -2340,6 +2380,8 @@
             const monthFilter = document.getElementById('monthFilter');
             const month = document.getElementById('monthFilter').value
             console.log(month)
+
+            //TODO- Need to remove this hardcoded student id and replace with the logged in students id.
 
             const RefreshClasses = async (month) => {
                 await renderEnrolledClasses(month, student_id = 1);
@@ -3004,7 +3046,7 @@
                 console.log(selectedStudent)
                 console.log(`Clicked enrollment button for student id: ${studentId}`)
                 // TODO build show student enrollment function.
-                // showStudentEnrollment(selectedStudent);
+                showStudentEnrollment(selectedStudent);
             }
 
             if (deletBtn) {
