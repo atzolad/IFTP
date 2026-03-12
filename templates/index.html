@@ -2258,7 +2258,7 @@
 
             renderRoster(classId, monthValue, classDate);
 
-            new bootstrap.Modal(document.getElementById('rosterModal')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('rosterModal')).show();
         }
 
         function renderRoster(classId, month, classDate) {
@@ -2356,14 +2356,61 @@
         function showStudentEnrollment(selectedStudent) {
             document.getElementById('studentEnrollmentModalTitle').textContent = `Enrollment for ${selectedStudent.id}`
 
-            renderStudentEnrollment(selectedStudent.id)
+            // TODO- dynamically render the session drop-down. 
+
+            const currentDate = new Date();
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const FirstDayOfMonth = `${year}-${month}-01`;
+
+            renderStudentEnrollment(selectedStudent.id, FirstDayOfMonth)
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('studentEnrollmentModal')).show();
 
         }
 
-        function renderStudentEnrollment(studentId) {
-            console.log(`Render student enrollment for id: ${studentId}`)
+        function renderStudentEnrollment(studentId, FirstDayOfMonth) {
+            console.log(`Render student enrollment for id: ${studentId} for month: ${FirstDayOfMonth}`)
+
+            const apiEndpoint = `${baseUrl}/roster/enrollment/${studentId}?month=${FirstDayOfMonth}`;
+
+            fetch(apiEndpoint)
+                .then(response => {
+                    if (!response.ok) throw new Error('Networ error occurred');
+                    return response.json();
+                })
+                .then(enrolledClass => {
+
+                    const containerWrapper = document.getElementById('studentEnrollmentModalTableBody');
+                    containerWrapper.innerHTML = '';
+
+                    if (!enrolledClass.length) {
+                        const row = document.createElement('tr');
+                        const td = document.createElement('td');
+                        td.colSpan = 7;
+                        td.className = 'text-center text-muted';
+                        td.textContent = 'No enrolled class dates found';
+                        row.appendChild(td);
+                        containerWrapper.appendChild(row);
+                        return;
+                    }
+
+                    enrolledClass.forEach(({ class_name, class_date }) => {
+                        const row = document.createElement('tr');
+                        row.dataset.id = studentId;
+                        row.dataset.date = class_date;
+
+                        const className = document.createElement('td');
+                        className.textContent = class_name
+
+                        const classDate = document.createElement('td');
+                        classDate.textContent = new Date(class_date).toLocaleDateString();
+
+                        row.appendChild(className);
+                        row.appendChild(classDate);
+                        containerWrapper.appendChild(row);
+                    });
+                })
         }
 
         function removeClass(className) {
