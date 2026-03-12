@@ -52,7 +52,7 @@ type EnrollmentRequest struct {
 }
 
 type StudentEnrollment struct {
-	ClassName string    `db:"name" json:"class_name"`
+	ClassName string    `db:"class_name" json:"class_name"`
 	ClassDate time.Time `db:"class_date" json:"class_date"`
 	Month     time.Time `db:"month" json:"month"`
 }

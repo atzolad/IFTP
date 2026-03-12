@@ -93,7 +93,7 @@ func main() {
 
 	// Roster Endpoints
 	mux.HandleFunc("GET /roster/{class_id}", roster.GetRoster(myDb))
-	mux.HandleFunc("GET /roster/{student_id}", roster.GetStudentEnrollment(myDb))
+	mux.HandleFunc("GET /roster/enrollment/{student_id}", roster.GetStudentEnrollment(myDb))
 
 	// Calendar Endpoints
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
