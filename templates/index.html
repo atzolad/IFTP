@@ -1708,6 +1708,17 @@
                             <!-- Insert Dynamic Content Here -->
                         </tbody>
                     </table>
+                    <div class="mb-3">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <strong>Notes:</strong>
+                                <p class="mt-2"></p>
+                                <div class="col-md-12" id="studentEnrollmentModalNotes">
+                                    `;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2355,6 +2366,7 @@
 
         function showStudentEnrollment(selectedStudent) {
             document.getElementById('studentEnrollmentModalTitle').textContent = `Enrollment for ${selectedStudent.id}`
+            document.getElementById('studentEnrollmentModalNotes').textContent = selectedStudent.notes
 
             const currentDate = new Date();
             const year = currentDate.getFullYear();
