@@ -2363,8 +2363,7 @@
             const month = String(currentDate.getMonth() + 1).padStart(2, '0');
             const FirstDayOfMonth = `${year}-${month}-01`;
 
-            console.log(FirstDayOfMonth)
-
+            populateMonthDropdown('studentEnrollmentModalMonthFilter')
             document.getElementById('studentEnrollmentModalMonthFilter').value = FirstDayOfMonth
 
             renderStudentEnrollment(selectedStudent.id, FirstDayOfMonth)
