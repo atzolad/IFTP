@@ -116,12 +116,12 @@ func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *Enrollmen
 
 	err := tx.QueryRow(ctx, `
 	SELECT EXISTS (
-		SELECT 1 FROM roster
+		SELECT 1 FROM roster r
 		JOIN class_schedule cs on cs.class_id = r.class_id
 		AND cs.session_date = r.class_date
-		WHERE student_id = $1
-		AND class_id = $2
-		AND status = 'Enrolled'
+		WHERE r.student_id = $1
+		AND r.class_id = $2
+		AND r.status = 'Enrolled'
 		AND cs.month = $3)
 	`, studentId, request.RequestedClassID, request.Month).Scan(&enrolled)
 
