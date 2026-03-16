@@ -220,7 +220,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		err := dbGetClassInfo(ctx, myDb, &newEnrollmentRequest)
+		err = dbGetClassInfo(ctx, myDb, &newEnrollmentRequest)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
@@ -269,10 +269,10 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
-				Message: "Error checking db for duplicates",
+				Message: "Error checking db for prior enrollment",
 				Code:    http.StatusInternalServerError,
 			})
-			myDb.logger.Printf("Error checking db for duplicates: %v", err)
+			myDb.logger.Printf("Error checking db for prior enrollment: %v", err)
 			return
 		}
 
@@ -309,9 +309,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created enrollment request")
-		myDb.Logger.Printf("Successfully created new class with session dates: %v", newClass)
-
-
+		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v",studentId, newEnrollmentRequest.RequestedClassID)
 		
 }
 

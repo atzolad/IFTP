@@ -93,7 +93,7 @@ func dbGetClassInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.En
 		LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date
 		WHERE c.id = $1 AND cs.month = $2 AND c.active = True
 		GROUP BY cs.month, c.id
-		ORDER  BY cs.month DESC`, request.ClassID, request.Month).Scan(&request.RequestedClassID, &request.RequestedClassName, &request.Teacher, &request.AvailableSpots)
+		ORDER  BY cs.month DESC`, request.RequestedClassID, request.Month).Scan(&request.RequestedClassID, &request.RequestedClassName, &request.Teacher, &request.AvailableSpots)
 
 	return err
 }
@@ -102,10 +102,11 @@ func dbEnrollmentReqExists(ctx context.Context, tx pgx.Tx, request *roster.Enrol
 	var exists bool
 
 	err := tx.QueryRow(ctx, `
-	SELECT EXISTS FROM enrollment_requests
-	WHERE student_id = $1
-	AND requested_class_id = $2
-	AND status = 'Pending'
+	SELECT EXISTS (
+		SELECT 1 FROM enrollment_requests
+		WHERE student_id = $1
+		AND requested_class_id = $2
+		AND status = 'Pending')
 	`, studentId, request.RequestedClassID).Scan(&exists)
 
 	return exists, err
@@ -115,13 +116,14 @@ func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *roster.En
 	var enrolled bool
 
 	err := tx.QueryRow(ctx, `
-	SELECT EXISTS FROM roster
-	JOIN class_schedule cs on cs.class_id = r.class_id
-	AND cs.session_date = r.class_date
-	WHERE student_id = $1
-	AND class_id = $2
-	AND status = 'Enrolled'
-	AND cs.month = $3
+	SELECT EXISTS (
+		SELECT 1 FROM roster
+		JOIN class_schedule cs on cs.class_id = r.class_id
+		AND cs.session_date = r.class_date
+		WHERE student_id = $1
+		AND class_id = $2
+		AND status = 'Enrolled'
+		AND cs.month = $3)
 	`, studentId, request.RequestedClassID, request.Month).Scan(&enrolled)
 
 	return enrolled, err
