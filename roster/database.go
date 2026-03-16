@@ -2,6 +2,7 @@ package roster
 
 import (
 	"IFTP/db"
+	"IFTP/roster"
 	"context"
 	"time"
 
@@ -70,6 +71,17 @@ func dbGetStudentEnrollment(ctx context.Context, myDb *db.MyDatabase, studentId 
 	}
 
 	return requestedStudentEnrollment, nil
+}
+
+func dbGetStudentInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.EnrollmentRequestApproval, studentId int) error {
+	err := myDb.Pool.QueryRow(ctx,
+		`SELECT s.name, s.email, COALESCE(ARRAY_AGG(DISTINCT c.name ORDER BY c.name) FILTER (WHERE c.name IS NOT NULL), '{}') AS currently_enrolled FROM students AS s
+	LEFT JOIN roster AS r on r.student_id = s.id
+	LEFT JOIN classes AS c on r.class_id = c.id
+	WHERE s.id = $1 AND s.active = true
+	GROUP BY s.name, s.email`, studentId).Scan(&request.StudentName, &request.StudentEmail, &request.CurrentlyEnrolled)
+
+	return err
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {

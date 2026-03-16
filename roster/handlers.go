@@ -3,10 +3,13 @@ package roster
 import (
 	"IFTP/db"
 	"IFTP/utils"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/spiffe/go-spiffe/v2/logger"
 )
 
 //	type Roster struct {
@@ -58,14 +61,19 @@ type StudentEnrollment struct {
 }
 
 type EnrollmentRequestApproval struct {
-	RequestID int `json:"request_id"`
-	StudentName string `json:"name"`
-	StudentEmail string `json:"email"`
-	CurrentlyEnrolled []Class.Class `json:"currently_enrolled"`
-	RequestedClassID int `json:"requested_class_id"`
-	Teacher string `json:"teacher"`
-	AvailableSpots int `json:"available"`
-	Reason string `json:"reason"`
+	RequestID         int      `json:"request_id"`
+	StudentName       string   `json:"name"`
+	StudentEmail      string   `json:"email"`
+	CurrentlyEnrolled []string `json:"currently_enrolled"`
+	RequestedClassID  int      `json:"requested_class_id"`
+	Teacher           string   `json:"teacher"`
+	AvailableSpots    int      `json:"available"`
+	Reason            string   `json:"reason"`
+}
+
+type EnrollmentRequestInput struct {
+	RequestedClassID int    `json:"requested_class_id"`
+	Reason           string `json:"reason"`
 }
 
 // GetRoster responds with the overall enrolled class lists
@@ -169,7 +177,56 @@ func GetStudentEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-function CreateEnrollmentRequest
+func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+
+		// TODO get student id from the session- will hardcode it here for now.
+
+		studentId := 1
+		var input EnrollmentRequestInput
+
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Decoding Request: %v",
+				Code:    http.StatusBadRequest,
+			})
+			logger.Printf("Error decoding Request: %v,", err)
+			return
+		}
+
+		logger.Printf("New enrollment request for student id: %v and class id: %v", studentId, input.RequestedClassID)
+
+		var newEnrollmentRequest EnrollmentRequestApproval
+
+		newEnrollmentRequest.RequestedClassID = input.RequestedClassID
+		newEnrollmentRequest.Reason = input.Reason
+
+		err := dbGetStudentInfo(ctx, myDb, &newEnrollmentRequest, studentId)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error fetching student info from db",
+				Code:    http.StatusBadRequest,
+			})
+			logger.Printf("Error fetching student info from db: %v", err)
+			return
+		}
+
+		err := dbGetClassInfo(ctx, myDb, &newEnrollmentRequest)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error fetching class info from db",
+				Code:    http.StatusBadRequest,
+			})
+			logger.Printf("Error fetching class info from db: %v", err)
+			return
+
+	}
+}
 
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students
