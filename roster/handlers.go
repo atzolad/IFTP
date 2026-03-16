@@ -57,6 +57,17 @@ type StudentEnrollment struct {
 	Month     time.Time `db:"month" json:"month"`
 }
 
+type EnrollmentRequestApproval struct {
+	RequestID int `json:"request_id"`
+	StudentName string `json:"name"`
+	StudentEmail string `json:"email"`
+	CurrentlyEnrolled []Class.Class `json:"currently_enrolled"`
+	RequestedClassID int `json:"requested_class_id"`
+	Teacher string `json:"teacher"`
+	AvailableSpots int `json:"available"`
+	Reason string `json:"reason"`
+}
+
 // GetRoster responds with the overall enrolled class lists
 func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -157,6 +168,8 @@ func GetStudentEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
 		myDb.Logger.Printf("Successfully retrieved roster\n")
 	}
 }
+
+function CreateEnrollmentRequest
 
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students

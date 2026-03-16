@@ -95,6 +95,9 @@ func main() {
 	mux.HandleFunc("GET /roster/{class_id}", roster.GetRoster(myDb))
 	mux.HandleFunc("GET /roster/enrollment/{student_id}", roster.GetStudentEnrollment(myDb))
 
+	//Enrollment Request Endpoints
+	mux.HandleFunc("POST /enrollment_request", roster.CreateEnrollmentRequest(myDb))
+
 	// Calendar Endpoints
 	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
 	mux.HandleFunc("GET /calendarEvents/{student_id}", class.GetCalendarEventsByStudent(myDb))

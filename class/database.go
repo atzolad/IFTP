@@ -130,8 +130,6 @@ func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, mont
 
 	query.WriteString(`GROUP BY cs.month, c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity;`)
 
-	fmt.Println("QUERY:", query.String())
-
 	rows, err := myDb.Pool.Query(ctx, query.String(), args...)
 	if err != nil {
 		return nil, err
