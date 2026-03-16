@@ -66,6 +66,7 @@ type EnrollmentRequestApproval struct {
 	StudentEmail      string   `json:"email"`
 	CurrentlyEnrolled []string `json:"currently_enrolled"`
 	RequestedClassID  int      `json:"requested_class_id"`
+	RequestedClassName string `json:"requested_class_name"`
 	Month *time.Time  `json:"month"`
 	Teacher           string   `json:"teacher"`
 	AvailableSpots    int      `json:"available"`
@@ -228,8 +229,66 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 			})
 			logger.Printf("Error fetching class info from db: %v", err)
 			return
-
 	}
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Begining transcation",
+				Code:    http.StatusInternalServerError,
+			})
+			logger.Printf("Error Begining transcation: %v", err)
+			return
+		}
+
+		defer tx.Rollback(ctx)
+
+		duplicate, err := dbEnrollmentReqExists(ctx, tx, &newEnrollmentRequest, studentId)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error checking db for duplicates",
+				Code:    http.StatusInternalServerError,
+			})
+			logger.Printf("Error checking db for duplicates: %v", err)
+			return
+		}
+
+		if duplicate {
+			utils.WriteJSONResponse(w, http.StatusConflict, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName),
+				Code:    http.StatusConflict,
+			})
+			logger.Printf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
+			return
+		}
+
+		alreadyEnrolled, err := dbStudentAlreadyEnrolled(ctx, tx, &newEnrollmentRequest, studentId)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error checking db for duplicates",
+				Code:    http.StatusInternalServerError,
+			})
+			logger.Printf("Error checking db for duplicates: %v", err)
+			return
+		}
+
+
+		if alreadyEnrolled {
+			utils.WriteJSONResponse(w, http.StatusConflict, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName),
+				Code:    http.StatusConflict,
+			})
+			logger.Printf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
+			return
+		}
+
+
+		
 }
 
 // Enroll adds the student info in the body of the request to the class from the url.
