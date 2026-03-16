@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -204,7 +205,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		var newEnrollmentRequest EnrollmentRequestApproval
 
 		newEnrollmentRequest.RequestedClassID = input.RequestedClassID
-		newEnrollmentRequest.Reason = input.Reason
+		newEnrollmentRequest.Reason = strings.TrimSpace(input.Reason)
 		newEnrollmentRequest.Month = input.Month
 
 		err := dbGetStudentInfo(ctx, myDb, &newEnrollmentRequest, studentId)
@@ -321,7 +322,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 // 		// Call BindJSON to bind the received JSON to
 // 		// newEnrollment.
 // 		if err := c.BindJSON(&newEnrollmentRequest); err != nil {
-// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 			c.JSON(http.StatusBadRequerst, gin.H{"error": err.Error()})
 // 			return
 // 		}
 
