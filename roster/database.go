@@ -2,7 +2,6 @@ package roster
 
 import (
 	"IFTP/db"
-	"IFTP/roster"
 	"context"
 	"time"
 
@@ -73,7 +72,7 @@ func dbGetStudentEnrollment(ctx context.Context, myDb *db.MyDatabase, studentId 
 	return requestedStudentEnrollment, nil
 }
 
-func dbGetStudentInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.EnrollmentRequestApproval, studentId int) error {
+func dbGetStudentInfo(ctx context.Context, myDb *db.MyDatabase, request *EnrollmentRequestApproval, studentId int) error {
 	err := myDb.Pool.QueryRow(ctx,
 		`SELECT s.name, s.email, COALESCE(ARRAY_AGG(DISTINCT c.name ORDER BY c.name) FILTER (WHERE c.name IS NOT NULL), '{}') AS currently_enrolled FROM students AS s
 	LEFT JOIN roster AS r on r.student_id = s.id
@@ -84,7 +83,7 @@ func dbGetStudentInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.
 	return err
 }
 
-func dbGetClassInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.EnrollmentRequestApproval) error {
+func dbGetClassInfo(ctx context.Context, myDb *db.MyDatabase, request *EnrollmentRequestApproval) error {
 	err := myDb.Pool.QueryRow(ctx,
 		`SELECT c.id, c.name, c.teacher,
 		c.capacity - COUNT(DISTINCT r.student_id) as available_spots
@@ -98,7 +97,7 @@ func dbGetClassInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.En
 	return err
 }
 
-func dbEnrollmentReqExists(ctx context.Context, tx pgx.Tx, request *roster.EnrollmentRequestApproval, studentId int) (bool, error) {
+func dbEnrollmentReqExists(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId int) (bool, error) {
 	var exists bool
 
 	err := tx.QueryRow(ctx, `
@@ -112,7 +111,7 @@ func dbEnrollmentReqExists(ctx context.Context, tx pgx.Tx, request *roster.Enrol
 	return exists, err
 }
 
-func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *roster.EnrollmentRequestApproval, studentId int) (bool, error) {
+func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId int) (bool, error) {
 	var enrolled bool
 
 	err := tx.QueryRow(ctx, `
@@ -130,7 +129,7 @@ func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *roster.En
 
 }
 
-func dbInsertEnrollmentRequest(ctx context.Context, tx pgx.Tx, request *roster.EnrollmentRequestApproval, studentId int) error {
+func dbInsertEnrollmentRequest(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId int) error {
 	_, err := tx.Exec(ctx, `
 	INSERT INTO enrollment_requests (student_id, requested_class_id, reason)
 	VALUES ($1, $2, $3)

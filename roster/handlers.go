@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/spiffe/go-spiffe/v2/logger"
 )
 
 //	type Roster struct {
@@ -61,23 +59,23 @@ type StudentEnrollment struct {
 }
 
 type EnrollmentRequestApproval struct {
-	RequestID         int      `json:"request_id"`
-	StudentName       string   `json:"name"`
-	StudentEmail      string   `json:"email"`
-	CurrentlyEnrolled []string `json:"currently_enrolled"`
-	RequestedClassID  int      `json:"requested_class_id"`
-	RequestedClassName string `json:"requested_class_name"`
-	Month *time.Time  `json:"month"`
-	Teacher           string   `json:"teacher"`
-	AvailableSpots    int      `json:"available"`
-	Reason            string   `json:"reason"`
-	RequestedAt        time.Time   `json:"requested_at"`
+	RequestID          int        `json:"request_id"`
+	StudentName        string     `json:"name"`
+	StudentEmail       string     `json:"email"`
+	CurrentlyEnrolled  []string   `json:"currently_enrolled"`
+	RequestedClassID   int        `json:"requested_class_id"`
+	RequestedClassName string     `json:"requested_class_name"`
+	Month              *time.Time `json:"month"`
+	Teacher            string     `json:"teacher"`
+	AvailableSpots     int        `json:"available"`
+	Reason             string     `json:"reason"`
+	RequestedAt        time.Time  `json:"requested_at"`
 }
 
 type EnrollmentRequestInput struct {
-	RequestedClassID int    `json:"requested_class_id"`
-	Reason           string `json:"reason"`
-	Month         *time.Time  `json:"month"`
+	RequestedClassID int        `json:"requested_class_id"`
+	Reason           string     `json:"reason"`
+	Month            *time.Time `json:"month"`
 }
 
 // GetRoster responds with the overall enrolled class lists
@@ -197,11 +195,11 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error Decoding Request: %v",
 				Code:    http.StatusBadRequest,
 			})
-			myDb.logger.Printf("Error decoding Request: %v,", err)
+			myDb.Logger.Printf("Error decoding Request: %v,", err)
 			return
 		}
 
-		myDb.logger.Printf("New enrollment request for student id: %v and class id: %v", studentId, input.RequestedClassID)
+		myDb.Logger.Printf("New enrollment request for student id: %v and class id: %v", studentId, input.RequestedClassID)
 
 		var newEnrollmentRequest EnrollmentRequestApproval
 
@@ -216,7 +214,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error fetching student info from db",
 				Code:    http.StatusBadRequest,
 			})
-			myDb.logger.Printf("Error fetching student info from db: %v", err)
+			myDb.Logger.Printf("Error fetching student info from db: %v", err)
 			return
 		}
 
@@ -227,9 +225,9 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error fetching class info from db",
 				Code:    http.StatusBadRequest,
 			})
-			myDb.logger.Printf("Error fetching class info from db: %v", err)
+			myDb.Logger.Printf("Error fetching class info from db: %v", err)
 			return
-	}
+		}
 
 		tx, err := myDb.Pool.Begin(ctx)
 		if err != nil {
@@ -238,7 +236,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error Begining transcation",
 				Code:    http.StatusInternalServerError,
 			})
-			myDb.logger.Printf("Error Begining transcation: %v", err)
+			myDb.Logger.Printf("Error Begining transcation: %v", err)
 			return
 		}
 
@@ -251,7 +249,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error checking db for duplicates",
 				Code:    http.StatusInternalServerError,
 			})
-			myDb.logger.Printf("Error checking db for duplicates: %v", err)
+			myDb.Logger.Printf("Error checking db for duplicates: %v", err)
 			return
 		}
 
@@ -261,7 +259,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: fmt.Sprintf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName),
 				Code:    http.StatusConflict,
 			})
-			myDb.logger.Printf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
+			myDb.Logger.Printf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
 			return
 		}
 
@@ -272,10 +270,9 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error checking db for prior enrollment",
 				Code:    http.StatusInternalServerError,
 			})
-			myDb.logger.Printf("Error checking db for prior enrollment: %v", err)
+			myDb.Logger.Printf("Error checking db for prior enrollment: %v", err)
 			return
 		}
-
 
 		if alreadyEnrolled {
 			utils.WriteJSONResponse(w, http.StatusConflict, utils.ResponseData{
@@ -283,20 +280,20 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: fmt.Sprintf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName),
 				Code:    http.StatusConflict,
 			})
-			myDb.logger.Printf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
+			myDb.Logger.Printf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
 			return
 		}
 
-		err:= dbInsertEnrollmentRequest(ctx, tx, &newEnrollmentRequest, studentId) 
+		err = dbInsertEnrollmentRequest(ctx, tx, &newEnrollmentRequest, studentId)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
 				Message: "Error creating new enrollment request in db",
 				Code:    http.StatusInternalServerError,
 			})
-			myDb.logger.Printf("Error creating new enrollment request in db: %v", err)
+			myDb.Logger.Printf("Error creating new enrollment request in db: %v", err)
 			return
-			
+
 		}
 
 		if err := tx.Commit(ctx); err != nil {
@@ -309,8 +306,9 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created enrollment request")
-		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v",studentId, newEnrollmentRequest.RequestedClassID)
-		
+		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v", studentId, newEnrollmentRequest.RequestedClassID)
+
+	}
 }
 
 // Enroll adds the student info in the body of the request to the class from the url.
