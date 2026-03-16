@@ -66,14 +66,17 @@ type EnrollmentRequestApproval struct {
 	StudentEmail      string   `json:"email"`
 	CurrentlyEnrolled []string `json:"currently_enrolled"`
 	RequestedClassID  int      `json:"requested_class_id"`
+	Month *time.Time  `json:"month"`
 	Teacher           string   `json:"teacher"`
 	AvailableSpots    int      `json:"available"`
 	Reason            string   `json:"reason"`
+	RequestedAt        time.Time   `json:"requested_at"`
 }
 
 type EnrollmentRequestInput struct {
 	RequestedClassID int    `json:"requested_class_id"`
 	Reason           string `json:"reason"`
+	Month         *time.Time  `json:"month"`
 }
 
 // GetRoster responds with the overall enrolled class lists
@@ -203,6 +206,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 
 		newEnrollmentRequest.RequestedClassID = input.RequestedClassID
 		newEnrollmentRequest.Reason = input.Reason
+		newEnrollmentRequest.Month = input.Month
 
 		err := dbGetStudentInfo(ctx, myDb, &newEnrollmentRequest, studentId)
 		if err != nil {

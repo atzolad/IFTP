@@ -84,6 +84,20 @@ func dbGetStudentInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.
 	return err
 }
 
+func dbGetClassInfo(ctx context.Context, myDb *db.MyDatabase, request *roster.EnrollmentRequestApproval) error {
+	err := myDb.Pool.QueryRow(ctx,
+		`SELECT c.id, c.name, c.teacher,
+		c.capacity - COUNT(DISTINCT r.student_id) as available_spots
+		FROM classes AS c
+		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id
+		LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date
+		WHERE c.id = $1 AND cs.month = $2 AND c.active = True
+		GROUP BY cs.month, c.id
+		ORDER  BY cs.month DESC`, request.ClassID, request.Month).Scan(&request.ClassID, &request.ClassName, &request.Teacher, request.AvailableSpots)
+
+	return err
+}
+
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
 
 // 	var rosterID int
