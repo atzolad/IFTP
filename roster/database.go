@@ -128,6 +128,15 @@ func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *roster.En
 
 }
 
+func dbInsertEnrollmentRequest(ctx context.Context, tx pgx.Tx, request *roster.EnrollmentRequestApproval, studentId int) error {
+	_, err := tx.Exec(ctx, `
+	INSERT INTO enrollment_requests (student_id, requested_class_id, reason)
+	VALUES ($1, $2, $3)
+	`, studentId, request.RequestedClassID, request.Reason)
+
+	return err
+}
+
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
 
 // 	var rosterID int

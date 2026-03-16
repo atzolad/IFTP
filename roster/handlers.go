@@ -197,11 +197,11 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error Decoding Request: %v",
 				Code:    http.StatusBadRequest,
 			})
-			logger.Printf("Error decoding Request: %v,", err)
+			myDb.logger.Printf("Error decoding Request: %v,", err)
 			return
 		}
 
-		logger.Printf("New enrollment request for student id: %v and class id: %v", studentId, input.RequestedClassID)
+		myDb.logger.Printf("New enrollment request for student id: %v and class id: %v", studentId, input.RequestedClassID)
 
 		var newEnrollmentRequest EnrollmentRequestApproval
 
@@ -216,7 +216,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error fetching student info from db",
 				Code:    http.StatusBadRequest,
 			})
-			logger.Printf("Error fetching student info from db: %v", err)
+			myDb.logger.Printf("Error fetching student info from db: %v", err)
 			return
 		}
 
@@ -227,7 +227,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error fetching class info from db",
 				Code:    http.StatusBadRequest,
 			})
-			logger.Printf("Error fetching class info from db: %v", err)
+			myDb.logger.Printf("Error fetching class info from db: %v", err)
 			return
 	}
 
@@ -238,7 +238,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error Begining transcation",
 				Code:    http.StatusInternalServerError,
 			})
-			logger.Printf("Error Begining transcation: %v", err)
+			myDb.logger.Printf("Error Begining transcation: %v", err)
 			return
 		}
 
@@ -251,7 +251,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error checking db for duplicates",
 				Code:    http.StatusInternalServerError,
 			})
-			logger.Printf("Error checking db for duplicates: %v", err)
+			myDb.logger.Printf("Error checking db for duplicates: %v", err)
 			return
 		}
 
@@ -261,7 +261,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: fmt.Sprintf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName),
 				Code:    http.StatusConflict,
 			})
-			logger.Printf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
+			myDb.logger.Printf("Enrollment request for student %v and class %v already exists", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
 			return
 		}
 
@@ -272,7 +272,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error checking db for duplicates",
 				Code:    http.StatusInternalServerError,
 			})
-			logger.Printf("Error checking db for duplicates: %v", err)
+			myDb.logger.Printf("Error checking db for duplicates: %v", err)
 			return
 		}
 
@@ -283,9 +283,33 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: fmt.Sprintf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName),
 				Code:    http.StatusConflict,
 			})
-			logger.Printf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
+			myDb.logger.Printf("Student %v already enrolled in class %v", newEnrollmentRequest.StudentName, newEnrollmentRequest.RequestedClassName)
 			return
 		}
+
+		err:= dbInsertEnrollmentRequest(ctx, tx, &newEnrollmentRequest, studentId) 
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error creating new enrollment request in db",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.logger.Printf("Error creating new enrollment request in db: %v", err)
+			return
+			
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Failed to commit database changes",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created enrollment request")
+		myDb.Logger.Printf("Successfully created new class with session dates: %v", newClass)
 
 
 		
