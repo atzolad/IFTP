@@ -409,12 +409,7 @@
                             <p class="text-muted">Browse and enroll in classes for this month</p>
                         </div>
                         <div class="col-auto">
-                            <select class="form-select" id="monthFilter">
-                                <option value="2025-12-01" selected> December 2025</option>
-                                <option value="2026-01-01">January 2026</option>
-                                <option value="2026-02-01">February 2026</option>
-                                <option value="2026-03-01">March 2026</option>
-                            </select>
+                            <select class="form-select" id="monthFilter"></select>
                         </div>
                     </div>
 
@@ -2027,22 +2022,17 @@
             new bootstrap.Modal(document.getElementById('enrollModal')).show();
         }
 
-        function showRequestApprovalModal(className) {
-            document.getElementById('requestClassName').textContent = className;
-            const details = getClassDetails(className);
+        function showRequestApprovalModal(selectedClass) {
+
+            currentRequestClassId = selectedClass.id;
+            currentRequestMonth = currentMonth;
+
+            document.getElementById('requestClassName').textContent = selectedClass.name;
+            curre
             document.getElementById('requestClassDetails').textContent = details;
             new bootstrap.Modal(document.getElementById('requestApprovalModal')).show();
         }
 
-        function getClassDetails(className) {
-            // Mock function to get class details
-            const classMap = {
-                'English Literature': 'English Literature - Wednesdays at 2:00 PM',
-                'Science Lab': 'Science Lab - Fridays at 3:30 PM',
-                'Art Workshop': 'Art Workshop - Tuesdays at 4:00 PM'
-            };
-            return classMap[className] || className;
-        }
 
         function submitEnrollmentRequest() {
             const reason = document.getElementById('enrollmentReason').value;
@@ -2439,10 +2429,12 @@
         }
 
 
+        let currentMonth = null;
 
         document.addEventListener('DOMContentLoaded', () => {
 
             const monthFilter = document.getElementById('monthFilter');
+            populateMonthDropdown('monthFilter');
             const month = document.getElementById('monthFilter').value
             console.log(month)
 
