@@ -2,6 +2,7 @@ package roster
 
 import (
 	"IFTP/db"
+	"IFTP/roster"
 	"context"
 	"time"
 
@@ -131,11 +132,16 @@ func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *Enrollmen
 
 func dbInsertEnrollmentRequest(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId int) error {
 	_, err := tx.Exec(ctx, `
-	INSERT INTO enrollment_requests (student_id, requested_class_id, reason)
-	VALUES ($1, $2, $3)
-	`, studentId, request.RequestedClassID, request.Reason)
+	INSERT INTO enrollment_requests (student_id, requested_class_id, reason, month)
+	VALUES ($1, $2, $3, $4)
+	`, studentId, request.RequestedClassID, request.Reason, request.Month)
 
 	return err
+}
+
+func dbGetEnrollmentRequests(ctx context.Context, myDb *db.MyDatabase) ([]roster.EnrollmentRequestApproval, error) {
+	rows, err := myDb.Pool.Query(ctx, `
+	`)
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {

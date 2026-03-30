@@ -108,6 +108,7 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error: month required in YYYY-MM-DD format",
 				Code:    http.StatusBadRequest,
 			})
+			return
 		}
 
 		classDate, err := time.Parse("2006-01-02", classDateStr)
@@ -117,6 +118,7 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Error: class date required in YYYY-MM-DD format",
 				Code:    http.StatusBadRequest,
 			})
+			return
 		}
 
 		fullRoster, err := dbGetRoster(ctx, myDb, classId, month, classDate)
@@ -308,6 +310,26 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 
 		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created enrollment request")
 		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v", studentId, newEnrollmentRequest.RequestedClassID)
+
+	}
+}
+
+func GetEnrollmentRequests(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		requests, err := dbGetEnrollmentRequests(ctx, myDb)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error fetching enrollment requests",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error fetching enrollment requests: %v", err)
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, requests)
 
 	}
 }
