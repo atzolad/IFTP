@@ -1308,10 +1308,8 @@
                         placeholder="Example: My schedule changed and I am looking to switch from Wednesdays to Mondays..."></textarea>
                     <div class="mt-3">
                         <p class="mb-2"><strong>Class Details:</strong></p>
-                        <p class="mb-1 text-muted" id="requestClassDetails">English Literature - Wednesdays at
-                            2:00
-                            PM
-                        </p>
+                        <p class="mb-1 text-muted" id="requestClassDetails"></p>
+                        <p class="mb-1 text-muted" id="requestClassDescription"></p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2022,28 +2020,61 @@
             new bootstrap.Modal(document.getElementById('enrollModal')).show();
         }
 
+        let currentRequestClassId = null;
+
         function showRequestApprovalModal(selectedClass) {
+            console.log(`showRequestApprovalModal: ${selectedClass}`);
 
             currentRequestClassId = selectedClass.id;
-            currentRequestMonth = currentMonth;
 
             document.getElementById('requestClassName').textContent = selectedClass.name;
-            curre
-            document.getElementById('requestClassDetails').textContent = details;
+            document.getElementById('requestClassDetails').textContent = `${selectedClass.day_of_week} at ${selectedClass.time}`;
+            document.getElementById('requestClassDescription').textContent = `${selectedClass.description}`;
+            document.getElementById('enrollmentReason').value = '';
             new bootstrap.Modal(document.getElementById('requestApprovalModal')).show();
         }
 
 
-        function submitEnrollmentRequest() {
-            const reason = document.getElementById('enrollmentReason').value;
-            if (!reason.trim()) {
+        async function submitEnrollmentRequest() {
+            const reason = document.getElementById('enrollmentReason').value.trim();
+            if (!reason) {
                 alert('Please provide a reason for your enrollment request.');
                 return;
             }
 
-            alert('Your enrollment request has been submitted! You will be notified when an admin reviews your request.');
-            bootstrap.Modal.getInstance(document.getElementById('requestApprovalModal')).hide();
-            document.getElementById('enrollmentReason').value = '';
+            const requestBody = {
+                requested_class_id: currentRequestClassId,
+                reason: reason,
+                month: new Date(currentMonth).toISOString()
+            }
+
+            console.log('Submitting enrollment request:', requestBody);
+
+            try {
+                const resp = await fetch(`/enrollment_request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (resp.ok) {
+                    alert('Your enrollment request has been submitted! You will be notified when an admin reviews your request.');
+                    bootstrap.Modal.getInstance(document.getElementById('requestApprovalModal')).hide();
+
+                    const requestBtn = document.querySelector(`[data-class-id="${currentRequestClassId}"]`);
+                    if (requestBtn) {
+                        requestBtn.disabled = true;
+                        requestBtn.textContent = 'Request Pending';
+                    }
+                } else {
+                    alert(responseData.message || 'Error submitting request');
+                }
+
+            } catch (error) {
+                console.error('Error submitting enrollment request:', error);
+                alert('Network error occurred');
+            }
+
         }
 
         function approveEnrollmentRequest() {
@@ -2149,7 +2180,6 @@
             const methodType = 'POST';
 
             try {
-                // Make the API call using fetch
                 const response = await fetch(endpointUrl, {
                     method: methodType,
                     headers: {
@@ -2435,20 +2465,20 @@
 
             const monthFilter = document.getElementById('monthFilter');
             populateMonthDropdown('monthFilter');
-            const month = document.getElementById('monthFilter').value
-            console.log(month)
+            currentMonth = document.getElementById('monthFilter').value
+            console.log(currentMonth)
 
             //TODO- Need to remove this hardcoded student id and replace with the logged in students id.
 
-            const RefreshClasses = async (month) => {
-                await renderEnrolledClasses(month, student_id = 1);
+            const RefreshClasses = async (currentMonth) => {
+                await renderEnrolledClasses(currentMonth, student_id = 1);
                 console.log("Enrolled classses:", currentEnrolledClasses)
-                await renderClasses(month);
+                await renderClasses(currentMonth);
                 RenderManageClassesTable();
                 populateMonthDropdown('classModalMonthSelect');
             }
 
-            RefreshClasses(month);
+            RefreshClasses(currentMonth);
             //TODO need to separate the admin and student views- no need to populate the admin view for a student login. Should probably completely separate the two.
 
 
@@ -2456,6 +2486,7 @@
             monthFilter.addEventListener('change', (event) => {
                 // This function will execute when a new option is selected
                 const selectedMonth = event.target.value;
+                currentMonth = event.target.value;
                 RefreshClasses(selectedMonth)
                 console.log('Selected Month:', selectedMonth);
 
@@ -2689,7 +2720,9 @@
             // Request enrollment button
             const requestBtn = e.target.closest('.request-enrollment-btn');
             if (requestBtn) {
-                const classId = requestBtn.dataset.classId;
+                // TODO Will need to change this if I change to UUID
+                const classId = parseInt(requestBtn.dataset.classId);
+                console.log(`clicked request button! for classid: ${classId}`)
                 const selectedClass = availableClasses.find(c => c.id === classId);
                 if (selectedClass) showRequestApprovalModal(selectedClass);
                 return;
@@ -2697,7 +2730,9 @@
 
             const enrollBtn = e.target.closest('.enroll-btn');
             if (enrollBtn) {
-                const classId = enrollBtn.dataset.classId;
+                //TODO Will need to change this if I change to UUID
+                const classId = parseInt(enrollBtn.dataset.classId);
+                console.log(`clicked enroll button! for classid: ${classId}`)
                 showEnrollModal(classId);
             }
 
