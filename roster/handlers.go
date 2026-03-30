@@ -60,17 +60,18 @@ type StudentEnrollment struct {
 }
 
 type EnrollmentRequestApproval struct {
-	RequestID          int        `json:"request_id"`
-	StudentName        string     `json:"name"`
-	StudentEmail       string     `json:"email"`
-	CurrentlyEnrolled  []string   `json:"currently_enrolled"`
-	RequestedClassID   int        `json:"requested_class_id"`
-	RequestedClassName string     `json:"requested_class_name"`
-	Month              *time.Time `json:"month"`
-	Teacher            string     `json:"teacher"`
-	AvailableSpots     int        `json:"available"`
-	Reason             string     `json:"reason"`
-	RequestedAt        time.Time  `json:"requested_at"`
+	RequestID          string     `db:"id" json:"request_id"`
+	StudentName        string     `db:"name" json:"name"`
+	StudentEmail       string     `db:"email" json:"email"`
+	CurrentlyEnrolled  []string   `db:"currently_enrolled" json:"currently_enrolled"`
+	RequestedClassID   int        `db:"requested_class_id" json:"requested_class_id"`
+	RequestedClassName string     `db:"class_name" json:"requested_class_name"`
+	Month              *time.Time `db:"month" json:"month"`
+	Teacher            string     `db:"teacher" json:"teacher"`
+	Schedule           string     `db:"schedule" json:"schedule"`
+	AvailableSpots     int        `db:"available_spots" json:"available"`
+	Reason             string     `db:"reason" json:"reason"`
+	RequestedAt        time.Time  `db:"requested_at" json:"requested_at"`
 }
 
 type EnrollmentRequestInput struct {

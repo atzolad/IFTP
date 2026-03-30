@@ -2,7 +2,6 @@ package roster
 
 import (
 	"IFTP/db"
-	"IFTP/roster"
 	"context"
 	"time"
 
@@ -139,9 +138,38 @@ func dbInsertEnrollmentRequest(ctx context.Context, tx pgx.Tx, request *Enrollme
 	return err
 }
 
-func dbGetEnrollmentRequests(ctx context.Context, myDb *db.MyDatabase) ([]roster.EnrollmentRequestApproval, error) {
+func dbGetEnrollmentRequests(ctx context.Context, myDb *db.MyDatabase) ([]EnrollmentRequestApproval, error) {
 	rows, err := myDb.Pool.Query(ctx, `
+	SELECT 
+			er.id,
+			s.name,
+			s.email,
+			c.name as class_name,
+			c.teacher,
+			CONCAT(c.day_of_week, ' at ', c.time) AS schedule,
+			c.capacity - COUNT(DISTINCT r.student_id) AS available_spots,
+			er.reason,
+			er.requested_at,
+			cs.month
+		FROM enrollment_requests AS er
+		JOIN students AS s ON s.id = er.student_id
+		JOIN classes AS c ON c.id = er.requested_class_id
+		JOIN class_schedule AS cs ON cs.class_id = c.id
+		LEFT JOIN roster AS r ON r.class_id = c.id 
+			AND r.class_date = cs.session_date
+		WHERE er.status = 'Pending'
+		AND cs.month = er.month
+		GROUP BY er.id, s.name, s.email, c.name, c.teacher, 
+					c.day_of_week, c.time, c.capacity, 
+					er.reason, er.requested_at, cs.month
+		ORDER BY er.requested_at ASC
 	`)
+
+	requests, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[EnrollmentRequestApproval])
+	if err != nil {
+		return nil, err
+	}
+	return requests, nil
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {

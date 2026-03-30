@@ -2052,7 +2052,7 @@
             console.log('Submitting enrollment request:', requestBody);
 
             try {
-                const resp = await fetch(`/enrollment_request`, {
+                const resp = await fetch(`/enrollment_requests`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody)
