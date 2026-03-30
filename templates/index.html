@@ -2080,13 +2080,14 @@
 
         async function renderEnrollmentRequests() {
             const apiEndpoint = `${baseUrl}/enrollment_requests`;
-            container = document.getElementById('studentEnrollmentRequestContainer');
+            const container = document.getElementById('studentEnrollmentRequestContainer');
 
             try {
                 const response = await fetch(apiEndpoint);
                 if (!response.ok) throw new Error('Failed to fetch enrollment requests');
 
                 const requests = await response.json();
+                console.log(requests)
 
                 container.innerHTML = '';
 
@@ -2094,14 +2095,85 @@
                     container.innerHTML = '<p class="text-muted">No pending enrollment requests.</p>';
                     return;
                 }
-                requests.forEach(request => renderRequestCart(request, container));
+
+                requests.forEach(request => renderRequestCard(request, container));
+
             } catch (err) {
                 console.error('Error fetching enrollment requests', err);
                 container.innterHTML = '<p class="text-danger">Failed to load requests.</p>';
             }
         }
 
+        function renderRequestCard(request, container) {
+            const card = document.createElement('div');
+            card.className = 'card mb-3';
 
+            card.innerHTML = `
+                        <div class="card-header bg-white text-black">
+                            <h5 class="mb-0">Enrollment Request - <span class= "enrollment_req_student_name"></span></h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Student:</strong><span class="enrollment_req_student_name"></span></p>
+                                    <p><strong>Email:</strong><span class="enrollment_req_student_email"></span></p>
+                                    <p><strong>Currently Enrolled:<span class="enrollment_req_enrolled"></span></p>
+                                    <p><strong>Request Date:</strong> <span class="enrollment_req_date"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Requested Class:</strong><span class = "enrollment_req_class_name"></span></p>
+                                    <p><strong>Teacher:</strong><span class = "enrollment_req_teacher"></span></p>
+                                    <p><strong>Schedule:</strong><span class = "enrollment_req_schedule"></span</p>
+                                    <p><strong>Available Spots:</strong><span class = "enrollment_req_avail_spots"></span></p>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <p><strong>Reason:</strong></p>
+                                <p class="reasonTxt text-muted">"</p>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-primary me-2 enrollmentReqApproveBtn">
+                                    <i class="bi bi-check-circle"></i> Approve
+                                </button>
+                                <button class="btn btn-secondary enrollmentReqDenyBtn">
+                                    <i class="bi bi-x-circle"></i> Deny
+                                </button>
+                            </div>
+                        </div>`;
+
+            card.querySelectorAll('.enrollment_req_student_name').forEach(element => element.textContent = request.name);
+            card.querySelector('.enrollment_req_student_email').textContent = request.email;
+            card.querySelector('.enrollment_req_enrolled').textContent = request.currently_enrolled;
+            card.querySelector('.enrollment_req_date').textContent = new Date(request.requested_at).toLocaleDateString();
+            card.querySelector('.enrollment_req_class_name').textContent = request.requested_class_name;
+            card.querySelector('.enrollment_req_teacher').textContent = request.teacher
+            card.querySelector('.enrollment_req_schedule').textContent = request.schedule;
+            card.querySelector('.enrollment_req_avail_spots').textContent = request.available;
+            card.querySelector('.reasonTxt').textContent = request.reason;
+
+            card.querySelector('.enrollmentReqApproveBtn').dataset.requestId = request.request_id
+            card.querySelector('.enrollmentReqDenyBtn').dataset.requestId = request.request_id
+
+
+            card.querySelector('.enrollmentReqApproveBtn')
+
+            container.appendChild(card);
+        }
+
+        const enrollmentRequestContainer = document.getElementById('studentEnrollmentRequestContainer');
+        enrollmentRequestContainer.addEventListener('click', (event) => {
+            const approveBtn = event.target.closest('.enrollmentReqApproveBtn');
+            if (approveBtn) {
+                const requestId = approveBtn.dataset.requestId;
+                handleEnrollmentRequest(requestId, 'approved');
+                return;
+            }
+            const denyBtn = e.target.closest('.enrollmentReqDenyBtn');
+            if (denyBtn) {
+                const requestId = approveBtn.dataset.requestId;
+                handleEnrollmentRequest(requestId, 'denied')
+            }
+        });
 
         function approveEnrollmentRequest() {
             if (confirm('Approve this enrollment request?')) {
@@ -2518,7 +2590,7 @@
 
             });
 
-            // TODO replace this with actual logged in student's id.
+            // TODO replace this with actual logged in student's id. Also handle this state management with the initialized. 
             renderStudentCalendar(studentId = 1);
             window.studentCalendarInitialized = true;
 
@@ -2527,6 +2599,9 @@
 
             renderManageStudentsTable();
             window.ManageStudentsInitialized = true;
+
+            renderEnrollmentRequests();
+            window.ManageEnrollmentRequstsInitialized = true;
 
 
             // Call March 2026
