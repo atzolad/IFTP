@@ -2078,6 +2078,31 @@
 
         }
 
+        async function renderEnrollmentRequests() {
+            const apiEndpoint = `${baseUrl}/enrollment_requests`;
+            container = document.getElementById('studentEnrollmentRequestContainer');
+
+            try {
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) throw new Error('Failed to fetch enrollment requests');
+
+                const requests = await response.json();
+
+                container.innerHTML = '';
+
+                if (!requests || requests.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No pending enrollment requests.</p>';
+                    return;
+                }
+                requests.forEach(request => renderRequestCart(request, container));
+            } catch (err) {
+                console.error('Error fetching enrollment requests', err);
+                container.innterHTML = '<p class="text-danger">Failed to load requests.</p>';
+            }
+        }
+
+
+
         function approveEnrollmentRequest() {
             if (confirm('Approve this enrollment request?')) {
                 alert('Enrollment request approved! Student has been notified and enrolled in the class.');
