@@ -2706,7 +2706,12 @@
                 const requestBtn = document.createElement('button');
                 requestBtn.className = 'btn btn-outline-primary w-100 mt-2 request-enrollment-btn';
                 requestBtn.dataset.classId = selectedClass.id;
-                requestBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Request Enrollment'
+                requestBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Request Enrollment';
+
+                if (!selectedClass.sessionDates || selectedClass.session_dates.length === 0) {
+                    requestBtn.disabled = true;
+                    requestBtn.title = 'No sessions scheduled for this month';
+                }
 
                 btnContainer.appendChild(lockBtn);
                 btnContainer.appendChild(requestBtn);
