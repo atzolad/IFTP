@@ -1310,7 +1310,7 @@
                     </div>
                     <p>Please provide a reason for requesting enrollment in this class:</p>
                     <textarea class="form-control" rows="4" id="enrollmentReason"
-                        placeholder="Example: I would like to take this class to improve my writing skills..."></textarea>
+                        placeholder="Example: My schedule changed and I am looking to switch from Wednesdays to Mondays..."></textarea>
                     <div class="mt-3">
                         <p class="mb-2"><strong>Class Details:</strong></p>
                         <p class="mb-1 text-muted" id="requestClassDetails">English Literature - Wednesdays at
@@ -2595,9 +2595,11 @@
             }
         });
 
+        let availableClasses = []
+
         async function renderClasses(month) {
             const containerWrapper = document.getElementById('availableClassesContainer');
-            const apiEndpoint = baseUrl + '/classes' + '?' + 'month=' + month
+            const apiEndpoint = `${baseUrl}/classes?month=${month}`;
 
 
             try {
@@ -2607,6 +2609,7 @@
                 }
 
                 const classes = await (response.json());
+                availableClasses = classes;
 
 
                 // Clear existing classes
@@ -2618,64 +2621,156 @@
                 }
 
                 classes.forEach(selectedClass => {
-                    const isAlreadyEnrolled = currentEnrolledClasses.includes(selectedClass.id);
-
-                    let enrollBtnHtml = '';
-
-                    if (isAlreadyEnrolled) {
-                        console.log("Is enrolled!")
-                        enrollBtnHtml = `
-                                            <button class="btn btn-primary w-100" onclick="showEnrollModal(${selectedClass.name})">
-                                            <i class="bi bi-check-circle"></i> Register for next month
-                                            </button>`
-                    }
-                    else {
-                        console.log("Not enrolled!")
-                        enrollBtnHtml = `                            
-                                            <button class="btn btn-secondary w-100">
-                                                <i class="bi bi-lock"></i> Requires Approval
-                                            </button>
-                                            <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('${selectedClass.name}')">
-                                                <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
-                                            </button>`
-
-                    }
-
-                    // TODO- may want to update this show request approval modal to selectedClass.id instead of name.
-
-                    var sessionDatesHtml = ``;
-                    selectedClass.session_dates.forEach(session_date => {
-                        const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-                        sessionDatesHtml += dateBadge;
-                    });
-
-                    console.log(sessionDatesHtml);
-
-                    const containerHtml = `
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card class-card border-primary">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${selectedClass.name}</h5>
-                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${selectedClass.teacher}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${selectedClass.day_of_week} at ${selectedClass.time}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${selectedClass.capacity} capacity</p>
-                                            <p class="card-text mb-3">${selectedClass.description}</p>
-                                            <div class="mb-3">
-                                                <strong class="d-block mb-2">Session Dates:</strong>
-                                                ${sessionDatesHtml}
-                                            </div>
-                                            ${enrollBtnHtml}
-                                        </div>
-                                    </div>
-                                </div>`
-                    // Append the new HTML to the wrapper
-                    containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
+                    const isEnrolled = currentEnrolledClasses.includes(selectedClass.id);
+                    containerWrapper.appendChild(buildClassCard(selectedClass, isEnrolled));
                 });
+
             } catch (error) {
                 console.error('Error fetching data:', error);
                 containerWrapper.innerHTML = '<p class="text-danger">Failed to load classes.</p>';
             }
         }
+
+        function buildClassCard(selectedClass, isEnrolled) {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4'
+
+            col.innerHTML = `
+                <div class="card class-card border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title class-name"></h5>
+                        <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: <span class="teacher"></span></p>
+                        <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="schedule"></span></p>
+                        <p class="text-muted mb-2"><i class="bi bi-people"></i> <span class="capacity"></span> capacity</p>
+                        <p class="card-text mb-3 description"></p>
+                        <div class="mb-3">
+                            <strong class="d-block mb-2">Session Dates:</strong>
+                            <div class="session-dates"></div>
+                        </div>
+                        <div class="btn-container"></div>
+                        </div>
+                    </div>
+                 </div>`;
+
+            col.querySelector('.class-name').textContent = selectedClass.name;
+            col.querySelector('.teacher').textContent = selectedClass.teacher;
+            col.querySelector('.schedule').textContent = `${selectedClass.day_of_week} at ${selectedClass.time}`;
+            col.querySelector('.capacity').textContent = selectedClass.capacity;
+            col.querySelector('.description').textContent = selectedClass.description;
+
+            const datesContainer = col.querySelector('.session-dates');
+            selectedClass.session_dates.forEach(date => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary text-light me-1';
+                badge.textContent = date;
+                datesContainer.appendChild(badge);
+            });
+
+            const btnContainer = col.querySelector('.btn-container');
+            if (isEnrolled) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-primary w-100 enroll-btn';
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Register for next month';
+                btn.dataset.classId = selectedClass.id;
+                btnContainer.appendChild(btn);
+
+            } else {
+                const lockBtn = document.createElement('button');
+                lockBtn.className = 'btn btn-secondary w-100 ';
+                lockBtn.disabled = true
+                lockBtn.innerHTML = '<i class="bi bi-lock"></i> Requires Approval';
+
+                const requestBtn = document.createElement('button');
+                requestBtn.className = 'btn btn-outline-primary w-100 mt-2 request-enrollment-btn';
+                requestBtn.dataset.classId = selectedClass.id;
+                requestBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Request Enrollment'
+
+                btnContainer.appendChild(lockBtn);
+                btnContainer.appendChild(requestBtn);
+            }
+
+            return col;
+        }
+
+        // Event listener for available classes buttons
+        document.getElementById('availableClassesContainer').addEventListener('click', (e) => {
+            // Request enrollment button
+            const requestBtn = e.target.closest('.request-enrollment-btn');
+            if (requestBtn) {
+                const classId = requestBtn.dataset.classId;
+                const selectedClass = availableClasses.find(c => c.id === classId);
+                if (selectedClass) showRequestApprovalModal(selectedClass);
+                return;
+            }
+
+            const enrollBtn = e.target.closest('.enroll-btn');
+            if (enrollBtn) {
+                const classId = enrollBtn.dataset.classId;
+                showEnrollModal(classId);
+            }
+
+        });
+
+        // let enrollBtnHtml = '';
+
+        //         if (isEnrolled) {
+        //             console.log("Is enrolled!")
+        //             enrollBtnHtml = `
+        //                                 <button class="btn btn-primary w-100" onclick="showEnrollModal(${selectedClass.name})">
+        //                                 <i class="bi bi-check-circle"></i> Register for next month
+        //                                 </button>`
+        //         }
+        //         else {
+        //             console.log("Not enrolled!")
+        //             const requestBtn = document.createElement('button');
+        //             requestBtn.className = 'btn btn-secondary w-100';
+        //             requestBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Request Enrollment';
+
+        //             enrollBtnHtml = `                            
+        //                                 <button class="btn btn-secondary w-100">
+        //                                     <i class="bi bi-lock"></i> Requires Approval
+        //                                 </button>
+        //                                 <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('${selectedClass.id}', '${selectedClass.name}')">
+        //                                     <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
+        //                                 </button>`
+
+        //         }
+
+        //         // TODO- may want to update this show request approval modal to selectedClass.id instead of name.
+
+        //         var sessionDatesHtml = ``;
+        //         selectedClass.session_dates.forEach(session_date => {
+        //             const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
+        //             sessionDatesHtml += dateBadge;
+        //         });
+
+        //         console.log(sessionDatesHtml);
+
+        //         const containerHtml = `
+        //                     <div class="col-md-6 col-lg-4">
+        //                         <div class="card class-card border-primary">
+        //                             <div class="card-body">
+        //                                 <h5 class="card-title">${selectedClass.name}</h5>
+        //                                 <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${selectedClass.teacher}</p>
+        //                                 <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${selectedClass.day_of_week} at ${selectedClass.time}</p>
+        //                                 <p class="text-muted mb-2"><i class="bi bi-people"></i> ${selectedClass.capacity} capacity</p>
+        //                                 <p class="card-text mb-3">${selectedClass.description}</p>
+        //                                 <div class="mb-3">
+        //                                     <strong class="d-block mb-2">Session Dates:</strong>
+        //                                     ${sessionDatesHtml}
+        //                                 </div>
+        //                                 ${enrollBtnHtml}
+        //                             </div>
+        //                         </div>
+        //                     </div>`
+        //         // Append the new HTML to the wrapper
+        //         containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
+        //     });
+        // } catch (error) {
+        //     console.error('Error fetching data:', error);
+        //     containerWrapper.innerHTML = '<p class="text-danger">Failed to load classes.</p>';
+        //     // }
+        // }
 
         let currentEnrolledClasses = [];
 
