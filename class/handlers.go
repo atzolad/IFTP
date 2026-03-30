@@ -55,6 +55,13 @@ func (c Class) MarshalJSON() ([]byte, error) {
 	// Creates a new type with all of the fields of Class but none of the methods
 	type Alias Class
 
+	var monthStr string
+	if c.Month != nil {
+		monthStr = c.Month.Format("2006-01-02")
+	} else {
+		monthStr = ""
+	}
+
 	return json.Marshal(&struct {
 		Month        string   `json:"month"`
 		SessionDates []string `json:"session_dates"`
@@ -62,7 +69,7 @@ func (c Class) MarshalJSON() ([]byte, error) {
 		Time         string   `json:"time"`
 		Alias
 	}{
-		Month:        c.Month.Format("2006-01-02"),
+		Month:        monthStr,
 		SessionDates: formatTimeSlice(c.SessionDates),
 		EndDate:      c.EndDate.Format("2006-01-02"),
 		Time:         formatTime(c.Time),
