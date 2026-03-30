@@ -2708,7 +2708,7 @@
                 requestBtn.dataset.classId = selectedClass.id;
                 requestBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Request Enrollment';
 
-                if (!selectedClass.sessionDates || selectedClass.session_dates.length === 0) {
+                if (!selectedClass.session_dates || selectedClass.session_dates.length === 0) {
                     requestBtn.disabled = true;
                     requestBtn.title = 'No sessions scheduled for this month';
                 }
