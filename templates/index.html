@@ -2146,16 +2146,15 @@
             card.querySelector('.enrollment_req_enrolled').textContent = request.currently_enrolled;
             card.querySelector('.enrollment_req_date').textContent = new Date(request.requested_at).toLocaleDateString();
             card.querySelector('.enrollment_req_class_name').textContent = request.requested_class_name;
-            card.querySelector('.enrollment_req_teacher').textContent = request.teacher
+            card.querySelector('.enrollment_req_teacher').textContent = request.teacher;
             card.querySelector('.enrollment_req_schedule').textContent = request.schedule;
             card.querySelector('.enrollment_req_avail_spots').textContent = request.available;
             card.querySelector('.reasonTxt').textContent = request.reason;
 
-            card.querySelector('.enrollmentReqApproveBtn').dataset.requestId = request.request_id
-            card.querySelector('.enrollmentReqDenyBtn').dataset.requestId = request.request_id
+            card.querySelector('.enrollmentReqApproveBtn').dataset.requestId = request.request_id;
+            card.querySelector('.enrollmentReqDenyBtn').dataset.requestId = request.request_id;
 
 
-            card.querySelector('.enrollmentReqApproveBtn')
 
             container.appendChild(card);
         }
@@ -2164,28 +2163,41 @@
         enrollmentRequestContainer.addEventListener('click', (event) => {
             const approveBtn = event.target.closest('.enrollmentReqApproveBtn');
             if (approveBtn) {
-                const requestId = approveBtn.dataset.requestId;
-                handleEnrollmentRequest(requestId, 'approved');
-                return;
+                if (confirm('Approve this enrollment request?')) {
+                    const requestId = approveBtn.dataset.requestId;
+                    handleEnrollmentRequest(requestId, 'Approved');
+                    return;
+                }
             }
             const denyBtn = e.target.closest('.enrollmentReqDenyBtn');
             if (denyBtn) {
-                const requestId = approveBtn.dataset.requestId;
-                handleEnrollmentRequest(requestId, 'denied')
+                if (confirm('Deny this enrollment request')) {
+                    const requestId = approveBtn.dataset.requestId;
+                    handleEnrollmentRequest(requestId, 'Denied')
+                }
             }
         });
 
-        function approveEnrollmentRequest() {
-            if (confirm('Approve this enrollment request?')) {
-                alert('Enrollment request approved! Student has been notified and enrolled in the class.');
-            }
-        }
+        // TODO - add the pending requests to the student page and also the reason if denied. 
 
-        function denyEnrollmentRequest() {
-            const reason = prompt('Please provide a reason for denying this request:');
-            if (reason) {
-                alert('Enrollment request denied. Student has been notified with your reason.');
+        async function handleEnrollmentRequest(requestId, decision) {
+            try {
+                const response = await fetch(`${baseUrl}/enrollment_requests/${requestId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ decision })
+                });
+
+                if (!response.ok) {
+                    alert('Error handling enrollment request. Please try again.');
+                    return;
+                }
+                // Re-render enrollment requests after processing
+                renderEnrollmentRequests();
+            } catch (err) {
+                console.error('Error updating enrollment request:', err);
             }
+
         }
 
         function showDayModal(date) {
