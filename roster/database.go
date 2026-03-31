@@ -172,13 +172,33 @@ func dbGetEnrollmentRequests(ctx context.Context, myDb *db.MyDatabase) ([]Enroll
 	return requests, nil
 }
 
+func dbUpdateRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) (studentId int, classId int, month time.Time, err error) {
+	err = tx.QueryRow(ctx, `
+	UPDATE enrollment_requests
+	SET status = $1
+	WHERE id = $2
+	RETURNING student_id, requested_class_id, month`, status, requestId).Scan(&studentId, &classId, &month)
+
+	return
+}
+
+func dbEnrollStudent(ctx context.Context, tx pgx.Tx, studentId int, classId int, month time.Time) error {
+	_, err := tx.Exec(ctx, `
+		INSERT INTO roster (student_id, class_id, class_date, registration_date, status)
+		SELECT $1, class_id, session_date, NOW(), 'Enrolled'
+		FROM class_schedule
+		WHERE class_id = $2 AND month = $3`, studentId, classId, month)
+
+	return err
+}
+
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
 
 // 	var rosterID int
 
 // 	err := myDb.Pool.QueryRow(
-// 		"INSERT INTO roster (class_date, student_id, class_id, registration_date) "+
-// 			"VALUES ($1, $2, $3, NOW()) RETURNING id", classDate, studentID, classID).Scan(&rosterID)
+// 		"INSERT INTO roster (student_id, class_id, class_date, registration_date, status) "+
+// 			"VALUES ($1, $2, $3, NOW()), enrolled RETURNING id", studentID, classID, classDate).Scan(&rosterID)
 
 // 	return err
 // }

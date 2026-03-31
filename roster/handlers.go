@@ -335,6 +335,86 @@ func GetEnrollmentRequests(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
+func UpdateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		requestId := r.PathValue("request_id")
+
+		var input struct {
+			Status string `json:"status"` //Approved or Denied
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error decoding enrollment request for update",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Error decoding enrollment request for update")
+			return
+		}
+
+		if input.Status != "Approved" && input.Status != "Denied" {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Status must be approved or denied",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Error updating enrollment request- status must be Approved or Denied: %v", input.Status)
+			return
+		}
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error Begining transcation: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		defer tx.Rollback(ctx)
+
+		studentId, classId, month, err := dbUpdateRequestStatus(ctx, tx, requestId, input.Status)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error updating enrollment request status",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Erorr updating enrollment request status: %v", err)
+			return
+		}
+		if input.Status == "Approved" {
+			if err := dbEnrollStudent(ctx, tx, studentId, classId, month); err != nil {
+				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+					Status:  "error",
+					Message: "Error enrolling student",
+					Code:    http.StatusInternalServerError,
+				})
+				myDb.Logger.Printf("Erorr enrolling student: %v", err)
+				return
+			}
+		}
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error commiting enrollment request update and enrollment transaction",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error commiting enrollment request update and enrollment transaction: %v", err)
+			return
+		}
+		utils.WriteJSONResponse(w, http.StatusOK, utils.ResponseData{
+			Status:  "success",
+			Message: fmt.Sprintf("Enrollment request %v successfully", input.Status),
+			Code:    http.StatusOK,
+		})
+	}
+}
+
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students
 // func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
