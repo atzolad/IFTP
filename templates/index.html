@@ -2117,13 +2117,13 @@
                                 <div class="col-md-6">
                                     <p><strong>Student:</strong><span class="enrollment_req_student_name"></span></p>
                                     <p><strong>Email:</strong><span class="enrollment_req_student_email"></span></p>
-                                    <p><strong>Currently Enrolled:<span class="enrollment_req_enrolled"></span></p>
+                                    <p><strong>Currently Enrolled:</strong><span class="enrollment_req_enrolled"></span></p>
                                     <p><strong>Request Date:</strong> <span class="enrollment_req_date"></span></p>
                                 </div>
                                 <div class="col-md-6">
                                     <p><strong>Requested Class:</strong><span class = "enrollment_req_class_name"></span></p>
                                     <p><strong>Teacher:</strong><span class = "enrollment_req_teacher"></span></p>
-                                    <p><strong>Schedule:</strong><span class = "enrollment_req_schedule"></span</p>
+                                    <p><strong>Month:</strong><span class = "enrollment_req_month"></span></p>
                                     <p><strong>Available Spots:</strong><span class = "enrollment_req_avail_spots"></span></p>
                                 </div>
                             </div>
@@ -2141,15 +2141,15 @@
                             </div>
                         </div>`;
 
-            card.querySelectorAll('.enrollment_req_student_name').forEach(element => element.textContent = request.name);
-            card.querySelector('.enrollment_req_student_email').textContent = request.email;
-            card.querySelector('.enrollment_req_enrolled').textContent = request.currently_enrolled;
-            card.querySelector('.enrollment_req_date').textContent = new Date(request.requested_at).toLocaleDateString();
-            card.querySelector('.enrollment_req_class_name').textContent = request.requested_class_name;
-            card.querySelector('.enrollment_req_teacher').textContent = request.teacher;
-            card.querySelector('.enrollment_req_schedule').textContent = request.schedule;
-            card.querySelector('.enrollment_req_avail_spots').textContent = request.available;
-            card.querySelector('.reasonTxt').textContent = request.reason;
+            card.querySelectorAll('.enrollment_req_student_name').forEach(element => element.textContent = ` ${request.name}`);
+            card.querySelector('.enrollment_req_student_email').textContent = ` ${request.email}`;
+            card.querySelector('.enrollment_req_enrolled').textContent = `${request.currently_enrolled ?? " No students enrolled"}`;
+            card.querySelector('.enrollment_req_date').textContent = `${new Date(request.requested_at).toISOString().split('T')[0]}`;
+            card.querySelector('.enrollment_req_class_name').textContent = ` ${request.requested_class_name}`;
+            card.querySelector('.enrollment_req_teacher').textContent = ` ${request.teacher}`;
+            card.querySelector('.enrollment_req_month').textContent = ` ${new Date(request.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}`;
+            card.querySelector('.enrollment_req_avail_spots').textContent = ` ${request.available}`;
+            card.querySelector('.reasonTxt').textContent = ` ${request.reason}`;
 
             card.querySelector('.enrollmentReqApproveBtn').dataset.requestId = request.request_id;
             card.querySelector('.enrollmentReqDenyBtn').dataset.requestId = request.request_id;
@@ -2169,7 +2169,7 @@
                     return;
                 }
             }
-            const denyBtn = e.target.closest('.enrollmentReqDenyBtn');
+            const denyBtn = event.target.closest('.enrollmentReqDenyBtn');
             if (denyBtn) {
                 if (confirm('Deny this enrollment request')) {
                     const requestId = approveBtn.dataset.requestId;
@@ -2180,12 +2180,12 @@
 
         // TODO - add the pending requests to the student page and also the reason if denied. 
 
-        async function handleEnrollmentRequest(requestId, decision) {
+        async function handleEnrollmentRequest(requestId, status) {
             try {
                 const response = await fetch(`${baseUrl}/enrollment_requests/${requestId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ decision })
+                    body: JSON.stringify({ status })
                 });
 
                 if (!response.ok) {
