@@ -2,17 +2,13 @@ package roster
 
 import (
 	"IFTP/db"
-	"IFTP/timeutils"
 	"IFTP/utils"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 //	type Roster struct {
@@ -422,107 +418,6 @@ func UpdateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 			Code:    http.StatusOK,
 		})
 	}
-}
-
-func TriggerScheduleApprovals(myDb *db.MyDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-
-		if err := GenerateScheduleApprovals(ctx, myDb); err != nil {
-			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
-				Status:  "error",
-				Message: "Error generating schedule approvals",
-				Code:    http.StatusInternalServerError,
-			})
-			myDb.Logger.Printf("Error generating schedule approvals: %v", err)
-			return
-		}
-		utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
-			Status:  "success",
-			Message: "Successfully generated schedule approvals",
-			Code:    http.StatusOK,
-		})
-	}
-}
-
-func GenerateScheduleApprovals(ctx context.Context, myDb *db.MyDatabase) error {
-	// Having this automatically calculate the next month from now so cron job doesn't need to handle times. Can change this later if needed.
-	now := time.Now()
-	month := time.Date(now.Year(), now.Month()+1, 1, 0, 0, 0, 0, now.Location())
-
-	myDb.Logger.Printf("Generating schedule approvals for month: %v", month)
-	rows, err := myDb.Pool.Query(ctx, `
-	SELECT id, day_of_week FROM classes WHERE active = true`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	classes, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[ActiveClass])
-	if err != nil {
-		return fmt.Errorf("Error collecting active classes: %v", err)
-	}
-
-	myDb.Logger.Printf("Found %v active classes to process", len(classes))
-
-	for _, class := range classes {
-		if err := generateClassApproval(ctx, myDb, class.ID, class.DayOfWeek, month); err != nil {
-			return fmt.Errorf("Error generating approval for class %v: %w", class.ID, err)
-		}
-	}
-	myDb.Logger.Printf("Successfully generated schedule approvals for %v classes", len(classes))
-	return nil
-}
-
-func generateClassApproval(ctx context.Context, myDb *db.MyDatabase, classId int, dayOfWeek string, month time.Time) error {
-	tx, err := myDb.Pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	// Check if this approval already exists
-	var exists bool
-
-	err = tx.QueryRow(ctx, `
-		SELECT EXISTS (
-			SELECT 1 FROM schedule_approvals
-			WHERE class_id = $1 and month = $2)`,
-		classId, month).Scan(&exists)
-
-	if err != nil {
-		return err
-	}
-	if exists {
-		myDb.Logger.Printf("Approval already exists for class %v month %v, skipping", classId, month)
-		return nil // already exists- no need to process
-	}
-
-	weekday, err := timeutils.ParseWeekday(dayOfWeek)
-	if err != nil {
-		return err
-	}
-
-	dates := timeutils.CreateDatesMap([]time.Weekday{weekday}, month.Year(), month.Month())
-	pendingDates := dates[weekday]
-
-	approvalId, err := dbInsertScheduleApproval(ctx, tx, classId, month)
-	if err != nil {
-		return err
-	}
-
-	err = dbInsertPendingDates(ctx, tx, approvalId, pendingDates)
-	if err != nil {
-		return err
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return err
-	}
-
-	myDb.Logger.Printf("Successfully created approval %v for class %v", approvalId, classId)
-	return nil
-
 }
 
 // Enroll adds the student info in the body of the request to the class from the url.

@@ -34,7 +34,13 @@ func FirstDay(weekday time.Weekday, year int, month time.Month) int {
 	}
 
 	t := time.Date(year, month, 1, 0, 0, 0, 0, location)
-	return (8-int(t.Weekday()))%7 + int(weekday)
+
+	//Days until target weekday
+	diff := int(weekday) - int(t.Weekday())
+	if diff < 0 {
+		diff += 7
+	}
+	return 1 + diff // first occurrence of that day in the month
 }
 
 func CreateDatesMap(classDays []time.Weekday, year int, month time.Month) (datesMap map[time.Weekday][]time.Time) {
