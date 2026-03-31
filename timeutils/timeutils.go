@@ -68,6 +68,23 @@ func ParseDate(dateStr string) (time.Time, error) {
 	return time.Parse("2006-01-02", dateStr)
 }
 
+func ParseWeekday(day string) (time.Weekday, error) {
+	days := map[string]time.Weekday{
+		"Sunday":    time.Sunday,
+		"Monday":    time.Monday,
+		"Tuesday":   time.Tuesday,
+		"Wednesday": time.Wednesday,
+		"Thursday":  time.Thursday,
+		"Friday":    time.Friday,
+		"Saturday":  time.Saturday,
+	}
+	w, ok := days[day]
+	if !ok {
+		return 0, fmt.Errorf("invalid weekday: %v", day)
+	}
+	return w, nil
+}
+
 //createDatesMap:
 // go through each day of the week in the list
 //For Monday- if Monday does not exists in the map, add it and add the first date.
