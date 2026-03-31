@@ -2172,7 +2172,7 @@
             const denyBtn = event.target.closest('.enrollmentReqDenyBtn');
             if (denyBtn) {
                 if (confirm('Deny this enrollment request')) {
-                    const requestId = approveBtn.dataset.requestId;
+                    const requestId = denyBtn.dataset.requestId;
                     handleEnrollmentRequest(requestId, 'Denied')
                 }
             }
