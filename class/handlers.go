@@ -115,6 +115,19 @@ type ActiveClass struct {
 	DayOfWeek string `db:"day_of_week"`
 }
 
+type MonthlyClassScheduleApproval struct {
+	ID           string      `db:"id" json:"id"`
+	ClassID      int         `db:"class_id" json:"class_id"`
+	ClassName    string      `db:"class_name" json:"class_name"`
+	Teacher      string      `db:"teacher" json:"teacher"`
+	DayOfWeek    DayOfWeek   `db:"day_of_week" json:"day_of_week"`
+	Time         string      `db:"time" json:"time"`
+	Capacity     int         `db:"capacity" json:"capacity"`
+	Month        *time.Time  `db:"month" json:"month"`
+	Status       string      `db:"status" json:"status"`
+	PendingDates []time.Time `db:"pending_dates" json:"pending_dates"`
+}
+
 func ListClasses(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -601,6 +614,24 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			utils.WriteJSONResponse(w, http.StatusOK, updateRequest)
 			myDb.Logger.Printf("Successfully updated class: %v", updateRequest)
 		}
+	}
+}
+
+func GetPendingScheduleApprovals(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		approvals, err := dbGetPendingScheduleApprovals(ctx, myDb)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Error fetching pending schedule approvals from db: %v", err),
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Print("Error fetching pending schedule approvals from db")
+			return
+		}
+		utils.WriteJSONResponse(w, http.StatusOK, approvals)
 	}
 }
 
