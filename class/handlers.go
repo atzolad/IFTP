@@ -662,7 +662,7 @@ func ConfirmScheduleApproval(myDb *db.MyDatabase) http.HandlerFunc {
 		if input.Status != "Approved" && input.Status != "Rejected" {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
-				Message: fmt.Sprintf("Status must be Approved or Rejected"),
+				Message: "Status must be Approved or Rejected",
 				Code:    http.StatusBadRequest,
 			})
 			return
