@@ -269,6 +269,28 @@ func dbInsertPendingDates(ctx context.Context, tx pgx.Tx, approvalId string, pen
 	return nil
 }
 
+func dbGetPendingScheduleApprovals(ctx context.Context, myDb *db.MyDatabase) (approvals []MonthlyClassScheduleApproval, err error) {
+	rows, err := myDb.Pool.Query(ctx, `
+		SELECT sa.id, sa.class_id, c.name as class_name, c.teacher, c.day_of_week, c.time, c.capacity, sa.month, sa.status, ARRAY_AGG(sad.proposed_date ORDER BY sad.proposed_date) AS pending_dates
+		FROM schedule_approvals sa
+		JOIN classes c ON c.id = sa.class_id
+		JOIN schedule_approval_dates sad ON sad.schedule_approval_id = sa.id
+		WHERE sa.status = 'Pending'
+		GROUP BY sa.id, sa.class_id, c.name, c.teacher, c.day_of_week, c.time, c.capacity, sa.month, sa.status
+		ORDER BY sa.month ASC, c.name ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	approvals, err = pgx.CollectRows(rows, pgx.RowToStructByNameLax[MonthlyClassScheduleApproval])
+	if err != nil {
+		return nil, err
+	}
+
+	return approvals, nil
+}
+
 // // TODO: standard is to just call this delete not softDelete. Add comment about soft delete
 // func SoftDeleteClassDB(myDb *db.MyDatabase, id int) (string, error) {
 

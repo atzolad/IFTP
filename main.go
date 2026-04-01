@@ -79,6 +79,7 @@ func main() {
 	mux.HandleFunc("PATCH /classes/{class_id}", class.UpdateClass(myDb))
 	mux.HandleFunc("POST /classes", class.CreateClass(myDb))
 	mux.HandleFunc("POST /classes/schedule_approval/generate", class.TriggerScheduleApprovals(myDb))
+	mux.HandleFunc("GET /classes/schedule_approval", class.GetPendingScheduleApprovals(myDb))
 
 	// Roster Endpoints
 	mux.HandleFunc("GET /roster/{class_id}", roster.GetRoster(myDb))
