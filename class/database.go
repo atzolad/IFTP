@@ -163,13 +163,17 @@ func dbCreateClass(ctx context.Context, tx pgx.Tx, c *Class) error {
 	return err
 }
 
-func dbInsertClass_ScheduleRow(ctx context.Context, tx pgx.Tx, c *Class, sessionDate time.Time) error {
-	_, err := tx.Exec(ctx,
-		`INSERT INTO class_schedule (class_id, session_date, month, status) 
+func dbInsertClassScheduleRows(ctx context.Context, tx pgx.Tx, classId int, month time.Time, dates []time.Time) error {
+	for _, date := range dates {
+		_, err := tx.Exec(ctx,
+			`INSERT INTO class_schedule (class_id, session_date, month, status) 
 		VALUES ($1, $2, $3, $4)`,
-		c.ID, sessionDate, c.Month, "Scheduled")
-
-	return err
+			classId, date, month, "Scheduled")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func dbUpdateClass(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, error) {
@@ -289,6 +293,16 @@ func dbGetPendingScheduleApprovals(ctx context.Context, myDb *db.MyDatabase) (ap
 	}
 
 	return approvals, nil
+}
+
+func dbUpdateScheduleApprovalStatus(ctx context.Context, tx pgx.Tx, approvalId string, status string) (classId int, month time.Time, err error) {
+	err = tx.QueryRow(ctx, `
+	UPDATE schedule_approvals
+	SET status = $1, reviewed_at = NOW()
+	WHERE id = $2
+	RETURNING class_id, month`, status, approvalId).Scan(&classId, &month)
+
+	return
 }
 
 // // TODO: standard is to just call this delete not softDelete. Add comment about soft delete

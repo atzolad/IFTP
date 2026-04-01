@@ -128,6 +128,11 @@ type MonthlyClassScheduleApproval struct {
 	PendingDates []time.Time `db:"pending_dates" json:"pending_dates"`
 }
 
+type ScheduleApprovalInput struct {
+	Status string      `json:"status"` // Approved or Rejected
+	Dates  []time.Time `json:"dates"`  // Returned dates after calendar edits
+}
+
 func ListClasses(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -632,6 +637,87 @@ func GetPendingScheduleApprovals(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 		utils.WriteJSONResponse(w, http.StatusOK, approvals)
+	}
+}
+
+func ConfirmScheduleApproval(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+
+		approvalId := r.PathValue("approval_id")
+
+		var input ScheduleApprovalInput
+
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error decoding confirmed schedule dates for approval",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Error decoding confirmed schedule dates for approval: %v", err)
+			return
+		}
+
+		if input.Status != "Approved" && input.Status != "Rejected" {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: fmt.Sprintf("Status must be Approved or Rejected"),
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error confirming schedule dates for approval",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error confirming schedule dates for approval: %v", err)
+			return
+		}
+
+		defer tx.Rollback(ctx)
+
+		classId, month, err := dbUpdateScheduleApprovalStatus(ctx, tx, approvalId, input.Status)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error updating schedule approval status",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error updating schedule status: %v", err)
+			return
+		}
+
+		if input.Status == "Approved" {
+			if err := dbInsertClassScheduleRows(ctx, tx, classId, month, input.Dates); err != nil {
+				utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+					Status:  "error",
+					Message: "Error inserting into class schedule",
+					Code:    http.StatusInternalServerError,
+				})
+				myDb.Logger.Printf("Error inserting into class schedule: %v", err)
+				return
+			}
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error committing transaction",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, utils.ResponseData{
+			Status:  "success",
+			Message: fmt.Sprintf("Schedule approval %v successfully", input.Status),
+			Code:    http.StatusOK,
+		})
 	}
 }
 
