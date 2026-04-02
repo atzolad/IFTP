@@ -2757,6 +2757,8 @@
             return col;
         }
 
+        // Schedule Approval Functions
+
         let pendingApprovals = []
 
         async function renderScheduleApprovals() {
@@ -2859,7 +2861,7 @@
 
         // Event listener for Schedule Approval Buttons
 
-        document.getElementById('classScheduleApprovalsContainer').addEventListener('click', async (event) => {
+        document.getElementById('classScheduleApprovalsContainer').addEventListener('click', (event) => {
             const card = event.target.closest('[data-approval-id]');
 
             if (!card) {
@@ -2871,7 +2873,7 @@
 
 
             if (event.target.closest('.approvalCardApproveBtn')) {
-                await submitScheduleApproval(approvalId, 'Approved', approval.pending_dates);
+                ubmitScheduleApproval(approvalId, 'Approved', approval.pending_dates);
                 return;
             };
 
@@ -2881,10 +2883,32 @@
             }
 
             if (event.target.closest('.approvalCardRejectBtn')) {
-                await submitScheduleApproval(approvalId, 'Rejected', []);
+                submitScheduleApproval(approvalId, 'Rejected', []);
                 return;
             }
         });
+
+        async function submitScheduleApproval(approvalId, status, pendingDates) {
+            try {
+                const resp = await fetch(`/classes/schedule_approval/confirm/${approvalId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-type': 'application/json' },
+                    body: JSON.stringify({ status, dates })
+                });
+
+                if (!resp.ok) {
+                    const data = await resp.json(); a
+                    alert(data.message || 'Error submitting schedule approval');
+                    return;
+                }
+
+                renderScheduleApprovals();
+
+            } catch (err) {
+                console.error('Error submitting schedule approval', err);
+                alert('Network error occured');
+            }
+        }
 
 
 
@@ -3567,7 +3591,6 @@
                 });
 
                 const responseData = await resp.json();
-                console.log(responseData)
 
                 if (resp.ok) {
                     const responseString = JSON.stringify(responseData, null, 2)
