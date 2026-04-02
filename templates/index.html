@@ -2108,12 +2108,12 @@
                 return;
             }
 
-            const badge = element.querySelector('.badge');
 
             if (element.classList.contains('has-class')) {
-                // Remove the class
                 element.classList.remove('has-class');
-                if (badge) badge.remove();
+                element.querySelector('.badge')?.remove();
+                selectedDates = selectedDates.filter(d => d !== date);
+
             } else {
                 // Add the class
                 element.classList.add('has-class');
@@ -2121,6 +2121,7 @@
                 newBadge.className = 'badge class-badge bg-primary';
                 newBadge.innerHTML = '<i class="bi bi-check-circle"></i> Selected';
                 element.appendChild(newBadge);
+                selectedDates.push(date);
             }
 
             // Update selected dates summary (simplified for demo)
