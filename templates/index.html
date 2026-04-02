@@ -2079,11 +2079,15 @@
         //     new bootstrap.Modal(document.getElementById('calendarEditModal')).show();
         // }
 
-        function showCalendarEditModal(approval) {
+        let currentEditApprovalId = null;
+        let selectedDates = [];
+
+        async function showCalendarEditModal(approval) {
             currentEditApprovalId = approval.approvalId;
             selectedDates = [...approval.pending_dates];
             const date = new Date(approval.month);
-            monthLabel = date.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+            holidays = await fetchHolidays(date.getFullYear());
+            monthLabel = date.toLocaleDateString('default', { month: 'long', year: 'numeric', timezone: 'UTC' });
 
 
             document.getElementById('calendarEditTitle').textContent = `${approval.class_name} -  ${monthLabel}`;
@@ -2702,6 +2706,7 @@
 
                 const approvals = await (response.json());
                 pendingApprovals = approvals
+                console.log(pendingApprovals)
 
                 containerWrapper.innerHTML = '';
 
@@ -2764,7 +2769,8 @@
             `
 
             const monthLabel = new Date(approval.month).toLocaleDateString('default',
-                { month: 'long', year: 'numeric' });
+                { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
 
             card.querySelector('.approvalCardTitle').textContent = `${monthLabel} - ${approval.teacher}`;
             card.querySelector('.approvalCardTeacher').textContent = ` ${approval.teacher}`;
@@ -2807,7 +2813,7 @@
             };
 
             if (event.target.closest('.approvalCardCalendarBtn')) {
-                showCalendarEditModal(approval.month);
+                showCalendarEditModal(approval);
                 return;
             }
 
@@ -3370,11 +3376,17 @@
             }
         });
 
-        const holidays = {
-            '2026-03-17': 'St. Patrick\'s Day'
-        };
 
-        const selectedDates = ['2026-03-02', '2026-03-09', '2026-03-16', '2026-03-23'];
+        async function fetchHolidays(year, countryCode = 'US') {
+            const resp = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`);
+            const data = await resp.json();
+
+            // Convert to { 'YYYY-MM-DD': 'Holiday Name' } format
+            return data.reduce((acc, holiday) => {
+                acc[holiday.date] = holiday.localName;
+                return acc;
+            }, {});
+        }
 
         function generateCalendar(year, month) {
             const tbody = document.getElementById('editCalendarBody');
