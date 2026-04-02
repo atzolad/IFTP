@@ -2536,6 +2536,9 @@
             renderEnrollmentRequests();
             window.ManageEnrollmentRequstsInitialized = true;
 
+            renderScheduleApprovals();
+            window.ScheduleApprovalsInitialized = true;
+
 
             // Call March 2026
             // generateCalendar(2026, 2);
@@ -2769,7 +2772,7 @@
                 const approvals = await (response.json());
                 pendingApprovals = approvals
 
-                container.innterHTML = '';
+                containerWrapper.innerHTML = '';
 
 
                 if (!approvals || approvals.length == 0) {
@@ -2833,24 +2836,22 @@
                 { month: 'long', year: 'numeric' });
 
             card.querySelector('.approvalCardTitle').textContent = `${monthLabel} - ${approval.teacher}`;
-            card.querySelector('.approvalCardTeacher').textContent = approval.teacher;
-            card.querySelector('.approvalCardDay').textContent = approval.day_of_week;
-            card.querySelector('.approvalCardTime').textContent = approval.time;
-            card.querySelector('.approvalCardCapacity').textContent = approval.capacity;
+            card.querySelector('.approvalCardTeacher').textContent = ` ${approval.teacher}`;
+            card.querySelector('.approvalCardDay').textContent = ` ${approval.day_of_week}`;
+            card.querySelector('.approvalCardTime').textContent = ` ${formatTime(approval.time)}`;
+            card.querySelector('.approvalCardCapacity').textContent = ` ${approval.capacity}`;
 
             // Date badges
             const datesContainer = card.querySelector('.approvalCardDates');
 
             approval.pending_dates.forEach(date => {
-                const badge = document.CreateElement('span');
-                badge.ClassName = 'badge bg-light text-dark me-1';
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-light text-dark me-1';
                 badge.textContent = new Date(date).toLocaleDateString('default',
                     { month: 'short', day: 'numeric' });
                 datesContainer.appendChild(badge);
 
             });
-
-            const btnContainer = col.querySelector('.');
 
             return card;
 
@@ -2859,7 +2860,7 @@
         // Event listener for Schedule Approval Buttons
 
         document.getElementById('classScheduleApprovalsContainer').addEventListener('click', async (event) => {
-            const card = e.target.closest('[data-approval-id]');
+            const card = event.target.closest('[data-approval-id]');
 
             if (!card) {
                 return;
@@ -2869,17 +2870,17 @@
             const approval = pendingApprovals.find(approval => approval.id === approvalId);
 
 
-            if (e.target.closest('.approvalCardApproveBtn')) {
+            if (event.target.closest('.approvalCardApproveBtn')) {
                 await submitScheduleApproval(approvalId, 'Approved', approval.pending_dates);
                 return;
             };
 
-            if (e.target.closest('.approvalCardCalendarBtn')) {
-                showCalendarEditModal(approval);
+            if (event.target.closest('.approvalCardCalendarBtn')) {
+                showCalendarEditModal(approval.month);
                 return;
             }
 
-            if (e.target.closets('.approvalCardRejectBtn')) {
+            if (event.target.closest('.approvalCardRejectBtn')) {
                 await submitScheduleApproval(approvalId, 'Rejected', []);
                 return;
             }
@@ -3787,6 +3788,15 @@
             }
             document.getElementById(alertId).innerHTML = '';
         }
+
+        function formatTime(timeStr) {
+            // timeStr comes in as "19:00:00.000000"
+            const [hours, minutes] = timeStr.split(':');
+            const date = new Date();
+            date.setHours(parseInt(hours), parseInt(minutes));
+            return date.toLocaleTimeString('default', { hour: 'numeric', minute: '2-digit' });
+        }
+
 
 
     </script>
