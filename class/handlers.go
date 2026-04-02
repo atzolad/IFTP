@@ -160,10 +160,6 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 		month := r.FormValue("month")
 		studentId := strings.TrimSpace(r.PathValue("student_id"))
 		var studentIntegerId *int
-		// fmt.Println("MONTH:")
-		// fmt.Println(month)
-		// fmt.Println("STUDENT ID:")
-		// fmt.Println(studentId)
 
 		if studentId != "" {
 			val, err := strconv.Atoi(studentId)

@@ -949,79 +949,8 @@
                     <h4 class="mb-3 mt-4">Monthly Class Schedule Approvals</h4>
                     <p class="text-muted">Review and approve auto-generated class schedules for upcoming months.
                     </p>
-
-                    <div class="card mb-3">
-                        <div class="card-header bg-white">
-                            <h5 class="mb-0">March 2026 - Matthew Moore</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Teacher:</strong> Matthew Moore</p>
-                                    <p><strong>Day:</strong> Monday</p>
-                                    <p><strong>Time:</strong> 7:00 PM</p>
-                                    <p><strong>Capacity:</strong> 16 students</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Proposed Dates:</strong></p>
-                                    <div>
-                                        <span class="badge bg-light text-dark me-1">March 2</span>
-                                        <span class="badge bg-light text-dark me-1">March 9</span>
-                                        <span class="badge bg-light text-dark me-1">March 16</span>
-                                        <span class="badge bg-light text-dark me-1">March 23</span>
-                                    </div>
-                                    <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
-                                        Note:
-                                        Warning if potential holiday conflicts</p>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
-                                    Approve</button>
-                                <button class="btn btn-primary me-2"
-                                    onclick="showCalendarEditModal('Mondays with Matthew Moore', 'March 2026')"><i
-                                        class="bi bi-calendar-edit"></i> Edit on Calendar</button>
-                                <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
-                            </div>
-                        </div>
+                    <div id="classScheduleApprovalsContainer">
                     </div>
-
-                    <div class="card mb-3">
-                        <div class="card-header bg-white">
-                            <h5 class="mb-0">March 2026 - Liam Clancy</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Teacher:</strong> Liam Clancy</p>
-                                    <p><strong>Day:</strong> Tuesday</p>
-                                    <p><strong>Time:</strong> 7:00 PM</p>
-                                    <p><strong>Capacity:</strong> 16 students</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Proposed Dates:</strong></p>
-                                    <div>
-                                        <span class="badge bg-light text-dark me-1">March 3</span>
-                                        <span class="badge bg-light text-dark me-1">March 10</span>
-                                        <span class="badge bg-light text-dark me-1">March 17</span>
-                                        <span class="badge bg-light text-dark me-1">March 24</span>
-                                    </div>
-                                    <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
-                                        Note:
-                                        Warning if potential holiday conflicts</p>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
-                                    Approve</button>
-                                <button class="btn btn-primary me-2"
-                                    onclick="showCalendarEditModal('Tuesdays with Liam Clancy', 'March 2026')"><i
-                                        class="bi bi-calendar-edit"></i> Edit on Calendar</button>
-                                <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
                 <!-- Manage Students Section -->
@@ -2824,6 +2753,179 @@
 
             return col;
         }
+
+        let pendingApprovals = []
+
+        async function renderScheduleApprovals() {
+            const containerWrapper = document.getElementById('classScheduleApprovalsContainer');
+            const apiEndpoint = `${baseUrl}/classes/schedule_approval`;
+
+            try {
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`)
+                }
+
+                const approvals = await (response.json());
+                pendingApprovals = approvals
+
+                container.innterHTML = '';
+
+
+                if (!approvals || approvals.length == 0) {
+                    containerWrapper.innerHTML = '<p class="text-muted">No pending schedule approvals.</p>'
+                    return
+                }
+
+                approvals.forEach(approval => {
+                    containerWrapper.appendChild(buildApprovalCard(approval));
+                });
+
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                containerWrapper.innerHTML = '<p class ="text-danger">Failed to load approvals.</p>';
+            }
+        }
+
+        function buildApprovalCard(approval) {
+            const card = document.createElement('div');
+            card.className = 'card mb-3';
+
+            card.innerHTML = `
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0 approvalCardTitle"></h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Teacher:</strong><span class="approvalCardTeacher"</span></p>
+                                    <p><strong>Day:</strong><span class="approvalCardDay"</span></p>
+                                    <p><strong>Time:</strong><span class="approvalCardTime"</span></p>
+                                    <p><strong>Capacity:</strong><span class="approvalCardCapacity"</span> students</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Proposed Dates:</strong></p>
+                                    <div class="approvalCardDates">
+                                    </div>
+                                    <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
+                                        Note:
+                                        Warning if potential holiday conflicts</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-primary me-2 approvalCardApproveBtn">
+                                    <i class="bi bi-check-circle"></i>Approve
+                                    </button>
+                                <button class="btn btn-primary me-2 approvalCardCalendarBtn">
+                                    <i class="bi bi-calendar-edit"></i> Edit on Calendar
+                                </button>
+                                <button class="btn btn-secondary approvalCardRejectBtn">
+                                    <i class="bi bi-x-circle"></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+            `
+
+            const monthLabel = new Date(approval.month).toLocaleDateString('default',
+                { month: 'long', year: 'numeric' });
+
+            card.querySelector('.approvalCardTitle').textContent = `${monthLabel} - ${approval.teacher}`;
+            card.querySelector('.approvalCardTeacher').textContent = approval.teacher;
+            card.querySelector('.approvalCardDay').textContent = approval.day_of_week;
+            card.querySelector('.approvalCardTime').textContent = approval.time;
+            card.querySelector('.approvalCardCapacity').textContent = approval.capacity;
+
+            // Date badges
+            const datesContainer = card.querySelector('.approvalCardDates');
+
+            approval.pending_dates.forEach(date => {
+                const badge = document.CreateElement('span');
+                badge.ClassName = 'badge bg-light text-dark me-1';
+                badge.textContent = new Date(date).toLocaleDateString('default',
+                    { month: 'short', day: 'numeric' });
+                datesContainer.appendChild(badge);
+
+            });
+
+            const btnContainer = col.querySelector('.');
+
+            return card;
+
+        }
+
+        // <div class=" card mb-3">
+        //                 <div class="card-header bg-white">
+        //                     <h5 class="mb-0">March 2026 - Matthew Moore</h5>
+        //                 </div>
+        //                 <div class="card-body">
+        //                     <div class="row">
+        //                         <div class="col-md-6">
+        //                             <p><strong>Teacher:</strong> Matthew Moore</p>
+        //                             <p><strong>Day:</strong> Monday</p>
+        //                             <p><strong>Time:</strong> 7:00 PM</p>
+        //                             <p><strong>Capacity:</strong> 16 students</p>
+        //                         </div>
+        //                         <div class="col-md-6">
+        //                             <p><strong>Proposed Dates:</strong></p>
+        //                             <div>
+        //                                 <span class="badge bg-light text-dark me-1">March 2</span>
+        //                                 <span class="badge bg-light text-dark me-1">March 9</span>
+        //                                 <span class="badge bg-light text-dark me-1">March 16</span>
+        //                                 <span class="badge bg-light text-dark me-1">March 23</span>
+        //                             </div>
+        //                             <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
+        //                                 Note:
+        //                                 Warning if potential holiday conflicts</p>
+        //                         </div>
+        //                     </div>
+        //                     <div class="mt-3">
+        //                         <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
+        //                             Approve</button>
+        //                         <button class="btn btn-primary me-2"
+        //                             onclick="showCalendarEditModal('Mondays with Matthew Moore', 'March 2026')"><i
+        //                                 class="bi bi-calendar-edit"></i> Edit on Calendar</button>
+        //                         <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
+        //                     </div>
+        //                 </div>
+        //             </div>
+
+        //             <div class="card mb-3">
+        //                 <div class="card-header bg-white">
+        //                     <h5 class="mb-0">March 2026 - Liam Clancy</h5>
+        //                 </div>
+        //                 <div class="card-body">
+        //                     <div class="row">
+        //                         <div class="col-md-6">
+        //                             <p><strong>Teacher:</strong> Liam Clancy</p>
+        //                             <p><strong>Day:</strong> Tuesday</p>
+        //                             <p><strong>Time:</strong> 7:00 PM</p>
+        //                             <p><strong>Capacity:</strong> 16 students</p>
+        //                         </div>
+        //                         <div class="col-md-6">
+        //                             <p><strong>Proposed Dates:</strong></p>
+        //                             <div>
+        //                                 <span class="badge bg-light text-dark me-1">March 3</span>
+        //                                 <span class="badge bg-light text-dark me-1">March 10</span>
+        //                                 <span class="badge bg-light text-dark me-1">March 17</span>
+        //                                 <span class="badge bg-light text-dark me-1">March 24</span>
+        //                             </div>
+        //                             <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
+        //                                 Note:
+        //                                 Warning if potential holiday conflicts</p>
+        //                         </div>
+        //                     </div>
+        //                     <div class="mt-3">
+        //                         <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
+        //                             Approve</button>
+        //                         <button class="btn btn-primary me-2"
+        //                             onclick="showCalendarEditModal('Tuesdays with Liam Clancy', 'March 2026')"><i
+        //                                 class="bi bi-calendar-edit"></i> Edit on Calendar</button>
+        //                         <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
+        //                     </div>
+        //                 </div>
+        //             </div>
 
         // Event listener for available classes buttons
         document.getElementById('availableClassesContainer').addEventListener('click', (e) => {
