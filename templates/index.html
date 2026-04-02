@@ -2290,7 +2290,7 @@
             console.log(`Render Roster for ID: ${classId}, Month: ${month}, Date: ${classDate} `);
 
 
-            const apiEndpoint = `${baseUrl} /roster/${classId}?month = ${month}& class_date=${classDate} `;
+            const apiEndpoint = `${baseUrl}/roster/${classId}?month=${month}&class_date=${classDate}`;
 
 
             fetch(apiEndpoint)
@@ -2335,11 +2335,11 @@
                             'Enrolled': 'bg-primary',
                             'Away': 'bg-danger',
                         }[student.status] ?? 'bg-primary';
-                        studentStatus.innerHTML = `< span class="badge ${badgeColor}" > ${student.status}</span > `;
+                        studentStatus.innerHTML = `<span class="badge ${badgeColor}">${student.status}</span> `;
                         row.appendChild(studentStatus)
 
                         const button = document.createElement('td');
-                        button.innerHTML = `< button class="btn btn-sm btn-outline-danger removeFromRosterBtn" > Remove</button > `
+                        button.innerHTML = `<button class="btn btn-sm btn-outline-danger removeFromRosterBtn" > Remove</button> `
                         row.appendChild(button)
 
                         containerWrapper.appendChild(row);
@@ -2347,7 +2347,7 @@
                 }).catch(error => {
                     console.error('Error fetching data:', error);
                     const containerWrapper = document.getElementById('rosterTableBody');
-                    containerWrapper.innerHTML = `< tr > <td colspan="4" class="text-center text-muted">Failed to load roster.</td></tr > `;
+                    containerWrapper.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Failed to load roster.</td></tr> `;
                 });
         }
 
