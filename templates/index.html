@@ -1767,10 +1767,6 @@
                         <div class="card-body">
                             <strong>Selected Dates:</strong>
                             <div id="selectedDatesSummary" class="mt-2">
-                                <span class="badge bg-primary me-1">March 2</span>
-                                <span class="badge bg-primary me-1">March 9</span>
-                                <span class="badge bg-primary me-1">March 16</span>
-                                <span class="badge bg-primary me-1">March 23</span>
                             </div>
                         </div>
                     </div>
@@ -2086,33 +2082,54 @@
 
         async function showCalendarEditModal(approval) {
             currentEditApprovalId = approval.approvalId;
-            selectedDates = [...approval.pending_dates];
+            selectedDates = approval.pending_dates.map(d =>
+                new Date(d).toISOString().split('T')[0]
+            );
             const date = new Date(approval.month);
             holidays = await fetchHolidays(date.getFullYear());
-            monthLabel = date.toLocaleDateString('default', { month: 'long', year: 'numeric', timezone: 'UTC' });
+            monthLabel = date.toLocaleDateString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 
             document.getElementById('calendarEditTitle').textContent = `${approval.class_name} -  ${monthLabel}`;
 
 
             // Generate the calendar
-            generateCalendar(date.getFullYear(), date.getMonth());
+            generateCalendar(date.getFullYear(), date.getUTCMonth());
+
+            renderSelectedDateBadges();
 
             //  Show the Modal
             new bootstrap.Modal(document.getElementById('calendarEditModal')).show();
         }
 
+        renderSelectedDateBadges();
+
+        function renderSelectedDateBadges() {
+
+            const container = document.getElementById('selectedDatesSummary');
+            container.innerHTML = '';
+
+            // Selected dates is a module level variable so can be accessed without passing it in here
+            selectedDates.forEach(date => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary me-1';
+                badge.textContent = new Date(date).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', timeZone: 'UTC'
+                });
+                container.appendChild(badge);
+            });
+        }
         function toggleClassDate(element, date) {
             // Don't allow selection on holidays or other month days
             if (element.classList.contains('holiday') || element.classList.contains('other-month')) {
                 return;
             }
 
-
             if (element.classList.contains('has-class')) {
                 element.classList.remove('has-class');
                 element.querySelector('.badge')?.remove();
                 selectedDates = selectedDates.filter(d => d !== date);
+                renderSelectedDateBadges();
 
             } else {
                 // Add the class
@@ -2122,6 +2139,7 @@
                 newBadge.innerHTML = '<i class="bi bi-check-circle"></i> Selected';
                 element.appendChild(newBadge);
                 selectedDates.push(date);
+                renderSelectedDateBadges();
             }
 
             // Update selected dates summary (simplified for demo)
@@ -2788,7 +2806,9 @@
                 const badge = document.createElement('span');
                 badge.className = 'badge bg-light text-dark me-1';
                 badge.textContent = new Date(date).toLocaleDateString('default',
-                    { month: 'short', day: 'numeric' });
+                    {
+                        month: 'short', day: 'numeric', timeZone: 'UTC'
+                    });
                 datesContainer.appendChild(badge);
 
             });
