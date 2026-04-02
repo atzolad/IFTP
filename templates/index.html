@@ -3483,7 +3483,7 @@
             const monthOptions = [];
             const currentDate = new Date();
 
-            for (let i = 0; i < 3; i++) {
+            for (let i = -1; i < 3; i++) {
                 const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
                 const label = date.toLocaleString('default', { month: 'long', year: 'numeric' })
                 const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
@@ -3493,7 +3493,15 @@
             monthOptions.forEach(month => {
                 const option = document.createElement('option')
                 option.value = month.value;
-                option.innerHTML = month.label;
+                option.textContent = month.label;
+
+                // Optional: Auto-select the current month
+                const now = new Date();
+                const currentVal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+                if (month.value === currentVal) {
+                    option.selected = true;
+                }
+
                 monthDropdown.appendChild(option);
             });
         }
