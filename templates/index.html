@@ -1796,8 +1796,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save &
-                        Approve</button>
+                    <button type="button" id="saveCalendarEditBtn" class="btn btn-primary"><i
+                            class="bi bi-check-circle"></i>
+                        Save & Approve
+                    </button>
                 </div>
             </div>
         </div>
@@ -2844,6 +2846,12 @@
                 alert('Network error occured');
             }
         }
+
+        //  Event listener for Calendar Schedule Approval button 
+        document.getElementById('saveCalendarEditBtn').addEventListener('click', async () => {
+            await submitScheduleApproval(currentEditApprovalId, 'Approved', selectedDates);
+            bootstrap.Modal.getInstance(document.getElementById('calendarEditModal')).hide();
+        });
 
 
 
