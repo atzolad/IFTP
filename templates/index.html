@@ -2790,6 +2790,7 @@
 
         function buildApprovalCard(approval) {
             const card = document.createElement('div');
+            card.dataset.approvalId = approval.id;
             card.className = 'card mb-3';
 
             card.innerHTML = `
@@ -2855,77 +2856,36 @@
 
         }
 
-        // <div class=" card mb-3">
-        //                 <div class="card-header bg-white">
-        //                     <h5 class="mb-0">March 2026 - Matthew Moore</h5>
-        //                 </div>
-        //                 <div class="card-body">
-        //                     <div class="row">
-        //                         <div class="col-md-6">
-        //                             <p><strong>Teacher:</strong> Matthew Moore</p>
-        //                             <p><strong>Day:</strong> Monday</p>
-        //                             <p><strong>Time:</strong> 7:00 PM</p>
-        //                             <p><strong>Capacity:</strong> 16 students</p>
-        //                         </div>
-        //                         <div class="col-md-6">
-        //                             <p><strong>Proposed Dates:</strong></p>
-        //                             <div>
-        //                                 <span class="badge bg-light text-dark me-1">March 2</span>
-        //                                 <span class="badge bg-light text-dark me-1">March 9</span>
-        //                                 <span class="badge bg-light text-dark me-1">March 16</span>
-        //                                 <span class="badge bg-light text-dark me-1">March 23</span>
-        //                             </div>
-        //                             <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
-        //                                 Note:
-        //                                 Warning if potential holiday conflicts</p>
-        //                         </div>
-        //                     </div>
-        //                     <div class="mt-3">
-        //                         <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
-        //                             Approve</button>
-        //                         <button class="btn btn-primary me-2"
-        //                             onclick="showCalendarEditModal('Mondays with Matthew Moore', 'March 2026')"><i
-        //                                 class="bi bi-calendar-edit"></i> Edit on Calendar</button>
-        //                         <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
-        //                     </div>
-        //                 </div>
-        //             </div>
+        // Event listener for Schedule Approval Buttons
 
-        //             <div class="card mb-3">
-        //                 <div class="card-header bg-white">
-        //                     <h5 class="mb-0">March 2026 - Liam Clancy</h5>
-        //                 </div>
-        //                 <div class="card-body">
-        //                     <div class="row">
-        //                         <div class="col-md-6">
-        //                             <p><strong>Teacher:</strong> Liam Clancy</p>
-        //                             <p><strong>Day:</strong> Tuesday</p>
-        //                             <p><strong>Time:</strong> 7:00 PM</p>
-        //                             <p><strong>Capacity:</strong> 16 students</p>
-        //                         </div>
-        //                         <div class="col-md-6">
-        //                             <p><strong>Proposed Dates:</strong></p>
-        //                             <div>
-        //                                 <span class="badge bg-light text-dark me-1">March 3</span>
-        //                                 <span class="badge bg-light text-dark me-1">March 10</span>
-        //                                 <span class="badge bg-light text-dark me-1">March 17</span>
-        //                                 <span class="badge bg-light text-dark me-1">March 24</span>
-        //                             </div>
-        //                             <p class="mt-2 text-muted small"><i class="bi bi-exclamation-triangle"></i>
-        //                                 Note:
-        //                                 Warning if potential holiday conflicts</p>
-        //                         </div>
-        //                     </div>
-        //                     <div class="mt-3">
-        //                         <button class="btn btn-primary me-2"><i class="bi bi-check-circle"></i>
-        //                             Approve</button>
-        //                         <button class="btn btn-primary me-2"
-        //                             onclick="showCalendarEditModal('Tuesdays with Liam Clancy', 'March 2026')"><i
-        //                                 class="bi bi-calendar-edit"></i> Edit on Calendar</button>
-        //                         <button class="btn btn-secondary"><i class="bi bi-x-circle"></i> Reject</button>
-        //                     </div>
-        //                 </div>
-        //             </div>
+        document.getElementById('classScheduleApprovalsContainer').addEventListener('click', async (event) => {
+            const card = e.target.closest('[data-approval-id]');
+
+            if (!card) {
+                return;
+            }
+
+            const approvalId = card.dataset.approvalId;
+            const approval = pendingApprovals.find(approval => approval.id === approvalId);
+
+
+            if (e.target.closest('.approvalCardApproveBtn')) {
+                await submitScheduleApproval(approvalId, 'Approved', approval.pending_dates);
+                return;
+            };
+
+            if (e.target.closest('.approvalCardCalendarBtn')) {
+                showCalendarEditModal(approval);
+                return;
+            }
+
+            if (e.target.closets('.approvalCardRejectBtn')) {
+                await submitScheduleApproval(approvalId, 'Rejected', []);
+                return;
+            }
+        });
+
+
 
         // Event listener for available classes buttons
         document.getElementById('availableClassesContainer').addEventListener('click', (e) => {
