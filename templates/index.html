@@ -2081,7 +2081,7 @@
         let selectedDates = [];
 
         async function showCalendarEditModal(approval) {
-            currentEditApprovalId = approval.approvalId;
+            currentEditApprovalId = approval.id;
             selectedDates = approval.pending_dates.map(d =>
                 new Date(d).toISOString().split('T')[0]
             );
@@ -2091,6 +2091,7 @@
 
 
             document.getElementById('calendarEditTitle').textContent = `${approval.class_name} -  ${monthLabel}`;
+            document.getElementById('saveCalendarEditBtn').dataset.id = currentEditApprovalId;
 
 
             // Generate the calendar
@@ -2827,11 +2828,13 @@
             }
 
             const approvalId = card.dataset.approvalId;
+            console.log('approvalId from dataset:', approvalId);
             const approval = pendingApprovals.find(approval => approval.id === approvalId);
+            console.log('found approval:', approval);
 
 
             if (event.target.closest('.approvalCardApproveBtn')) {
-                ubmitScheduleApproval(approvalId, 'Approved', approval.pending_dates);
+                submitScheduleApproval(approvalId, 'Approved', approval.pending_dates);
                 return;
             };
 
@@ -2846,16 +2849,19 @@
             }
         });
 
-        async function submitScheduleApproval(approvalId, status, pendingDates) {
+        async function submitScheduleApproval(approvalId, status, dates) {
+
+            const isoDates = dates.map(d => new Date(d + 'T00:00:00Z').toISOString());
+
             try {
                 const resp = await fetch(`/classes/schedule_approval/confirm/${approvalId}`, {
                     method: 'PATCH',
                     headers: { 'Content-type': 'application/json' },
-                    body: JSON.stringify({ status, dates })
+                    body: JSON.stringify({ status, dates: isoDates })
                 });
 
                 if (!resp.ok) {
-                    const data = await resp.json(); a
+                    const data = await resp.json();
                     alert(data.message || 'Error submitting schedule approval');
                     return;
                 }
