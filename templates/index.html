@@ -297,62 +297,6 @@
 <body>
 
 
-
-    <!-- Main Wrapper (Everything except sidebar) -->
-    <!-- <div class="wrapper"> -->
-    <!-- Header/Top Bar -->
-    <!-- <header class="header">
-            <div class="header-content">
-                <div class="d-flex align-items-center">
-                    <button class="mobile-menu-btn" id="mobileMenuBtn">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <h5 class="page-title" id="pageTitle">IFTP</h5>
-                </div> -->
-    <!-- <div class="input-group search-bar ms-auto" style="max-width: 300px;">
-                        <input type="text" class="form-control" placeholder="Search...">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div> -->
-    <!-- <div class="user-info btn-group">
-                    <button type="button" class="user-info btn dropdown-toggle" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <div class="user-avatar">AZ</div>
-                        <div>
-                            <small class="d-block fw-bold">Alex Zolad</small>
-                            <small class="text-muted">Admin</small>
-                        </div>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu" aria-labelledby="dropdownMenuUser"> -->
-    <!-- <li><a class="dropdown-item" href="#">Settings</a></li> -->
-    <!-- <li><a class="dropdown-item" href="#">Logout</a></li>
-                    </ul>
-                </div>
-            </div>
-        </header> -->
-
-    <!-- Navigation -->
-    <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#"><i class="bi bi-calendar-check"></i> Class Scheduler</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="userDisplay"><i class="bi bi-person-circle"></i> <span
-                                id="userName">Student Name</span></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav> -->
-
     <!-- Mobile Overlay -->
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
@@ -417,46 +361,12 @@
                     <!-- My Enrolled Classess -->
                     <h4 class="mb-3">My Enrolled Classes</h4>
                     <div class="row g-4" id="enrolledClassesContainer">
-                        <!-- The target element where containers will be injected -->
-                        <!-- <div id="enrolled-class-cards-container-wrapper" class="row g-4"> -->
-                        <!-- Dynamic content goes here -->
                     </div>
-                    <!-- <script src="script.js"></script> -->
 
-                    <!-- My Enrolled Classes -->
-                    <!-- <div class="mb-5">
-                            <h4 class="mb-3">My Enrolled Classes</h4>
-                            <div class="row g-4" id="enrolledClassesContainer">
-                                <!-- Example enrolled class -->
-                    <!-- <div class="col-md-6 col-lg-4">
-                                    <div class="card class-card border-success">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h5 class="card-title mb-0">Math 101</h5>
-                                                <span class="badge bg-success">Enrolled</span>
-                                            </div>
-                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: Alex Johnson</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> Mondays at 10:00 AM</p>
-                                            <p class="card-text small mb-3">Advanced mathematics covering algebra and geometry concepts.</p>
-                                            <div class="mb-2">
-                                                <strong>Session Dates:</strong>
-                                                <div class="mt-2">
-                                                    <span class="badge bg-secondary me-1">Nov 4</span>
-                                                    <span class="badge bg-secondary me-1">Nov 11</span>
-                                                    <span class="badge bg-secondary me-1">Nov 18</span>
-                                                    <span class="badge bg-secondary me-1">Nov 25</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
 
                     <!-- Available Classes -->
                     <h4 class="mb-3">Available Classes</h4>
                     <div class="row g-4" id="availableClassesContainer">
-                        <!-- The target element where containers will be injected -->
                     </div>
                 </div>
 
@@ -472,161 +382,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Student Calendar Grid -->
-    <!-- <div class="card">
-                    <div class="card-body p-0">
-                        <table class="table table-bordered mb-0">
-                            <thead>
-                                <tr class="text-center">
-                                    <th>Sunday</th>
-                                    <th>Monday</th>
-                                    <th>Tuesday</th>
-                                    <th>Wednesday</th>
-                                    <th>Thursday</th>
-                                    <th>Friday</th>
-                                    <th>Saturday</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="calendar-day other-month">
-                                        <div class="day-number">27</div>
-                                    </td>
-                                    <td class="calendar-day other-month">
-                                        <div class="day-number">28</div>
-                                    </td>
-                                    <td class="calendar-day other-month">
-                                        <div class="day-number">29</div>
-                                    </td>
-                                    <td class="calendar-day other-month">
-                                        <div class="day-number">30</div>
-                                    </td>
-                                    <td class="calendar-day other-month">
-                                        <div class="day-number">31</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">1</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">2</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="calendar-day">
-                                        <div class="day-number">3</div>
-                                    </td>
-                                    <td class="calendar-day has-class">
-                                        <div class="day-number">4</div>
-                                        <span class="badge class-badge bg-primary">Math 101 10:00 AM</span>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">5</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">6</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">7</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">8</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">9</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="calendar-day">
-                                        <div class="day-number">10</div>
-                                    </td>
-                                    <td class="calendar-day has-class">
-                                        <div class="day-number">11</div>
-                                        <span class="badge class-badge bg-primary">Math 101 10:00 AM</span>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">12</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">13</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">14</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">15</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">16</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="calendar-day">
-                                        <div class="day-number">17</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">18</div>
-                                        <span class="text-muted small">Unenrolled</span>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">19</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">20</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">21</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">22</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">23</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="calendar-day">
-                                        <div class="day-number">24</div>
-                                    </td>
-                                    <td class="calendar-day has-class">
-                                        <div class="day-number">25</div>
-                                        <span class="badge class-badge bg-primary">Math 101 10:00 AM</span>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">26</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">27</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">28</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">29</div>
-                                    </td>
-                                    <td class="calendar-day">
-                                        <div class="day-number">30</div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div> -->
-
-    <!-- Calendar Legend -->
-    <!-- <div class="card mt-3">
-                    <div class="card-body">
-                        <strong>Legend:</strong>
-                        <div class="d-flex align-items-center mt-2">
-                            <div class="d-flex align-items-center me-4">
-                                <div class="calendar-day has-class d-inline-block me-2" style="width:30px;height:15px;">
-                                </div>
-                                <span>My Classes</span>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
-    <!-- </div> -->
 
 
     <!-- ADMIN VIEW -->
@@ -666,36 +421,6 @@
                 </li> -->
             </ul>
         </div>
-
-
-        <!-- <li class="nav-item">
-                            <a class="nav-link" href="javascript:void(0)" data-tab="reports">
-                                <i class="bi bi-graph-up"></i>
-                            <span>Reports</span>
-                        </a>
-                    </li> -->
-        <!-- </ul>
-                </div> -->
-        <!-- Sidebar -->
-        <!-- <div class="col-md-2 admin-sidebar">
-                    <h5 class="mb-4">Admin Panel</h5>
-                    <nav class="nav flex-column">
-                        <a class="nav-link active" href="#" onclick="showAdminSection('calendar')">
-                            <i class="bi bi-calendar3"></i> Calendar
-                        </a>
-                        <a class="nav-link" href="#" onclick="showAdminSection('classes')">
-                            <i class="bi bi-book"></i> Manage Classes
-                        </a>
-                        <a class="nav-link" href="#" onclick="showAdminSection('students')">
-                            <i class="bi bi-people"></i> Manage Students
-                        </a>
-                        <a class="nav-link" href="#" onclick="showAdminSection('pending')">
-                            <i class="bi bi-clock-history"></i> Pending Approvals
-                            <span class="badge bg-danger ms-2">5</span>
-                        </a>
-                    </nav>
-                </div> -->
-
 
         <!-- Main Wrapper (Everything except sidebar) -->
         <div class="wrapper">
@@ -742,179 +467,7 @@
                         <div id="fullcalendar"></div>
                     </div>
                 </div>
-                <!-- Calendar Grid
-                        <div class="card">
-                            <div class="card-body p-0">
-                                <table class="table table-bordered mb-0">
-                                    <thead>
-                                        <tr class="text-center">
-                                            <th>Sunday</th>
-                                            <th>Monday</th>
-                                            <th>Tuesday</th>
-                                            <th>Wednesday</th>
-                                            <th>Thursday</th>
-                                            <th>Friday</th>
-                                            <th>Saturday</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="calendar-day other-month">
-                                                <div class="day-number">27</div>
-                                            </td>
-                                            <td class="calendar-day other-month">
-                                                <div class="day-number">28</div>
-                                            </td>
-                                            <td class="calendar-day other-month">
-                                                <div class="day-number">29</div>
-                                            </td>
-                                            <td class="calendar-day other-month">
-                                                <div class="day-number">30</div>
-                                            </td>
-                                            <td class="calendar-day other-month">
-                                                <div class="day-number">31</div>
-                                            </td>
-                                            <td class="calendar-day has-class" onclick="showDayModal('Nov 1')">
-                                                <div class="day-number">1</div>
-                                                <span class="badge class-badge bg-info">Science Lab 3:30 PM</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">2</div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="calendar-day">
-                                                <div class="day-number">3</div>
-                                            </td>
-                                            <td class="calendar-day has-class" onclick="showDayModal('Nov 4')">
-                                                <div class="day-number">4</div>
-                                                <span class="badge class-badge bg-primary">Math 101 10:00 AM</span>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">5</div>
-                                                <span class="badge class-badge bg-warning">Art Workshop 4:00 PM</span>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">6</div>
-                                                <span class="badge class-badge bg-success">English Lit 2:00 PM</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">7</div>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">8</div>
-                                                <span class="badge class-badge bg-info">Science Lab 3:30 PM</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">9</div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="calendar-day">
-                                                <div class="day-number">10</div>
-                                            </td>
-                                            <td class="calendar-day has-class holiday" onclick="showDayModal('Nov 11')">
-                                                <div class="day-number">11</div>
-                                                <span class="badge class-badge bg-danger">Veterans Day</span>
-                                                <span class="badge class-badge bg-primary">Math 101 10:00 AM</span>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">12</div>
-                                                <span class="badge class-badge bg-warning">Art Workshop 4:00 PM</span>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">13</div>
-                                                <span class="badge class-badge bg-success">English Lit 2:00 PM</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">14</div>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">15</div>
-                                                <span class="badge class-badge bg-info">Science Lab 3:30 PM</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">16</div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="calendar-day">
-                                                <div class="day-number">17</div>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">18</div>
-                                                <span class="badge class-badge bg-primary">Math 101 10:00 AM</span>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">19</div>
-                                                <span class="badge class-badge bg-warning">Art Workshop 4:00 PM</span>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">20</div>
-                                                <span class="badge class-badge bg-success">English Lit 2:00 PM</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">21</div>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">22</div>
-                                                <span class="badge class-badge bg-info">Science Lab 3:30 PM</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">23</div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="calendar-day">
-                                                <div class="day-number">24</div>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">25</div>
-                                                <span class="badge class-badge bg-primary">Math 101 10:00 AM</span>
-                                            </td>
-                                            <td class="calendar-day has-class">
-                                                <div class="day-number">26</div>
-                                                <span class="badge class-badge bg-warning">Art Workshop 4:00 PM</span>
-                                            </td>
-                                            <td class="calendar-day holiday">
-                                                <div class="day-number">27</div>
-                                                <span class="badge class-badge bg-danger">Thanksgiving</span>
-                                            </td>
-                                            <td class="calendar-day holiday">
-                                                <div class="day-number">28</div>
-                                                <span class="badge class-badge bg-danger">Thanksgiving Break</span>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">29</div>
-                                            </td>
-                                            <td class="calendar-day">
-                                                <div class="day-number">30</div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div> -->
 
-                <!-- Legend -->
-                <!-- <div class="card mt-3">
-                        <div class="card-body">
-                            <strong>Legend:</strong>
-                            <div class="d-flex align-items-center mt-2">
-                                <div class="d-flex align-items-center me-4">
-                                    <div class="calendar-day has-class d-inline-block me-2" style="width:30px;height:15px;">
-                                    </div>
-                                    <span>Has Classes</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div class="calendar-day holiday d-inline-block me-2" style="width:30px;height:15px;">
-                                    </div>
-                                    <span>Holiday</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
 
                 <!-- Manage Classes Section -->
                 <div id="classesSection" class="d-none">
@@ -1572,22 +1125,6 @@
         </div>
     </div>
 
-
-
-    <!-- <td class="col-select">
-        <div class="form-check d-flex justify-content-center">
-            <input class="form-check-input item-checkbox-equipment" type="checkbox" value="${equipment.id}" id="check-${equipment.id}" data-status="${equipment.status}">
-        </div>
-    </td>
-    <td class="col-name">${equipment.name}</td>
-    <td class="text-center">${equipment.startDate}</td>
-    <td class="text-center">${equipment.endDate}</td>
-    </td>
-        <td class="text-center"><span id="status-${equipment.id}" class="badge ${equipment.status === 'Hold' ? ' bg-warning' : equipment.status === 'Booked' ? ' bg-success' : equipment.status === 'Completed' ? ' bg-secondary' : 'bg-danger text-white'}">
-            ${equipment.status}
-        </span>
-    </td> -->
-
     <!-- Calendar Edit Modal (For Pending Approvals) -->
     <div class="modal fade" id="calendarEditModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
@@ -1620,138 +1157,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="editCalendarBody">
-                                    <!-- December 2025 Example
-                                    <tr>
-                                        <td class="calendar-day other-month">
-                                            <div class="day-number">30</div>
-                                        </td>
-                                        <td class="calendar-day has-class"
-                                            onclick="toggleClassDate(this, '2025-12-01')">
-                                            <div class="day-number">1</div>
-                                            <span class="badge class-badge bg-success"><i
-                                                    class="bi bi-check-circle"></i> Selected</span>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-02')">
-                                            <div class="day-number">2</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-03')">
-                                            <div class="day-number">3</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-04')">
-                                            <div class="day-number">4</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-05')">
-                                            <div class="day-number">5</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-06')">
-                                            <div class="day-number">6</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-07')">
-                                            <div class="day-number">7</div>
-                                        </td>
-                                        <td class="calendar-day has-class"
-                                            onclick="toggleClassDate(this, '2025-12-08')">
-                                            <div class="day-number">8</div>
-                                            <span class="badge class-badge bg-success"><i
-                                                    class="bi bi-check-circle"></i> Selected</span>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-09')">
-                                            <div class="day-number">9</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-10')">
-                                            <div class="day-number">10</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-11')">
-                                            <div class="day-number">11</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-12')">
-                                            <div class="day-number">12</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-13')">
-                                            <div class="day-number">13</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-14')">
-                                            <div class="day-number">14</div>
-                                        </td>
-                                        <td class="calendar-day has-class"
-                                            onclick="toggleClassDate(this, '2025-12-15')">
-                                            <div class="day-number">15</div>
-                                            <span class="badge class-badge bg-success"><i
-                                                    class="bi bi-check-circle"></i> Selected</span>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-16')">
-                                            <div class="day-number">16</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-17')">
-                                            <div class="day-number">17</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-18')">
-                                            <div class="day-number">18</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-19')">
-                                            <div class="day-number">19</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-20')">
-                                            <div class="day-number">20</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-21')">
-                                            <div class="day-number">21</div>
-                                        </td>
-                                        <td class="calendar-day has-class"
-                                            onclick="toggleClassDate(this, '2025-12-22')">
-                                            <div class="day-number">22</div>
-                                            <span class="badge class-badge bg-success"><i
-                                                    class="bi bi-check-circle"></i> Selected</span>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-23')">
-                                            <div class="day-number">23</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-24')">
-                                            <div class="day-number">24</div>
-                                        </td>
-                                        <td class="calendar-day holiday" onclick="toggleClassDate(this, '2025-12-25')">
-                                            <div class="day-number">25</div>
-                                            <span class="badge class-badge bg-danger">Christmas</span>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-26')">
-                                            <div class="day-number">26</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-27')">
-                                            <div class="day-number">27</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-28')">
-                                            <div class="day-number">28</div>
-                                        </td>
-                                        <td class="calendar-day has-class"
-                                            onclick="toggleClassDate(this, '2025-12-29')">
-                                            <div class="day-number">29</div>
-                                            <span class="badge class-badge bg-success"><i
-                                                    class="bi bi-check-circle"></i> Selected</span>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-30')">
-                                            <div class="day-number">30</div>
-                                        </td>
-                                        <td class="calendar-day" onclick="toggleClassDate(this, '2025-12-31')">
-                                            <div class="day-number">31</div>
-                                        </td>
-                                        <td class="calendar-day other-month">
-                                            <div class="day-number">1</div>
-                                        </td>
-                                        <td class="calendar-day other-month">
-                                            <div class="day-number">2</div>
-                                        </td>
-                                        <td class="calendar-day other-month">
-                                            <div class="day-number">3</div>
-                                        </td>
-                                    </tr> -->
                                 </tbody>
                             </table>
                         </div>
@@ -2903,67 +2308,6 @@
 
         });
 
-        // let enrollBtnHtml = '';
-
-        //         if (isEnrolled) {
-        //             console.log("Is enrolled!")
-        //             enrollBtnHtml = `
-        //                                 <button class="btn btn-primary w-100" onclick="showEnrollModal(${selectedClass.name})">
-        //                                 <i class="bi bi-check-circle"></i> Register for next month
-        //                                 </button>`
-        //         }
-        //         else {
-        //             console.log("Not enrolled!")
-        //             const requestBtn = document.createElement('button');
-        //             requestBtn.className = 'btn btn-secondary w-100';
-        //             requestBtn.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Request Enrollment';
-
-        //             enrollBtnHtml = `                            
-        //                                 <button class="btn btn-secondary w-100">
-        //                                     <i class="bi bi-lock"></i> Requires Approval
-        //                                 </button>
-        //                                 <button class="btn btn-outline-primary w-100 mt-2" onclick="showRequestApprovalModal('${selectedClass.id}', '${selectedClass.name}')">
-        //                                     <i class="bi bi-hand-thumbs-up"></i> Request Enrollment
-        //                                 </button>`
-
-        //         }
-
-        //         // TODO- may want to update this show request approval modal to selectedClass.id instead of name.
-
-        //         var sessionDatesHtml = ``;
-        //         selectedClass.session_dates.forEach(session_date => {
-        //             const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-        //             sessionDatesHtml += dateBadge;
-        //         });
-
-        //         console.log(sessionDatesHtml);
-
-        //         const containerHtml = `
-        //                     <div class="col-md-6 col-lg-4">
-        //                         <div class="card class-card border-primary">
-        //                             <div class="card-body">
-        //                                 <h5 class="card-title">${selectedClass.name}</h5>
-        //                                 <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${selectedClass.teacher}</p>
-        //                                 <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${selectedClass.day_of_week} at ${selectedClass.time}</p>
-        //                                 <p class="text-muted mb-2"><i class="bi bi-people"></i> ${selectedClass.capacity} capacity</p>
-        //                                 <p class="card-text mb-3">${selectedClass.description}</p>
-        //                                 <div class="mb-3">
-        //                                     <strong class="d-block mb-2">Session Dates:</strong>
-        //                                     ${sessionDatesHtml}
-        //                                 </div>
-        //                                 ${enrollBtnHtml}
-        //                             </div>
-        //                         </div>
-        //                     </div>`
-        //         // Append the new HTML to the wrapper
-        //         containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
-        //     });
-        // } catch (error) {
-        //     console.error('Error fetching data:', error);
-        //     containerWrapper.innerHTML = '<p class="text-danger">Failed to load classes.</p>';
-        //     // }
-        // }
-
         let currentEnrolledClasses = [];
 
         async function renderEnrolledClasses(month, student_id) {
@@ -2992,15 +2336,12 @@
                 currentEnrolledClasses = classes.map(selectedClass => selectedClass.id);
 
                 classes.forEach(selectedClass => {
-                    console.log(selectedClass)
 
                     var sessionDatesHtml = ``;
                     selectedClass.session_dates.forEach(session_date => {
                         const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
                         sessionDatesHtml += dateBadge;
                     });
-
-                    console.log(sessionDatesHtml);
 
                     const containerHtml = `
                                 <div class="col-md-6 col-lg-4 mb-5">
