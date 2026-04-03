@@ -2163,7 +2163,19 @@
             });
 
             const btnContainer = col.querySelector('.btn-container');
-            if (isEnrolled) {
+            let nextMonth = new Date(currentMonth);
+            nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+            const nextMonthStr = nextMonth.toISOString().substring(0, 7);
+
+            if (isEnrolled && selectedClass.month === currentMonth) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-primary w-100 enroll-btn';
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Already registered for this month';
+                btn.dataset.classId = selectedClass.id;
+                btn.disabled = true
+                btnContainer.appendChild(btn);
+
+            } else if (isEnrolled && selectedClass.month === nextMonthStr) {
                 const btn = document.createElement('button');
                 btn.className = 'btn btn-primary w-100 enroll-btn';
                 btn.innerHTML = '<i class="bi bi-check-circle"></i> Register for next month';
