@@ -1306,15 +1306,16 @@
                 return
             }
 
+            console.log(selectedClass)
 
             document.getElementById('enrollClassName').textContent = selectedClass.name;
 
             const sessionDatesList = document.getElementById('enrollSessionDates');
             sessionDatesList.innerHTML = '';
 
-            selectedClass.sessionDates.forEach(date => {
+            selectedClass.session_dates.forEach(date => {
                 const li = document.createElement('li');
-                li.textContent = new Date(date).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+                li.textContent = new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
                 sessionDatesList.appendChild(li);
             });
 
