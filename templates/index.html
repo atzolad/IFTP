@@ -1400,8 +1400,7 @@
                 </div>
                 <div class="modal-body">
                     <p class="text-muted" id="rosterEnrolledStudents">Students enrolled</p>
-
-                    <h6>Session: March 2, 2026</h6>
+                    <h6 id="rosterModalSessionDate"></h6>
                     <table class="table table-sm">
                         <thead>
                             <tr>
@@ -1419,10 +1418,6 @@
                     <div class="mt-4">
                         <h6>Select Different Session:</h6>
                         <select class="form-select" id="rosterSessionSelect">
-                            <option selected>March 2, 2026</option>
-                            <option>March 9, 2026</option>
-                            <option>March 16, 2026</option>
-                            <option>March 23, 2026</option>
                         </select>
                     </div>
                 </div>
@@ -2277,8 +2272,11 @@
                 sessionDropDown.appendChild(option)
             });
 
+            document.getElementById('rosterModalSessionDate').textContent = `Session: ${sessionDropDown.value}`;
+
             sessionDropDown.onchange = () => {
                 renderRoster(classId, monthValue, sessionDropDown.value);
+                document.getElementById('rosterModalSessionDate').textContent = `Session: ${sessionDropDown.value}`;
             };
 
             renderRoster(classId, monthValue, classDate);
@@ -2404,7 +2402,7 @@
         function renderStudentEnrollment(studentId, FirstDayOfMonth) {
             console.log(`Render student enrollment for id: ${studentId} for month: ${FirstDayOfMonth} `)
 
-            const apiEndpoint = `${baseUrl} /roster/enrollment / ${studentId}?month = ${FirstDayOfMonth} `;
+            const apiEndpoint = `${baseUrl}/roster/enrollment/${studentId}?month=${FirstDayOfMonth}`;
 
             fetch(apiEndpoint)
                 .then(response => {
@@ -3187,7 +3185,6 @@
                             })
                         }
                     }
-                    console.log("Processed events:", events)
                     return events;
                 })
                 .catch(error => {
