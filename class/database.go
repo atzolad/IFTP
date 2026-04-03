@@ -53,7 +53,7 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 		) AS session_dates, 
 		COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
-		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id`)
+		JOIN class_schedule AS cs ON cs.class_id = c.id`)
 
 	if month != "" {
 		args = append(args, month)
