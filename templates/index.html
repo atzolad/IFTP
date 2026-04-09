@@ -1640,17 +1640,16 @@
 
         async function enrollStudent(classId) {
             const selectedClass = availableClasses.find(c => c.id === parseInt(classId));
-            console.log("Enroll Student;")
-            console.log("Session Dates:")
-            console.log(selectedClass)
+
+            if (!selectedClass) {
+                console.error('Class not found:', classId);
+                return;
+            }
 
             const endpointUrl = `${baseUrl}/roster/${classId}/enroll`;
 
             const requestBody = {
-                session_dates: selectedClass.session_dates.map(d =>
-                    new Date(d + 'T00:00:00Z').toISOString()
-                ),
-                month: new Date(currentMonth).toISOString()
+                month: new Date(selectedMonth + 'T00:00:00Z').toISOString()
             }
 
             try {
@@ -1700,7 +1699,6 @@
             document.getElementById('classModalTeacher').required = false;
             document.getElementById('classModalWeekday').required = false;
             document.getElementById('classModalCapacity').required = false;
-
             document.getElementById('classModalName').value = selectedClass.name || '';
             document.getElementById('classModalTeacher').value = selectedClass.teacher || '';
             document.getElementById('classModalWeekday').value = selectedClass.day_of_week || '';
