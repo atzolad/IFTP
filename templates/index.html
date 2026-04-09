@@ -1215,7 +1215,7 @@
                         <img src="/static/venmo-qr.png" alt="Venmo QR Code" class="img-fluid" style="max-width: 200px">
                         <p class="mt-2 text-muted">Scan with your phone camera or Venmo app</p>
                         <p><strong>@Alex-Zolad</strong></p>
-                    </div>
+                    </div>p
                     <p><strong>Note:</strong> <span id="venmoNote"></span></p>
                 </div>
                 <div class="modal-footer">
@@ -1639,7 +1639,10 @@
         }
 
         async function enrollStudent(classId) {
-            const selectedClass = availableClasses.find(c => c.id === classId);
+            const selectedClass = availableClasses.find(c => c.id === parseInt(classId));
+            console.log("Enroll Student;")
+            console.log("Session Dates:")
+            console.log(selectedClass)
 
             const endpointUrl = `${baseUrl}/roster/${classId}/enroll`;
 
@@ -1926,14 +1929,21 @@
                 })
         }
 
+        // For the Current Month
         let currentMonth = null;
+        // For the month select dropdown
+        let selectedMonth = null;
+        let nextMonthStr = '';
 
         document.addEventListener('DOMContentLoaded', () => {
 
             const monthFilter = document.getElementById('monthFilter');
             populateMonthDropdown('monthFilter');
             currentMonth = document.getElementById('monthFilter').value
-            console.log(currentMonth)
+            selectedMonth = currentMonth;
+            const nextMonth = new Date(currentMonth);
+            nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+            nextMonthStr = nextMonth.toISOString().substring(0, 10);
 
             //TODO- Need to remove this hardcoded student id and replace with the logged in students id.
 
@@ -1953,7 +1963,6 @@
             monthFilter.addEventListener('change', (event) => {
                 // This function will execute when a new option is selected
                 const selectedMonth = event.target.value;
-                currentMonth = event.target.value;
                 RefreshClasses(selectedMonth)
                 console.log('Selected Month:', selectedMonth);
 
@@ -2117,7 +2126,7 @@
                 }
 
                 classes.forEach(selectedClass => {
-                    const isEnrolled = currentEnrolledClasses.includes(selectedClass.id);
+                    const isEnrolled = currentMonthEnrolledClassIds.includes(selectedClass.id);
                     containerWrapper.appendChild(buildClassCard(selectedClass, isEnrolled));
                 });
 
@@ -2163,9 +2172,9 @@
             });
 
             const btnContainer = col.querySelector('.btn-container');
-            let nextMonth = new Date(currentMonth);
-            nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
-            const nextMonthStr = nextMonth.toISOString().substring(0, 7);
+            // let nextMonth = new Date(currentMonth);
+            // nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+            // const nextMonthStr = nextMonth.toISOString().substring(0, 10);
 
             if (isEnrolled && selectedClass.month === currentMonth) {
                 const btn = document.createElement('button');
@@ -2311,6 +2320,53 @@
 
         }
 
+        function buildEnrolledClassCard(selectedClass) {
+            const card = document.createElement('div');
+            card.className = 'col-md-6 col-lg-4 mb-5';
+
+
+
+            card.innerHTML = `
+                                    <div class="card class-card border-primary">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h5 class="card-title"><span class="className"></span></h5>
+                                                <span class="badge bg-success">Enrolled</span>
+                                            </div>
+                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher:<span class="classTeacher"></span></p>
+                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i><span class="classDayOfWeek"></span> at <span class="classTime"></span></p>
+                                            <p class="text-muted mb-2"><i class="bi bi-people"></i><span class="classCapacity"></span> capacity</p>
+                                            <p class="card-text mb-3"><span class="classDescription"></span></p>
+                                            <div class="mb-3">
+                                                <strong class="d-block mb-2">Session Dates:</strong>
+                                                <div class="classSessionDates"></div>
+                                            </div>
+                                            <button class="btn btn-outline-danger btn-sm w-100 unenrollBtn">Unenroll</button>
+                                        </div>
+                                    </div>
+     
+            `
+
+            card.querySelector('.className').textContent = selectedClass.name;
+            card.querySelector('.classTeacher').textContent = selectedClass.teacher;
+            card.querySelector('.classDayOfWeek').textContent = selectedClass.day_of_week;
+            card.querySelector('.classTime').textContent = selectedClass.time;
+            card.querySelector('.classCapacity').textContent = selectedClass.capacity;
+            card.querySelector('.classDescription').textContent = selectedClass.description;
+
+            const datesContainer = card.querySelector('.classSessionDates');
+
+            selectedClass.session_dates.forEach(session_date => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary text-light me-1';
+                badge.textContent = session_date;
+                datesContainer.appendChild(badge);
+            });
+
+            return card;
+
+        }
+
         // Event listener for Schedule Approval Buttons
 
         document.getElementById('classScheduleApprovalsContainer').addEventListener('click', (event) => {
@@ -2429,42 +2485,19 @@
 
                 // Check if the current month matches this (for the first API call it should be current month and save those class ids. Use this to check for enrollment button state)
 
-                if (thisMonth === getCurrentMonth(month)) {
+                if (month === getCurrentMonth(month)) {
                     currentMonthEnrolledClassIds = [...currentEnrolledClasses]
                 }
 
+                console.log("currentMonthEnrolledClassIds")
+                console.log(currentMonthEnrolledClassIds)
+                // TODO - restructure this to prevent xss injection
                 classes.forEach(selectedClass => {
 
-                    var sessionDatesHtml = ``;
-                    selectedClass.session_dates.forEach(session_date => {
-                        const dateBadge = `<span class="badge bg-secondary text-light me-1">${session_date}</span>`;
-                        sessionDatesHtml += dateBadge;
-                    });
-
-                    const containerHtml = `
-                                <div class="col-md-6 col-lg-4 mb-5">
-                                    <div class="card class-card border-primary">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h5 class="card-title">${selectedClass.name}</h5>
-                                                <span class="badge bg-success">Enrolled</span>
-                                            </div>
-                                            <p class="text-muted mb-2"><i class="bi bi-person"></i> Teacher: ${selectedClass.teacher}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-clock"></i> ${selectedClass.day_of_week} at ${selectedClass.time}</p>
-                                            <p class="text-muted mb-2"><i class="bi bi-people"></i> ${selectedClass.capacity} capacity</p>
-                                            <p class="card-text mb-3">${selectedClass.description}</p>
-                                            <div class="mb-3">
-                                                <strong class="d-block mb-2">Session Dates:</strong>
-                                                ${sessionDatesHtml}
-                                            </div>
-                                            <button class="btn btn-outline-danger btn-sm w-100 unenrollBtn">Unenroll</button>
-                                        </div>
-                                    </div>
-                                </div>`
-
-                    // Append the new HTML to the wrapper
-                    containerWrapper.insertAdjacentHTML('beforeend', containerHtml);
+                    const card = buildEnrolledClassCard(selectedClass);
+                    containerWrapper.appendChild(card);
                 });
+
             } catch (error) {
                 console.error('Error fetching data:', error);
                 containerWrapper.innerHTML = '<p class="text-danger">Failed to load content.</p>';
