@@ -192,32 +192,6 @@ func dbEnrollStudent(ctx context.Context, tx pgx.Tx, studentId int, classId int,
 	return err
 }
 
-func dbInsertScheduleApproval(ctx context.Context, tx pgx.Tx, classId int, month time.Time) (approvalId string, err error) {
-	err = tx.QueryRow(ctx, `
-	INSERT INTO schedule_approvals (class_id, month)
-	VALUES ($1, $2)
-	RETURNING id`, classId, month).Scan(&approvalId)
-
-	if err != nil {
-		return "", err
-	}
-
-	return approvalId, err
-
-}
-
-func dbInsertPendingDates(ctx context.Context, tx pgx.Tx, approvalId string, pendingDates []time.Time) (err error) {
-	for _, date := range pendingDates {
-		_, err = tx.Exec(ctx, `
-			INSERT INTO schedule_approval_dates (schedule_approval_id, proposed_date)
-			VALUES ($1, $2)`, approvalId, date)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
 
 // 	var rosterID int

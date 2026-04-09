@@ -101,6 +101,9 @@ func main() {
 	mux.HandleFunc("POST /students", students.AddStudent(myDb))
 	mux.HandleFunc("PATCH /students/{student_id}", students.UpdateStudent(myDb))
 
+	// Handle items in the static folder
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	myDb.Logger.Printf("Server starting on :%v", port)
 	if err := http.ListenAndServe(":"+port, wrappedMux); err != nil {
 		log.Fatalf("Error initializing server: %v", err)

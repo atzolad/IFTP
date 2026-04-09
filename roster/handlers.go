@@ -80,10 +80,6 @@ type EnrollmentRequestInput struct {
 	Month            *time.Time `json:"month"`
 }
 
-type ActiveClass struct {
-	ID        int    `db:"id"`
-	DayOfWeek string `db:"day_of_week"`
-}
 
 // GetRoster responds with the overall enrolled class lists
 func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {

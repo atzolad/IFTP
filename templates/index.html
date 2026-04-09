@@ -2344,6 +2344,7 @@
 
         async function submitScheduleApproval(approvalId, status, dates) {
 
+            // TODO - getting an invalid time value error. Need to go back and fix this.
             const isoDates = dates.map(d => new Date(d + 'T00:00:00Z').toISOString());
 
             try {
@@ -2399,6 +2400,7 @@
         });
 
         let currentEnrolledClasses = [];
+        let currentMonthEnrolledClassIds = [];
 
         async function renderEnrolledClasses(month, student_id) {
             const containerWrapper = document.getElementById('enrolledClassesContainer');
@@ -2424,6 +2426,12 @@
                 }
 
                 currentEnrolledClasses = classes.map(selectedClass => selectedClass.id);
+
+                // Check if the current month matches this (for the first API call it should be current month and save those class ids. Use this to check for enrollment button state)
+
+                if (thisMonth === getCurrentMonth(month)) {
+                    currentMonthEnrolledClassIds = [...currentEnrolledClasses]
+                }
 
                 classes.forEach(selectedClass => {
 
@@ -3230,6 +3238,11 @@
             const date = new Date();
             date.setHours(parseInt(hours), parseInt(minutes));
             return date.toLocaleTimeString('default', { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function getCurrentMonth() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
         }
 
 
