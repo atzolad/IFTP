@@ -1334,7 +1334,7 @@
 
             document.getElementById('venmoAmount').textContent = '$185.00';
             document.getElementById('venmoNote').textContent =
-                `${selectedClass.name} - ${new Date(currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}`;
+                `${selectedClass.name} - ${new Date(selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}`;
             document.getElementById('venmoConfirmEnrollBtn').dataset.class_id = classId
 
             new bootstrap.Modal(document.getElementById('venmoModal')).show();
@@ -1357,6 +1357,7 @@
             }
 
         });
+
 
         let currentRequestClassId = null;
 
@@ -1649,7 +1650,7 @@
             const endpointUrl = `${baseUrl}/roster/${classId}/enroll`;
 
             const requestBody = {
-                month: new Date(selectedMonth + 'T00:00:00Z').toISOString()
+                month: selectedMonth
             }
 
             try {
@@ -1665,9 +1666,9 @@
                 }
 
                 const data = await response.json();
-                alert(`Successfully enrolled for ${selectedClass.name}:`);
+                await RefreshClasses(selectedMonth);
+                alert(`Successfully enrolled for ${selectedClass.name}`);
 
-                renderClasses(currentMonth);
 
             } catch (error) {
                 console.error('Error:', error);
@@ -1945,22 +1946,22 @@
 
             //TODO- Need to remove this hardcoded student id and replace with the logged in students id.
 
-            const RefreshClasses = async (currentMonth) => {
-                await renderEnrolledClasses(currentMonth, student_id = 1);
+            const RefreshClasses = async (month) => {
+                await renderEnrolledClasses(month, student_id = 1);
                 console.log("Enrolled classses:", currentEnrolledClasses)
-                await renderClasses(currentMonth);
+                await renderClasses(month);
                 RenderManageClassesTable();
                 populateMonthDropdown('classModalMonthSelect');
             }
 
-            RefreshClasses(currentMonth);
+            RefreshClasses(selectedMonth);
             //TODO need to separate the admin and student views- no need to populate the admin view for a student login. Should probably completely separate the two.
 
 
             // Re-render the classes when changing the month. 
             monthFilter.addEventListener('change', (event) => {
                 // This function will execute when a new option is selected
-                const selectedMonth = event.target.value;
+                selectedMonth = event.target.value;
                 RefreshClasses(selectedMonth)
                 console.log('Selected Month:', selectedMonth);
 

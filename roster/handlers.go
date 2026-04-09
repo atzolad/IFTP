@@ -80,7 +80,6 @@ type EnrollmentRequestInput struct {
 	Month            *time.Time `json:"month"`
 }
 
-
 // GetRoster responds with the overall enrolled class lists
 func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -411,6 +410,86 @@ func UpdateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		utils.WriteJSONResponse(w, http.StatusOK, utils.ResponseData{
 			Status:  "success",
 			Message: fmt.Sprintf("Enrollment request %v successfully", input.Status),
+			Code:    http.StatusOK,
+		})
+	}
+}
+
+func EnrollStudent(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		classId, err := strconv.Atoi(strings.TrimSpace(r.PathValue("class_id")))
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Invalid class ID",
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		// TODO: replace with student ID from session
+		studentId := 1
+
+		var body struct {
+			Month string `json:"month"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Invalid request body",
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		month, err := time.Parse("2006-01-02", body.Month)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error: month required in YYYY-MM-DD format",
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Begining transcation",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error Begining transcation: %v", err)
+			return
+		}
+		defer tx.Rollback(ctx)
+
+		if err := dbEnrollStudent(ctx, tx, studentId, classId, month); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error enrolling student",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Erorr enrolling student: %v", err)
+			return
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error commiting enrollment",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error commiting enrollment: %v", err)
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, utils.ResponseData{
+			Status:  "success",
+			Message: "Student successfully enrolled",
 			Code:    http.StatusOK,
 		})
 	}
