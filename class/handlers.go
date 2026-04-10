@@ -179,9 +179,7 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 			})
 			return
 		}
-		fmt.Println(classes)
 		utils.WriteJSONResponse(w, http.StatusOK, classes)
-		fmt.Printf("Successfully retrieved class list \n")
 	}
 }
 

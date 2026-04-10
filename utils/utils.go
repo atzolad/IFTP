@@ -11,7 +11,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"slices"
 	"strings"
@@ -20,20 +19,6 @@ import (
 	"github.com/markbates/goth/gothic"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	// "cloud.google.com/go/storage"
-	// ics "github.com/arran4/golang-ical"
-	// "github.com/google/uuid"
-	// "github.com/markbates/goth"
-	// "github.com/markbates/goth/gothic"
-	// "golang.org/x/oauth2"
-	// "golang.org/x/oauth2/google"
-	// "cloud.google.com/go/storage"
-	// ics "github.com/arran4/golang-ical"
-	// "github.com/google/uuid"
-	// "github.com/markbates/goth"
-	// "github.com/markbates/goth/gothic"
-	// "golang.org/x/oauth2"
-	// "golang.org/x/oauth2/google"
 )
 
 type Templates struct {
@@ -45,6 +30,16 @@ type ResponseData struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 	Code    int    `json:"code"`
+}
+
+type StudentLogin struct {
+	ID    int    `db:"id" json:"id"`
+	Name  string `db:"name" json:"name"`
+	Email string `db:"email" json:"email"`
+}
+
+type GoogleUserEmail struct {
+	Email string
 }
 
 var ErrNoFieldsToUpdate = errors.New("no fields to update")
@@ -157,6 +152,8 @@ func GoogleLogin() http.HandlerFunc {
 func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		ctx := r.Context()
+
 		// TODO send this from front-end later.
 		q := r.URL.Query()
 		q.Add("provider", "google")
@@ -174,11 +171,25 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		if !IsAuthorizedUser(user.Email) {
-			redirectURL := fmt.Sprintf("/unauthorized?email=%s", url.QueryEscape(user.Email))
-			http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		student, err := dbAddStudentOrRetreiveId(ctx, myDb, &StudentLogin{Name: user.Name, Email: user.Email})
+		fmt.Println(student)
+
+		if err != nil {
+
+			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
+				Status:  "error",
+				Message: "Error completing user auth",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error adding/retreiving student from db for login: %v", err)
 			return
 		}
+
+		// if !IsAuthorizedUser(user.Email) {
+		// 	redirectURL := fmt.Sprintf("/unauthorized?email=%s", url.QueryEscape(user.Email))
+		// 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		// 	return
+		// }
 
 		// store the user session
 		session, err := gothic.Store.New(r, "goth_session")
@@ -198,9 +209,9 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 		// }
 
 		// Save user info in cookie- The entire user object is too big.
-		session.Values["userId"] = user.UserID
+		session.Values["userId"] = student.ID
 		session.Values["email"] = user.Email
-		session.Values["name"] = user.Name
+		session.Values["name"] = student.Name
 
 		// save the user session
 		if err = session.Save(r, w); err != nil {
@@ -213,7 +224,7 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("User login email: %sv, User Name: %v,  Access token: %v", user.Name, user.Email, user.AccessToken)
+		fmt.Printf("User login email: %s, User Name: %v,  Access token: %v", student.Name, student.Email, user.AccessToken)
 
 		http.Redirect(w, r, "/", http.StatusFound)
 
@@ -354,10 +365,6 @@ func IsAuthorizedUser(email string) bool {
 	return slices.Contains(authorizedUsers, sanitizedEmail)
 }
 
-type GoogleUserEmail struct {
-	Email string
-}
-
 func UnAuthorizedHandler(tpl Templates) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -375,6 +382,21 @@ func UnAuthorizedHandler(tpl Templates) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func dbAddStudentOrRetreiveId(ctx context.Context, myDb *db.MyDatabase, s *StudentLogin) (*StudentLogin, error) {
+	err := myDb.Pool.QueryRow(ctx, `
+	INSERT INTO students (name, email)
+	VALUES ($1, $2)
+	ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+	RETURNING id, name, email`, s.Name, s.Email).Scan(&s.ID, &s.Name, &s.Email)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error adding or retrieving student from db for login: %v", err)
+	}
+
+	return s, nil
+
 }
 
 // const (
