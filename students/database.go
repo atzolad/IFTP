@@ -100,6 +100,21 @@ func dbUpdateStudent(ctx context.Context, myDb *db.MyDatabase, s *Student) (*Stu
 	return &updatedStudent, nil
 }
 
+func AddStudentOrRetreiveId(ctx context.Context, myDb *db.MyDatabase, s *Student) (*Student, error) {
+	err := myDb.Pool.QueryRow(ctx, `
+	INSERT INTO students (name, email)
+	VALUES ($1, $2)
+	ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+	RETURNING id, name, email`, s.Name, s.Email).Scan(&s.ID, &s.Name, &s.Email)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error adding or retrieving student from db for login: %v", err)
+	}
+
+	return s, nil
+
+}
+
 // func SoftDeleteStudentDB(myDb *db.MyDatabase, id int) (string, error) {
 
 // 	var name string
