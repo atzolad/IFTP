@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"IFTP/db"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,7 +11,15 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"slices"
+	"strings"
 	"time"
+
+	"github.com/markbates/goth/gothic"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	// "cloud.google.com/go/storage"
 	// ics "github.com/arran4/golang-ical"
 	// "github.com/google/uuid"
@@ -49,7 +59,7 @@ func LoadTemplates() Templates {
 func IndexHandler(tpl Templates, baseUrl string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		data := map[string]interface{}{
+		data := map[string]any{
 			"BaseUrl": baseUrl,
 		}
 
@@ -112,137 +122,137 @@ func ConvertStrDT(date string) (time.Time, error) {
 	return parsedDate, nil
 }
 
-// func ConfigureGoogleOauth(client_secret_file string) *oauth2.Config {
+func ConfigureGoogleOauth(client_secret_file string) *oauth2.Config {
 
-// 	// Read the JSON file content
-// 	jsonKey, err := os.ReadFile(client_secret_file)
-// 	if err != nil {
-// 		log.Fatalf("Unable to read client secret file: %v", err)
-// 	}
+	// Read the JSON file content
+	jsonKey, err := os.ReadFile(client_secret_file)
+	if err != nil {
+		log.Fatalf("Unable to read client secret file: %v", err)
+	}
 
-// 	// Use ConfigFromJSON to create an oauth2.Config
-// 	// You must specify the required scopes for your application
-// 	scopes := "openid email profile"
-// 	// The function returns a *oauth2.Config
-// 	config, err := google.ConfigFromJSON(jsonKey, scopes)
-// 	if err != nil {
-// 		log.Fatalf("Unable to parse client secret file to config: %v", err)
-// 	}
-// 	return config
+	// Use ConfigFromJSON to create an oauth2.Config
+	// You must specify the required scopes for your application
+	scopes := "openid email profile"
+	// The function returns a *oauth2.Config
+	config, err := google.ConfigFromJSON(jsonKey, scopes)
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+	return config
 
-// }
+}
 
-// func GoogleLogin() http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		// Manually add provider to query so gothic knows to use google. Can send this from the front-end later.
-// 		q := r.URL.Query()
-// 		q.Add("provider", "google")
-// 		q.Add("prompt", "consent")
-// 		r.URL.RawQuery = q.Encode()
+func GoogleLogin() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Manually add provider to query so gothic knows to use google. Can send this from the front-end later.
+		q := r.URL.Query()
+		q.Add("provider", "google")
+		q.Add("prompt", "consent")
+		r.URL.RawQuery = q.Encode()
 
-// 		gothic.BeginAuthHandler(w, r)
-// 	}
-// }
+		gothic.BeginAuthHandler(w, r)
+	}
+}
 
-// func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
+func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		// TODO send this from front-end later.
-// 		q := r.URL.Query()
-// 		q.Add("provider", "google")
-// 		r.URL.RawQuery = q.Encode()
+		// TODO send this from front-end later.
+		q := r.URL.Query()
+		q.Add("provider", "google")
+		r.URL.RawQuery = q.Encode()
 
-// 		user, err := gothic.CompleteUserAuth(w, r)
-// 		if err != nil {
-// 			myDb.Logger.Printf("Error completing user auth: %v", err)
-// 			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
-// 				Status:  "error",
-// 				Message: "Error completing user auth",
-// 				Code:    http.StatusInternalServerError,
-// 			})
-// 			myDb.Logger.Printf("Error completing user auth")
-// 			return
-// 		}
+		user, err := gothic.CompleteUserAuth(w, r)
+		if err != nil {
+			myDb.Logger.Printf("Error completing user auth: %v", err)
+			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
+				Status:  "error",
+				Message: "Error completing user auth",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error completing user auth")
+			return
+		}
 
-// 		if !IsAuthorizedUser(user.Email) {
-// 			redirectURL := fmt.Sprintf("/unauthorized?email=%s", url.QueryEscape(user.Email))
-// 			http.Redirect(w, r, redirectURL, http.StatusSeeOther)
-// 			return
-// 		}
+		if !IsAuthorizedUser(user.Email) {
+			redirectURL := fmt.Sprintf("/unauthorized?email=%s", url.QueryEscape(user.Email))
+			http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+			return
+		}
 
-// 		// store the user session
-// 		session, err := gothic.Store.New(r, "goth_session")
-// 		if err != nil {
-// 			myDb.Logger.Printf("Error storing user session: %v", err)
-// 			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
-// 				Status:  "error",
-// 				Message: "Error storing user session",
-// 				Code:    http.StatusInternalServerError,
-// 			})
-// 			return
-// 		}
+		// store the user session
+		session, err := gothic.Store.New(r, "goth_session")
+		if err != nil {
+			myDb.Logger.Printf("Error storing user session: %v", err)
+			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
+				Status:  "error",
+				Message: "Error storing user session",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
 
-// 		// Save user info into the database
-// 		// if err := DbInsertOrUpdateUser(myDb, user); err != nil {
-// 		// 	myDb.Logger.Printf("Error updating user in db: %v", err)
-// 		// }
+		// Save user info into the database
+		// if err := DbInsertOrUpdateUser(myDb, user); err != nil {
+		// 	myDb.Logger.Printf("Error updating user in db: %v", err)
+		// }
 
-// 		// Save user info in cookie- The entire user object is too big.
-// 		session.Values["userId"] = user.UserID
-// 		session.Values["email"] = user.Email
-// 		session.Values["name"] = user.Name
+		// Save user info in cookie- The entire user object is too big.
+		session.Values["userId"] = user.UserID
+		session.Values["email"] = user.Email
+		session.Values["name"] = user.Name
 
-// 		// save the user session
-// 		if err = session.Save(r, w); err != nil {
-// 			myDb.Logger.Printf("Error saving user session: %v", err)
-// 			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
-// 				Status:  "error",
-// 				Message: "Error saving user session",
-// 				Code:    http.StatusInternalServerError,
-// 			})
-// 			return
-// 		}
+		// save the user session
+		if err = session.Save(r, w); err != nil {
+			myDb.Logger.Printf("Error saving user session: %v", err)
+			WriteJSONResponse(w, http.StatusInternalServerError, ResponseData{
+				Status:  "error",
+				Message: "Error saving user session",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
 
-// 		fmt.Printf("User login email: %sv, User Name: %v,  Access token: %v", user.Name, user.Email, user.AccessToken)
+		fmt.Printf("User login email: %sv, User Name: %v,  Access token: %v", user.Name, user.Email, user.AccessToken)
 
-// 		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r, "/", http.StatusFound)
 
-// 	}
-// }
+	}
+}
 
-// func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		// Retrieve the session
-// 		session, err := gothic.Store.Get(r, "goth_session")
-// 		if err != nil {
-// 			myDb.Logger.Printf("Error retrieving user session: %v", err)
-// 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
-// 				Status:  "error",
-// 				Message: "Error retrieving user session",
-// 				Code:    http.StatusUnauthorized,
-// 			})
-// 			return
-// 		}
+func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Retrieve the session
+		session, err := gothic.Store.Get(r, "goth_session")
+		if err != nil {
+			myDb.Logger.Printf("Error retrieving user session: %v", err)
+			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
+				Status:  "error",
+				Message: "Error retrieving user session",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
 
-// 		// Get user data from session
-// 		user := session.Values["user"]
-// 		if user == nil {
-// 			myDb.Logger.Printf("Error: no authenticated user found: %v", err)
-// 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
-// 				Status:  "error",
-// 				Message: "No authenticated user found",
-// 				Code:    http.StatusUnauthorized,
-// 			})
-// 			return
-// 		}
+		// Get user data from session
+		user := session.Values["userId"]
+		if user == nil {
+			myDb.Logger.Printf("Error: no authenticated user found: %v", err)
+			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
+				Status:  "error",
+				Message: "No authenticated user found",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
 
-// 		WriteJSONResponse(w, http.StatusOK, ResponseData{
-// 			Status:  "success",
-// 			Message: "User fetched successfully",
-// 			Code:    http.StatusOK,
-// 		})
-// 	}
-// }
+		WriteJSONResponse(w, http.StatusOK, ResponseData{
+			Status:  "success",
+			Message: "User fetched successfully",
+			Code:    http.StatusOK,
+		})
+	}
+}
 
 // func DbInsertOrUpdateUser(myDb *db.MyDatabase, user goth.User) error {
 // 	userName := fmt.Sprintf("%v %v", user.FirstName, user.LastName)
@@ -265,107 +275,107 @@ func ConvertStrDT(date string) (time.Time, error) {
 // 	return err
 // }
 
-// func RequireAuth(next http.Handler) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
+func RequireAuth(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		apiKey := r.Header.Get("X-API-Key")
-// 		if apiKey != "" {
-// 			if apiKey == os.Getenv("API_KEY") {
+		apiKey := r.Header.Get("X-API-Key")
+		if apiKey != "" {
+			if apiKey == os.Getenv("API_KEY") {
 
-// 				// Set a context value so handlers know this is API key auth
-// 				ctx := context.WithValue(r.Context(), "user", "api_user")
-// 				ctx = context.WithValue(ctx, "auth_type", "api_key")
-// 				next.ServeHTTP(w, r.WithContext(ctx))
-// 				return
-// 			}
-// 			// Invalid API key - return JSON error for API clients
-// 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
-// 				Status:  "error",
-// 				Message: "Invalid API key",
-// 				Code:    http.StatusUnauthorized,
-// 			})
-// 			return
-// 		}
+				// Set a context value so handlers know this is API key auth
+				ctx := context.WithValue(r.Context(), "user", "api_user")
+				ctx = context.WithValue(ctx, "auth_type", "api_key")
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+			// Invalid API key - return JSON error for API clients
+			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
+				Status:  "error",
+				Message: "Invalid API key",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
 
-// 		// gets the user session from the request
-// 		session, err := gothic.Store.Get(r, "goth_session")
-// 		if err != nil {
-// 			http.Redirect(w, r, "/auth/google", http.StatusSeeOther)
-// 			return
-// 		}
-// 		// gets the user from the session data
-// 		userId := session.Values["userId"]
-// 		if userId == nil {
-// 			http.Redirect(w, r, "/auth/google", http.StatusSeeOther)
-// 			return
-// 		}
+		// gets the user session from the request
+		session, err := gothic.Store.Get(r, "goth_session")
+		if err != nil {
+			http.Redirect(w, r, "/auth/google", http.StatusSeeOther)
+			return
+		}
+		// gets the user from the session data
+		userId := session.Values["userId"]
+		if userId == nil {
+			http.Redirect(w, r, "/auth/google", http.StatusSeeOther)
+			return
+		}
 
-// 		ctx := context.WithValue(r.Context(), "userId", userId)
-// 		ctx = context.WithValue(ctx, "userEmail", session.Values["email"])
-// 		ctx = context.WithValue(ctx, "userName", session.Values["name"])
-// 		ctx = context.WithValue(ctx, "auth_type", "session")
-// 		next.ServeHTTP(w, r.WithContext(ctx))
-// 	}
-// }
+		ctx := context.WithValue(r.Context(), "userId", userId)
+		ctx = context.WithValue(ctx, "userEmail", session.Values["email"])
+		ctx = context.WithValue(ctx, "userName", session.Values["name"])
+		ctx = context.WithValue(ctx, "auth_type", "session")
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+}
 
-// func HandleLogout() http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		fmt.Println("Logout handler!")
+func HandleLogout() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Logout handler!")
 
-// 		// Clear the session
-// 		gothic.Logout(w, r)
-// 		session, err := gothic.Store.Get(r, "goth_session")
-// 		if err == nil {
-// 			session.Options.MaxAge = -1
-// 			session.Save(r, w)
-// 		}
-// 		http.Redirect(w, r, "/", http.StatusSeeOther)
-// 	}
-// }
+		// Clear the session
+		gothic.Logout(w, r)
+		session, err := gothic.Store.Get(r, "goth_session")
+		if err == nil {
+			session.Options.MaxAge = -1
+			session.Save(r, w)
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
 
-// func IsAuthorizedUser(email string) bool {
-// 	authorizedUserList := os.Getenv("AUTHORIZED_USERS")
-// 	if authorizedUserList == "" {
-// 		log.Println("Authorized users env variable missing")
-// 		return false
-// 	}
+func IsAuthorizedUser(email string) bool {
+	authorizedUserList := os.Getenv("AUTHORIZED_USERS")
+	if authorizedUserList == "" {
+		log.Println("Authorized users env variable missing")
+		return false
+	}
 
-// 	sanitizedAuthorizedUserList := strings.TrimSpace(strings.ToLower(authorizedUserList))
-// 	authorizedUsers := strings.Split(sanitizedAuthorizedUserList, ",")
-// 	sanitizedEmail := strings.TrimSpace(strings.ToLower(email))
+	sanitizedAuthorizedUserList := strings.TrimSpace(strings.ToLower(authorizedUserList))
+	authorizedUsers := strings.Split(sanitizedAuthorizedUserList, ",")
+	sanitizedEmail := strings.TrimSpace(strings.ToLower(email))
 
-// 	fmt.Printf("SanitizedAuthorizedUserList: %v \n", sanitizedAuthorizedUserList)
-// 	fmt.Printf("authorizedUsers: %v \n", authorizedUsers)
-// 	fmt.Printf("sanitizedEmail: %v \n", sanitizedEmail)
+	fmt.Printf("SanitizedAuthorizedUserList: %v \n", sanitizedAuthorizedUserList)
+	fmt.Printf("authorizedUsers: %v \n", authorizedUsers)
+	fmt.Printf("sanitizedEmail: %v \n", sanitizedEmail)
 
-// 	for _, user := range authorizedUsers {
-// 		fmt.Println(user)
-// 	}
-// 	return slices.Contains(authorizedUsers, sanitizedEmail)
-// }
+	for _, user := range authorizedUsers {
+		fmt.Println(user)
+	}
+	return slices.Contains(authorizedUsers, sanitizedEmail)
+}
 
-// type GoogleUserEmail struct {
-// 	Email string
-// }
+type GoogleUserEmail struct {
+	Email string
+}
 
-// func UnAuthorizedHandler(tpl Templates) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
+func UnAuthorizedHandler(tpl Templates) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		userEmail := r.URL.Query().Get("email")
+		userEmail := r.URL.Query().Get("email")
 
-// 		requestingUser := GoogleUserEmail{
-// 			Email: userEmail,
-// 		}
+		requestingUser := GoogleUserEmail{
+			Email: userEmail,
+		}
 
-// 		w.WriteHeader(http.StatusForbidden)
-// 		err := tpl.Unauthorized.Execute(w, requestingUser)
-// 		if err != nil {
-// 			renderError := fmt.Errorf("error rendering unauthorized template: %v", err)
-// 			log.Println(renderError)
-// 			return
-// 		}
-// 	}
-// }
+		w.WriteHeader(http.StatusForbidden)
+		err := tpl.Unauthorized.Execute(w, requestingUser)
+		if err != nil {
+			renderError := fmt.Errorf("error rendering unauthorized template: %v", err)
+			log.Println(renderError)
+			return
+		}
+	}
+}
 
 // const (
 // 	dateFormatUtc = "20060102"
@@ -415,21 +425,22 @@ func ConvertStrDT(date string) (time.Time, error) {
 // 	return cal
 // }
 
-// func HealthCheckHandler(myDb *db.MyDatabase) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		{
+func HealthCheckHandler(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		{
+			ctx := r.Context()
 
-// 			if err := myDb.Db.Ping(); err != nil {
-// 				w.WriteHeader(http.StatusServiceUnavailable)
-// 				w.Write([]byte("Database unavailable"))
-// 				return
-// 			}
+			if err := myDb.Pool.Ping(ctx); err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				w.Write([]byte("Database unavailable"))
+				return
+			}
 
-// 			w.WriteHeader(http.StatusOK)
-// 			w.Write([]byte("OK"))
-// 		}
-// 	}
-// }
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+		}
+	}
+}
 
 // func SetupBucketCORS(ctx context.Context, bucket *storage.BucketHandle) error {
 

@@ -13,9 +13,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/sessions"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
+	googleProvider "github.com/markbates/goth/providers/google"
 )
 
 func main() {
@@ -32,6 +36,16 @@ func main() {
 
 	connStr := os.Getenv("CONN_STR")
 	fmt.Println("Connecting with:", connStr)
+
+	clientKey := os.Getenv("GOOGLE_KEY")
+	clientSecret := os.Getenv("GOOGLE_SECRET")
+	scopes := os.Getenv("GOOGLE_SCOPES")
+	baseUrl := "http://localhost:8080"
+	callBackUrl := fmt.Sprintf("%v/auth/google/callback", baseUrl)
+
+	gp := googleProvider.New(clientKey, clientSecret, callBackUrl, scopes)
+	gp.SetPrompt("select_account")
+	goth.UseProviders(gp)
 
 	// Initialise the connection pool.
 	ctx := context.Background()
@@ -64,47 +78,73 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	baseUrl := "http://localhost:8080"
-
-	// Wrap the serve mux with a logger for http requests and responses.
-	wrappedMux := utils.LoggingWrapper(mux)
+	// Configure Gothic store parameters
+	key := os.Getenv("SESSION_SECRET")
+	if key == "" {
+		log.Fatal("Session Secret env variable missing")
+	}
+	maxAge := 86400 * 30 // 30 days
+	isProd := false      // Set to true when serving over https
+	store := sessions.NewCookieStore([]byte(key))
+	store.MaxAge(maxAge)
+	store.Options.Path = "/"
+	store.Options.HttpOnly = true
+	store.Options.Secure = isProd
+	store.Options.SameSite = http.SameSiteLaxMode
+	gothic.Store = store
 
 	// Handle file serving
 	fileServer := http.FileServer(http.Dir("static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
 
+	mux.HandleFunc("GET /auth/google", utils.GoogleLogin())
+	mux.HandleFunc("GET /auth/google/callback", utils.HandleGoogleOauth(myDb))
+	mux.HandleFunc("GET /auth/user", utils.GetUserAuth(myDb))
+	mux.HandleFunc("GET /unauthorized", utils.UnAuthorizedHandler(tpl))
+	mux.HandleFunc("GET /logout", utils.HandleLogout())
+	mux.HandleFunc("GET /health", utils.HealthCheckHandler(myDb))
+
+	protectedMux := http.NewServeMux()
+
+	// Require authorization for protected endpoints and wrap all endpoints with logger.
+	mux.Handle("/", utils.RequireAuth(protectedMux))
+	wrappedMux := utils.LoggingWrapper(mux)
+
+	// Wrap the serve mux with a logger for http requests and responses.
+	// wrappedMux := utils.LoggingWrapper(mux)
+
 	// Render the main index.
-	mux.HandleFunc("/", utils.IndexHandler(tpl, baseUrl))
+	protectedMux.HandleFunc("/", utils.IndexHandler(tpl, baseUrl))
 
 	// Class Endpoints
-	mux.HandleFunc("GET /classes/all", class.ListClasses(myDb))
-	mux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
-	mux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
-	mux.HandleFunc("PATCH /classes/{class_id}", class.UpdateClass(myDb))
-	mux.HandleFunc("POST /classes", class.CreateClass(myDb))
-	mux.HandleFunc("POST /classes/schedule_approval/generate", class.TriggerScheduleApprovals(myDb))
-	mux.HandleFunc("GET /classes/schedule_approval", class.GetPendingScheduleApprovals(myDb))
-	mux.HandleFunc("PATCH /classes/schedule_approval/confirm/{approval_id}", class.ConfirmScheduleApproval(myDb))
+	protectedMux.HandleFunc("GET /classes/all", class.ListClasses(myDb))
+	protectedMux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
+	protectedMux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
+	protectedMux.HandleFunc("PATCH /classes/{class_id}", class.UpdateClass(myDb))
+	protectedMux.HandleFunc("POST /classes", class.CreateClass(myDb))
+	protectedMux.HandleFunc("POST /classes/schedule_approval/generate", class.TriggerScheduleApprovals(myDb))
+	protectedMux.HandleFunc("GET /classes/schedule_approval", class.GetPendingScheduleApprovals(myDb))
+	protectedMux.HandleFunc("PATCH /classes/schedule_approval/confirm/{approval_id}", class.ConfirmScheduleApproval(myDb))
 
 	// Roster Endpoints
-	mux.HandleFunc("GET /roster/{class_id}", roster.GetRoster(myDb))
-	mux.HandleFunc("GET /roster/enrollment/{student_id}", roster.GetStudentEnrollment(myDb))
-	mux.HandleFunc("POST /roster/{class_id}/enroll", roster.EnrollStudent(myDb))
+	protectedMux.HandleFunc("GET /roster/{class_id}", roster.GetRoster(myDb))
+	protectedMux.HandleFunc("GET /roster/enrollment/{student_id}", roster.GetStudentEnrollment(myDb))
+	protectedMux.HandleFunc("POST /roster/{class_id}/enroll", roster.EnrollStudent(myDb))
 
 	//Enrollment Request Endpoints
-	mux.HandleFunc("POST /enrollment_requests", roster.CreateEnrollmentRequest(myDb))
-	mux.HandleFunc("GET /enrollment_requests", roster.GetEnrollmentRequests(myDb))
-	mux.HandleFunc("PATCH /enrollment_requests/{request_id}", roster.UpdateEnrollmentRequest(myDb))
+	protectedMux.HandleFunc("POST /enrollment_requests", roster.CreateEnrollmentRequest(myDb))
+	protectedMux.HandleFunc("GET /enrollment_requests", roster.GetEnrollmentRequests(myDb))
+	protectedMux.HandleFunc("PATCH /enrollment_requests/{request_id}", roster.UpdateEnrollmentRequest(myDb))
 
 	// Calendar Endpoints
-	mux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
-	mux.HandleFunc("GET /calendarEvents/{student_id}", class.GetCalendarEventsByStudent(myDb))
+	protectedMux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
+	protectedMux.HandleFunc("GET /calendarEvents/{student_id}", class.GetCalendarEventsByStudent(myDb))
 
 	// Student Endpoints
-	mux.HandleFunc("GET /students", students.GetStudents(myDb))
-	mux.HandleFunc("GET /students/enrollment", students.GetStudentsWithEnrollment(myDb))
-	mux.HandleFunc("POST /students", students.AddStudent(myDb))
-	mux.HandleFunc("PATCH /students/{student_id}", students.UpdateStudent(myDb))
+	protectedMux.HandleFunc("GET /students", students.GetStudents(myDb))
+	protectedMux.HandleFunc("GET /students/enrollment", students.GetStudentsWithEnrollment(myDb))
+	protectedMux.HandleFunc("POST /students", students.AddStudent(myDb))
+	protectedMux.HandleFunc("PATCH /students/{student_id}", students.UpdateStudent(myDb))
 
 	myDb.Logger.Printf("Server starting on :%v", port)
 	if err := http.ListenAndServe(":"+port, wrappedMux); err != nil {
