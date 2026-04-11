@@ -310,9 +310,9 @@
                 <div class="user-info btn-group">
                     <button type="button" class="user-info btn dropdown-toggle" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        <div class="user-avatar">AZ</div>
+                        <div class="user-avatar" id="userAvatarInitials">?</div>
                         <div>
-                            <small class="d-block fw-bold">Alex Zolad</small>
+                            <small class="d-block fw-bold" id="headerUserName">User Name</small>
                             <small class="text-muted">Student</small>
                         </div>
                     </button>
@@ -1518,6 +1518,34 @@
 
         // TODO - add the pending requests to the student page and also the reason if denied. 
 
+        async function getUserAuth() {
+            try {
+                const response = await fetch(`${baseUrl}/auth/user`);
+
+                if (!response.ok) {
+                    console.error('Failed to fetch user auth:', response.status);
+                    return null;
+                }
+
+                const userInfo = await response.json();
+
+                const nameParts = userInfo.name.split(' ');
+                const userInitials = nameParts.length >= 2
+                    ? nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase()
+                    : nameParts[0][0].toUpperCase();
+
+
+                document.getElementById("userAvatarInitials").textContent = userInitials;
+                document.getElementById("headerUserName").textContent = userInfo.name;
+
+                return userInfo
+
+            } catch (err) {
+                console.error('Error retrieving user auth info')
+            }
+
+        }
+
         async function handleEnrollmentRequest(requestId, status) {
             try {
                 const response = await fetch(`${baseUrl}/enrollment_requests/${requestId}`, {
@@ -1934,7 +1962,23 @@
         let selectedMonth = null;
         let nextMonthStr = '';
 
-        document.addEventListener('DOMContentLoaded', () => {
+        let authUser = {
+            id: null,
+            name: null,
+            role: 'Student'
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+
+            const userInfo = await getUserAuth();
+
+            // if (!userInfo) {
+            //     window.location.href = '/auth/google';
+            //     return;
+            // }
+
+            authUser.id = userInfo.id;
+            authUser.name = userInfo.name;
 
             const monthFilter = document.getElementById('monthFilter');
             populateMonthDropdown('monthFilter');
@@ -1947,7 +1991,7 @@
             //TODO- Need to remove this hardcoded student id and replace with the logged in students id.
 
             const RefreshClasses = async (month) => {
-                await renderEnrolledClasses(month, student_id = 1);
+                await renderEnrolledClasses(month, authUser.id);
                 console.log("Enrolled classses:", currentEnrolledClasses)
                 await renderClasses(month);
                 RenderManageClassesTable();
@@ -1968,7 +2012,7 @@
             });
 
             // TODO replace this with actual logged in student's id. Also handle this state management with the initialized. 
-            renderStudentCalendar(studentId = 1);
+            renderStudentCalendar(authUser.id);
             window.studentCalendarInitialized = true;
 
             renderAdminCalendar();

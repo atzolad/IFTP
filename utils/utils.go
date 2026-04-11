@@ -42,6 +42,14 @@ type GoogleUserEmail struct {
 	Email string
 }
 
+type contextKey string
+
+const (
+	CtxUserID    contextKey = "userId"
+	CtxUserName  contextKey = "userName"
+	CtxUserEmail contextKey = "userEmail"
+)
+
 var ErrNoFieldsToUpdate = errors.New("no fields to update")
 
 func LoadTemplates() Templates {
@@ -172,7 +180,6 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		student, err := dbAddStudentOrRetreiveId(ctx, myDb, &StudentLogin{Name: user.Name, Email: user.Email})
-		fmt.Println(student)
 
 		if err != nil {
 
@@ -246,8 +253,8 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		// Get user data from session
-		rawUserId := session.Values["userId"]
-		if rawUserId == nil {
+		userId, ok := session.Values["userId"].(int)
+		if !ok || userId == 0 {
 			myDb.Logger.Printf("Error: no authenticated user found: %v", err)
 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
 				Status:  "error",
@@ -255,19 +262,6 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 				Code:    http.StatusUnauthorized,
 			})
 			return
-		}
-
-		var userId int
-
-		switch v := rawUserId.(type) {
-		case int:
-			userId = v
-
-		case float64:
-			userId = int(v)
-
-		default:
-			myDb.Logger.Printf("userId is not an expected type: %T (value: %v)", rawUserId, rawUserId)
 		}
 
 		userName, _ := session.Values["name"].(string)
@@ -334,20 +328,26 @@ func RequireAuth(next http.Handler) http.HandlerFunc {
 
 		// gets the user session from the request
 		session, err := gothic.Store.Get(r, "goth_session")
-		if err != nil {
-			http.Redirect(w, r, "/auth/google", http.StatusSeeOther)
-			return
-		}
-		// gets the user from the session data
 		userId := session.Values["userId"]
-		if userId == nil {
+
+		if err != nil || userId == nil {
+
+			if r.Header.Get("Accept") == "application/json" || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+				WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
+					Status:  "error",
+					Message: "Session expired or unauthorized",
+					Code:    http.StatusUnauthorized,
+				})
+				return
+			}
+
 			http.Redirect(w, r, "/auth/google", http.StatusSeeOther)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "userId", userId)
-		ctx = context.WithValue(ctx, "userEmail", session.Values["email"])
-		ctx = context.WithValue(ctx, "userName", session.Values["name"])
+		ctx := context.WithValue(r.Context(), CtxUserID, userId)
+		ctx = context.WithValue(ctx, CtxUserEmail, session.Values["email"])
+		ctx = context.WithValue(ctx, CtxUserName, session.Values["name"])
 		ctx = context.WithValue(ctx, "auth_type", "session")
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

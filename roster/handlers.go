@@ -190,7 +190,16 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 
 		// TODO get student id from the session- will hardcode it here for now.
 
-		studentId := 1
+		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
+		if !ok || studentId == 0 {
+			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
+				Status:  "error",
+				Message: "Unauthorized",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
+
 		var input EnrollmentRequestInput
 
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -430,7 +439,18 @@ func EnrollStudent(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		// TODO: replace with student ID from session
-		studentId := 1
+
+		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
+		if !ok || studentId == 0 {
+			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
+				Status:  "error",
+				Message: "Unauthorized",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
+
+		// studentId := 1
 
 		var body struct {
 			Month string `json:"month"`
