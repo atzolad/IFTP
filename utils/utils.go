@@ -246,8 +246,8 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		// Get user data from session
-		user := session.Values["userId"]
-		if user == nil {
+		rawUserId := session.Values["userId"]
+		if rawUserId == nil {
 			myDb.Logger.Printf("Error: no authenticated user found: %v", err)
 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
 				Status:  "error",
@@ -257,11 +257,35 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		WriteJSONResponse(w, http.StatusOK, ResponseData{
-			Status:  "success",
-			Message: "User fetched successfully",
-			Code:    http.StatusOK,
-		})
+		var userId int
+
+		switch v := rawUserId.(type) {
+		case int:
+			userId = v
+
+		case float64:
+			userId = int(v)
+
+		default:
+			myDb.Logger.Printf("userId is not an expected type: %T (value: %v)", rawUserId, rawUserId)
+		}
+
+		userName, _ := session.Values["name"].(string)
+		userEmail, _ := session.Values["email"].(string)
+
+		if userName == "" || userEmail == "" {
+
+			myDb.Logger.Printf("Session is missing username : %v or email %v", userName, userEmail)
+
+		}
+
+		userData := StudentLogin{
+			ID:    userId,
+			Name:  userName,
+			Email: userEmail,
+		}
+
+		WriteJSONResponse(w, http.StatusOK, userData)
 	}
 }
 

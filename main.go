@@ -97,14 +97,15 @@ func main() {
 	fileServer := http.FileServer(http.Dir("static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
 
+	protectedMux := http.NewServeMux()
+
+	// Authorization endpoints
 	mux.HandleFunc("GET /auth/google", utils.GoogleLogin())
 	mux.HandleFunc("GET /auth/google/callback", utils.HandleGoogleOauth(myDb))
-	mux.HandleFunc("GET /auth/user", utils.GetUserAuth(myDb))
+	protectedMux.HandleFunc("GET /auth/user", utils.GetUserAuth(myDb))
 	mux.HandleFunc("GET /unauthorized", utils.UnAuthorizedHandler(tpl))
 	mux.HandleFunc("GET /logout", utils.HandleLogout())
 	mux.HandleFunc("GET /health", utils.HealthCheckHandler(myDb))
-
-	protectedMux := http.NewServeMux()
 
 	// Require authorization for protected endpoints and wrap all endpoints with logger.
 	mux.Handle("/", utils.RequireAuth(protectedMux))
