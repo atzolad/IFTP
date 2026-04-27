@@ -1189,6 +1189,7 @@
 
         document.getElementById('enrollModalConfirmBtn').addEventListener('click', (event) => {
             const classId = event.currentTarget.dataset.class_id;
+            // TODO- Remove parseInt when I convert to UUID
             const selectedClass = availableClasses.find(c => c.id === parseInt(classId));
 
             bootstrap.Modal.getInstance(document.getElementById('enrollModal')).hide();
@@ -1529,6 +1530,7 @@
         }
 
         async function enrollStudent(classId) {
+            // TODO- Remove parseInt when I convert to UUID
             const selectedClass = availableClasses.find(c => c.id === parseInt(classId));
 
             if (!selectedClass) {
@@ -2286,6 +2288,9 @@
         }
 
         function openMakeupModal(selectedClass) {
+
+            console.log('Selected Class!:')
+            console.log(selectedClass)
             // Reset state
             makeupState = {
                 enrolledClass: selectedClass,
@@ -2382,8 +2387,11 @@
             const makeupBtn = e.target.closest('.makeupRequestBtn');
             if (!makeupBtn) return;
 
-            const classId = makeupBtn.dataset.classId;
+            // TODO- Remove parseInt when I convert to UUID
+            const classId = parseInt(makeupBtn.dataset.classId);
             const selectedClass = currentEnrolledClasses.find(c => c.id === classId);
+            console.log('Original selected class:')
+            console.log(selectedClass)
             openMakeupModal(selectedClass);
         });
 
@@ -2407,7 +2415,7 @@
             document.getElementById('confirmedMissedDate').textContent = makeupState.missedDate;
 
             document.getElementById('makeupStage1').style.display = 'none';
-            document.getElementById('makeupStage2.').syle.display = 'block';
+            document.getElementById('makeupStage2.').style.display = 'block';
             document.getElementById('makeupStage1Footer').style.display = 'none';
             document.getElementById('makeupStage2Footer').style.display = 'flex';
 
@@ -2416,7 +2424,7 @@
 
         document.getElementById('makeupBackBtn').addEventListener('click', () => {
             document.getElementById('makeupStage1').style.display = 'block';
-            document.getElementById('makeupSatge2.').syle.display = 'none';
+            document.getElementById('makeupSatge2.').style.display = 'none';
             document.getElementById('makeupStage1Footer').style.display = 'flex';
             document.getElementById('makeupStage2Footer').style.display = 'none';
 
@@ -2438,7 +2446,8 @@
             badge.classList.remove('bg-secondary');
             badge.classList.add('bg-primary');
 
-            makeupState.makeupClassId = badge.dataset.classId;
+            // TODO- Remove parseInt when I convert to UUID
+            makeupState.makeupClassId = parseInt(badge.dataset.classId);
             makeupState.makeupDate = badge.dataset.date;
             document.getElementById('makeupSubmitBtn').disabled = false;
         });
