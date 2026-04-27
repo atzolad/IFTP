@@ -2525,7 +2525,7 @@
                             calendarEvents.scheduledClasses.forEach(calEvent => {
                                 calEvent.session_dates.forEach(dateStr => {
                                     events.push({
-                                        title: `${calEvent.name}- ${calEvent.enrolledCount}/${calEvent.capacity}`,
+                                        title: `${calEvent.name}- ${calEvent.enrolledCount}/${calEvent.capacity} Enrolled`,
                                         start: dateStr,
                                         allDay: true,
                                         className: 'fc-event-basic',
@@ -2607,11 +2607,15 @@
                             calendarEvents.scheduledClasses.forEach(calEvent => {
                                 calEvent.session_dates.forEach(dateStr => {
                                     events.push({
-                                        title: `${calEvent.name}`,
+                                        title: `${calEvent.name}- ${calEvent.enrolledCount}/${calEvent.capacity} Enrolled`,
                                         start: dateStr,
                                         allDay: true,
                                         className: 'fc-event-basic',
                                         // color: calEvent.colorTag,
+                                        extendedProps: {
+                                            "enrolledCount": calEvent.enrolledCount,
+                                            "capacity": calEvent.capacity
+                                        }
                                     })
                                 })
                             })
