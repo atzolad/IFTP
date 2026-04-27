@@ -859,59 +859,6 @@
         </div>
     </div>
 
-    <!-- Student Classes Modal -->
-    <div class="modal fade" id="studentClassesModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">John Doe - Enrolled Classes</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <h6>November 2025</h6>
-                    <div class="list-group mb-3">
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">Math 101</h6>
-                                    <small class="text-muted">Mondays at 10:00 AM</small>
-                                    <div class="mt-2">
-                                        <span class="badge bg-success me-1">Nov 4</span>
-                                        <span class="badge bg-success me-1">Nov 11</span>
-                                        <span class="badge bg-secondary me-1">Nov 18 (Absent)</span>
-                                        <span class="badge bg-success me-1">Nov 25</span>
-                                    </div>
-                                </div>
-                                <button class="btn btn-sm btn-outline-danger">Unenroll</button>
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">Science Lab</h6>
-                                    <small class="text-muted">Fridays at 3:30 PM</small>
-                                    <div class="mt-2">
-                                        <span class="badge bg-success me-1">Nov 1</span>
-                                        <span class="badge bg-success me-1">Nov 8</span>
-                                        <span class="badge bg-success me-1">Nov 15</span>
-                                        <span class="badge bg-success me-1">Nov 22</span>
-                                    </div>
-                                </div>
-                                <button class="btn btn-sm btn-outline-danger">Unenroll</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-primary"><i class="bi bi-plus-circle"></i> Enroll in Another
-                        Class</button>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Student Enrollment Modal -->
     <div class="modal fade" id="studentEnrollmentModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -1730,7 +1677,7 @@
         }
 
         function showStudentEnrollment(selectedStudent) {
-            document.getElementById('studentEnrollmentModalTitle').textContent = `Enrollment for ${selectedStudent.id}`
+            document.getElementById('studentEnrollmentModalTitle').textContent = `Enrollment for ${selectedStudent.name}`
             document.getElementById('studentEnrollmentModalNotes').textContent = selectedStudent.notes
 
             const currentDate = new Date();
