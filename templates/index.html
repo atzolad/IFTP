@@ -2334,6 +2334,25 @@
             openMakeupModal(selectedClass);
         });
 
+        document.getElementById('missedDateOptions').addEventListener('click', (e) => {
+            const badge = e.target.closest('.makeup-missed-date');
+            if (!badge) return;
+
+            // De-select all and select clicked options
+            document.querySelectorAll('.makeup-missed-date').forEach(b => {
+                b.classList.remove('bg-primary');
+                b.classList.add('bg-secondary');
+            });
+            badge.classList.remove('bg-secondary');
+            badge.classList.add('bg-primary');
+
+            makeupState.missedDate = badge.dataset.date;
+            document.getElementById('makeupNextBtn').disabled = False;
+        });
+
+
+
+
         // Event listener for Schedule Approval Buttons
 
         document.getElementById('classScheduleApprovalsContainer').addEventListener('click', (event) => {
