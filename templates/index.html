@@ -2245,7 +2245,7 @@
                                                 <strong class="d-block mb-2">Session Dates:</strong>
                                                 <div class="classSessionDates"></div>
                                             </div>
-                                            <button class="btn btn-outline-danger btn-sm w-100 unenrollBtn">Unenroll</button>
+                                            <button class="btn btn-outline-danger btn-sm w-100 makeupRequestBtn">Request Makeup</button>
                                         </div>
                                     </div>
      
@@ -2267,9 +2267,24 @@
                 datesContainer.appendChild(badge);
             });
 
+            // Store the id with the button for lookup later. 
+            const makeupBtn = card.querySelector('.makeupRequestBtn');
+            makeupBtn.dataset.classId = selectedClass.id;
+
             return card;
 
         }
+
+        // Event listeneer for makeup requests.
+
+        document.getElementById('enrolledClassesContainer').addEventListener('click', (e) => {
+            const makeupBtn = e.target.closest('.makeupRequestBtn');
+            if (!makeupBtn) return;
+
+            const classId = makeupBtn.dataset.classId;
+            const selectedClass = currentEnrolledClasses.find(c => c.id === classId);
+            openMakeupModal(selectedClass);
+        });
 
         // Event listener for Schedule Approval Buttons
 
