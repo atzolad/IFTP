@@ -2388,6 +2388,44 @@
             document.getElementById('makeupSubmitBtn').disabled = makeupState.missedDates.length === 0;
         });
 
+        async function submitMakeupRequest() {
+            const reason = document.getElementById('makeupReason').value.trim();
+
+            const requestBody = {
+                class_id: makeupState.enrolledClass.id,
+                missed_session_dates: makeupState.missedDates,
+                reason: reason || null,
+            }
+
+            console.log('Submitting makeup request:', requestBody);
+
+            try {
+                const resp = await fetch(`/makeup_requests`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (resp.ok) {
+                    alert('Your makeup request has been submitted!');
+                    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('makeupRequestModal'));
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+
+                } else {
+                    const responseData = await resp.json();
+                    alert(responseData.message || 'Error submitting request')
+                }
+
+            } catch (error) {
+                console.error('Error submitting makeup request:', error);
+                alert('Network error occured');
+            }
+        }
+
+        document.getElementById('makeupSubmitBtn').addEventListener('click', submitMakeupRequest);
+
 
         // document.getElementById('makeupClassOptions').addEventListener('click', (e) => {
         //     const badge = e.target.closest('.makeup-date-option');
