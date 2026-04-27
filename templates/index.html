@@ -2294,7 +2294,7 @@
                 makeupDate: null,
             }
 
-            // Reset UI to Stage 1
+            // Reset UI
             document.getElementById('makeupStage1').style.display = 'block';
             document.getElementById('makeupStage2').style.display = 'none';
             document.getElementById('makeupStage1Footer').style.display = 'flex';
@@ -2302,10 +2302,9 @@
             document.getElementById('makeupNextBtn').disabled = true;
             document.getElementById('makeupSubmitBtn').disabled = true;
 
-            // Populate class name in Stage 1 alert
             document.getElementById('makeupClassName').textContent = selectedClass.name;
 
-            // Render selectable date badges
+            // Render date badges
             const missedDateOptions = document.getElementById('missedDateOptions');
             missedDateOptions.innerHTML = '';
 
@@ -2323,7 +2322,29 @@
             modal.show();
         }
 
-        // Event listeneer for makeup requests.
+        function renderMakeupOptions() {
+            const container = document.getElementById('makeupClassOptions');
+            container.innerHTML = '';
+
+            const eligibleClasses = availableClasses.filter(c => c.id !== makeupState.enrolledClass.id)
+                .map(c => ({
+                    ...c, eligible_dates: c.session_dates
+                        .filter(d => d !== makeupState.missedDate)
+                })).filter(c => c.eligible_dates.length > 0);
+
+            if (eligibleClasses.length === 0) {
+                container.innerHTML = '<div class="col-12"><p class="text-muted">No available makeup sessions for this date.</p></div>'
+                return;
+            }
+
+            eligibleClasses.forEach(c => {
+                container.appendChild(buildMakeupClassCard(c));
+            });
+        }
+
+
+
+        // Event listener for makeup requests.
 
         document.getElementById('enrolledClassesContainer').addEventListener('click', (e) => {
             const makeupBtn = e.target.closest('.makeupRequestBtn');
@@ -2362,6 +2383,17 @@
             renderMakeupOptions();
         })
 
+        document.getElementById('makeupBackBtn').addEventListener('click', () => {
+            document.getElementById('makeupStage1').style.display = 'block';
+            document.getElementById('makeupSatge2.').syle.display = 'none';
+            document.getElementById('makeupStage1Footer').style.display = 'flex';
+            document.getElementById('makeupStage2Footer').style.display = 'none';
+
+            makeupState.makeupClassId = null;
+            makeupState.makeupClassId = null;
+            document.getElementById('makeupSubmitBtn').disabled = true;
+
+        })
 
 
         // Event listener for Schedule Approval Buttons
