@@ -2350,6 +2350,17 @@
             document.getElementById('makeupNextBtn').disabled = False;
         });
 
+        document.getElementById('makeupNextBtn').addEventListener('click', () => {
+            document.getElementById('confirmedMissedDate').textContent = makeupState.missedDate;
+
+            document.getElementById('makeupStage1').style.display = 'none';
+            document.getElementById('makeupSatge2.').syle.display = 'block';
+            document.getElementById('makeupStage1Footer').style.display = 'none';
+            document.getElementById('makeupStage2Footer').style.display = 'flex';
+
+            // TODO- Build makeupclass option rendering.
+            renderMakeupOptions();
+        })
 
 
 
