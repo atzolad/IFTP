@@ -2400,12 +2400,12 @@
                     return
                 }
 
-                currentEnrolledClasses = classes.map(selectedClass => selectedClass.id);
+                currentEnrolledClasses = classes;
 
                 // Check if the current month matches this (for the first API call it should be current month and save those class ids. Use this to check for enrollment button state)
 
                 if (month === getCurrentMonth(month)) {
-                    currentMonthEnrolledClassIds = [...currentEnrolledClasses]
+                    currentMonthEnrolledClassIds = currentEnrolledClasses.map(c => c.id);
                 }
 
                 console.log("currentMonthEnrolledClassIds")
