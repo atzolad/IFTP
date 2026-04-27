@@ -2351,7 +2351,7 @@
                 <div class="card-body">
                     <h6 class="card-title makeupClassName"></h6>
                     <p class="text-muted mb-1"><i class="bi bi-person"></i> <span class="makeupTeacher"></span></p>
-                    <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="makeupSchedule></span></p>
+                    <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="makeupSchedule"></span></p>
                     <strong class="d-block mb-2">Available Dates:</strong>
                     <div class="d-flex flex-wrap gap-2 makeupDateOptions"></div>
                 </div>
@@ -2366,7 +2366,7 @@
             eligibleClass.eligible_dates.forEach(date => {
                 const badge = document.createElement('span');
                 badge.className = 'badge bg-secondary text-light p-2 makeup-date-option';
-                badge.stye.cursor = 'pointer';
+                badge.style.cursor = 'pointer';
                 badge.dataset.date = date;
                 badge.dataset.classId = eligibleClass.id;
                 badge.textContent = date;
@@ -2376,7 +2376,7 @@
             return col
         }
 
-        // Event listener for makeup requests.
+        // Event listeners for makeup requests.
 
         document.getElementById('enrolledClassesContainer').addEventListener('click', (e) => {
             const makeupBtn = e.target.closest('.makeupRequestBtn');
@@ -2400,18 +2400,17 @@
             badge.classList.add('bg-primary');
 
             makeupState.missedDate = badge.dataset.date;
-            document.getElementById('makeupNextBtn').disabled = False;
+            document.getElementById('makeupNextBtn').disabled = false;
         });
 
         document.getElementById('makeupNextBtn').addEventListener('click', () => {
             document.getElementById('confirmedMissedDate').textContent = makeupState.missedDate;
 
             document.getElementById('makeupStage1').style.display = 'none';
-            document.getElementById('makeupSatge2.').syle.display = 'block';
+            document.getElementById('makeupStage2.').syle.display = 'block';
             document.getElementById('makeupStage1Footer').style.display = 'none';
             document.getElementById('makeupStage2Footer').style.display = 'flex';
 
-            // TODO- Build makeupclass option rendering.
             renderMakeupOptions();
         })
 
@@ -2422,10 +2421,27 @@
             document.getElementById('makeupStage2Footer').style.display = 'none';
 
             makeupState.makeupClassId = null;
-            makeupState.makeupClassId = null;
+            makeupState.makeupDate = null;
             document.getElementById('makeupSubmitBtn').disabled = true;
 
         })
+
+        document.getElementById('makeupClassOptions').addEventListener('click', (e) => {
+            const badge = e.target.closest('.makeup-date-option');
+            if (!badge) return;
+
+            document.querySelectorAll('.makeup-date-option').forEach(b => {
+                b.classList.remove('bg-primary');
+                b.classList.add('bg-secondary');
+            });
+
+            badge.classList.remove('bg-secondary');
+            badge.classList.add('bg-primary');
+
+            makeupState.makeupClassId = badge.dataset.classId;
+            makeupState.makeupDate = badge.dataset.date;
+            document.getElementById('makeupSubmitBtn').disabled = false;
+        });
 
 
         // Event listener for Schedule Approval Buttons
