@@ -920,11 +920,6 @@
                 <div class="modal-header">
                     <div class="d-flex flex-column">
                         <h5 class="modal-title" id="makeupRequestModalLabel">Request a Makeup Class</h5>
-                        <div class="d-flex gap-2 mt-1">
-                            <span class="badge rounded-pill bg-primary" id="makeupStep1Pill">1 · Select missed
-                                session</span>
-                            <span class="badge rounded-pill bg-secondary" id="makeupStep2Pill">2 · Choose makeup</span>
-                        </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -935,43 +930,24 @@
                     <div id="makeupStage1">
                         <div class="alert alert-light border mb-4">
                             <strong id="makeupClassName"></strong>
-                            <span class="text-muted"> — select the date you need to miss (Only displays future dates
-                                this month)</span>
+                            <span class="text-muted"> — select the date you need to miss</span>
                         </div>
-                        <div class="d-flex flex-wrap gap-2" id="missedDateOptions"></div>
-                    </div>
-
-                    <!-- Pick makeup session -->
-                    <div id="makeupStage2" style="display: none;">
-                        <div class="alert alert-light border mb-4">
-                            <span class="text-muted">Finding makeups for your missed </span>
-                            <strong id="confirmedMissedDate"></strong>
-                            <span class="text-muted"> session</span>
+                        <div class="d-flex flex-wrap gap-2 mb-4" id="missedDateOptions"></div>
+                        <div class="mt-3">
+                            <label for="makeupReason" class="form-label">Reason <span
+                                    class="text-muted">(optional)</span></label>
+                            <textarea class="form-control" id="makeupReason" rows="2"
+                                placeholder="e.g. Family vacation, work conflict..."></textarea>
                         </div>
-                        <div class="row g-3" id="makeupClassOptions"></div>
                     </div>
                 </div>
 
                 <!-- Footer -->
-                <div class="modal-footer">
-                    <!-- Stage 1 footer -->
-                    <div id="makeupStage1Footer" class="w-100 d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary" id="makeupNextBtn" disabled>
-                            Next <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
-
-                    <!-- Stage 2 footer -->
-                    <div id="makeupStage2Footer" class="w-100 justify-content-between" style="display: none;">
-                        <button type="button" class="btn btn-outline-secondary" id="makeupBackBtn">
-                            <i class="bi bi-arrow-left"></i> Back
-                        </button>
-                        <button type="button" class="btn btn-primary" id="makeupSubmitBtn" disabled>
-                            <i class="bi bi-send"></i> Submit Request
-                        </button>
-                    </div>
+                <div class="modal-footer d-flex justify-content-end">
+                    <button type="button" class="btn btn-primary" id="makeupSubmitBtn" disabled>
+                        Submit Request <i class="bi bi-send"></i>
+                    </button>
                 </div>
-
             </div>
         </div>
     </div>
@@ -2274,9 +2250,9 @@
         // Makeup modal state
         let makeupState = {
             enrolledClass: null,
-            missedDate: null,
-            makeupClassId: null,
-            makeupDate: null,
+            missedDates: [],
+            // makeupClassId: null,
+            // makeupDate: null,
         }
 
         function openMakeupModal(selectedClass) {
@@ -2286,18 +2262,11 @@
             // Reset state
             makeupState = {
                 enrolledClass: selectedClass,
-                missedDate: null,
-                makeupClassId: null,
-                makeupDate: null,
+                missedDates: [],
+                // makeupClassId: null,
+                // makeupDate: null,
             }
-            setMakeupStep(1);
 
-            // Reset UI
-            document.getElementById('makeupStage1').style.display = 'block';
-            document.getElementById('makeupStage2').style.display = 'none';
-            document.getElementById('makeupStage1Footer').style.display = 'flex';
-            document.getElementById('makeupStage2Footer').style.display = 'none';
-            document.getElementById('makeupNextBtn').disabled = true;
             document.getElementById('makeupSubmitBtn').disabled = true;
 
             document.getElementById('makeupClassName').textContent = selectedClass.name;
@@ -2306,88 +2275,84 @@
             const missedDateOptions = document.getElementById('missedDateOptions');
             missedDateOptions.innerHTML = '';
 
-            selectedClass.session_dates.filter(isFutureDate).forEach(date => {
-                const badge = document.createElement('span');
-                badge.className = 'badge bg-secondary text-light me-1 p-2 makeup-missed-date';
-                badge.style.cursor = 'pointer';
-                badge.dataset.date = date;
-                badge.textContent = date;
-                missedDateOptions.appendChild(badge);
-            });
+            const futureDates = selectedClass.session_dates.filter(isFutureDate);
+
+            if (futureDates.length === 0) {
+                const msg = document.createElement('p');
+                msg.className = 'text-muted';
+                msg.textContent = 'No upcoming sessions available to request a makeup for.';
+                missedDateOptions.appendChild(msg);
+            } else {
+                futureDates.forEach(date => {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-secondary text-light me-1 p-2 makeup-missed-date';
+                    badge.style.cursor = 'pointer';
+                    badge.dataset.date = date;
+                    badge.textContent = date;
+                    missedDateOptions.appendChild(badge);
+                });
+            }
 
             // Show the modal
             const modal = new bootstrap.Modal(document.getElementById('makeupRequestModal'));
             modal.show();
         }
 
-        function setMakeupStep(step) {
-            const step1Pill = document.getElementById('makeupStep1Pill');
-            const step2Pill = document.getElementById('makeupStep2Pill');
+        // function renderMakeupOptions() {
+        //     const container = document.getElementById('makeupClassOptions');
+        //     container.innerHTML = '';
 
-            if (step === 1) {
-                step1Pill.classList.replace('bg-secondary', 'bg-primary');
-                step2Pill.classList.replace('bg-primary', 'bg-secondary');
-            } else {
-                step1Pill.classList.replace('bg-primary', 'bg-secondary');
-                step2Pill.classList.replace('bg-secondary', 'bg-primary');
-            }
-        }
+        //     const eligibleClasses = availableClasses.filter(c => c.id !== makeupState.enrolledClass.id)
+        //         .map(c => ({
+        //             ...c, eligible_dates: c.session_dates
+        //                 .filter(d => d !== makeupState.missedDate)
+        //         })).filter(c => c.eligible_dates.length > 0);
 
-        function renderMakeupOptions() {
-            const container = document.getElementById('makeupClassOptions');
-            container.innerHTML = '';
+        //     if (eligibleClasses.length === 0) {
+        //         container.innerHTML = '<div class="col-12"><p class="text-muted">No available makeup sessions for this date.</p></div>'
+        //         return;
+        //     }
 
-            const eligibleClasses = availableClasses.filter(c => c.id !== makeupState.enrolledClass.id)
-                .map(c => ({
-                    ...c, eligible_dates: c.session_dates
-                        .filter(d => d !== makeupState.missedDate)
-                })).filter(c => c.eligible_dates.length > 0);
+        //     eligibleClasses.forEach(c => {
+        //         container.appendChild(buildMakeupClassCard(c));
+        //     });
+        // }
 
-            if (eligibleClasses.length === 0) {
-                container.innerHTML = '<div class="col-12"><p class="text-muted">No available makeup sessions for this date.</p></div>'
-                return;
-            }
+        // function buildMakeupClassCard(eligibleClass) {
+        //     const col = document.createElement('div');
+        //     col.className = 'col-md-6';
 
-            eligibleClasses.forEach(c => {
-                container.appendChild(buildMakeupClassCard(c));
-            });
-        }
+        //     col.innerHTML = `
+        //      <div class="card h-100">
+        //         <div class="card-body">
+        //             <h6 class="card-title makeupClassName"></h6>
+        //             <p class="text-muted mb-1"><i class="bi bi-person"></i> <span class="makeupTeacher"></span></p>
+        //             <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="makeupSchedule"></span></p>
+        //             <p class="text-muted mb-2"><i class="bi bi-people"></i> <span class="makeup-capacity"></span></p>
+        //             <strong class="d-block mb-2">Available Dates:</strong>
+        //             <div class="d-flex flex-wrap gap-2 makeupDateOptions"></div>
+        //         </div>
+        //     </div>
+        //     `;
 
-        function buildMakeupClassCard(eligibleClass) {
-            const col = document.createElement('div');
-            col.className = 'col-md-6';
+        //     col.querySelector('.makeupClassName').textContent = eligibleClass.name;
+        //     col.querySelector('.makeupTeacher').textContent = eligibleClass.teacher;
+        //     col.querySelector('.makeupSchedule').textContent = `${eligibleClass.day_of_week} at ${eligibleClass.time}`;
+        //     col.querySelector('.makeup-capacity').textContent = `${eligibleClass.enrolledCount} / ${eligibleClass.capacity} enrolled`;
 
-            col.innerHTML = `
-             <div class="card h-100">
-                <div class="card-body">
-                    <h6 class="card-title makeupClassName"></h6>
-                    <p class="text-muted mb-1"><i class="bi bi-person"></i> <span class="makeupTeacher"></span></p>
-                    <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="makeupSchedule"></span></p>
-                    <p class="text-muted mb-2"><i class="bi bi-people"></i> <span class="makeup-capacity"></span></p>
-                    <strong class="d-block mb-2">Available Dates:</strong>
-                    <div class="d-flex flex-wrap gap-2 makeupDateOptions"></div>
-                </div>
-            </div>
-            `;
+        //     const datesContainer = col.querySelector('.makeupDateOptions');
+        //     eligibleClass.eligible_dates.filter(isFutureDate).forEach(date => {
+        //         const badge = document.createElement('span');
+        //         badge.className = 'badge bg-secondary text-light p-2 makeup-date-option';
+        //         badge.style.cursor = 'pointer';
+        //         badge.dataset.date = date;
+        //         badge.dataset.classId = eligibleClass.id;
+        //         badge.textContent = date;
+        //         datesContainer.appendChild(badge);
+        //     });
 
-            col.querySelector('.makeupClassName').textContent = eligibleClass.name;
-            col.querySelector('.makeupTeacher').textContent = eligibleClass.teacher;
-            col.querySelector('.makeupSchedule').textContent = `${eligibleClass.day_of_week} at ${eligibleClass.time}`;
-            col.querySelector('.makeup-capacity').textContent = `${eligibleClass.enrolledCount} / ${eligibleClass.capacity} enrolled`;
-
-            const datesContainer = col.querySelector('.makeupDateOptions');
-            eligibleClass.eligible_dates.filter(isFutureDate).forEach(date => {
-                const badge = document.createElement('span');
-                badge.className = 'badge bg-secondary text-light p-2 makeup-date-option';
-                badge.style.cursor = 'pointer';
-                badge.dataset.date = date;
-                badge.dataset.classId = eligibleClass.id;
-                badge.textContent = date;
-                datesContainer.appendChild(badge);
-            });
-
-            return col
-        }
+        //     return col
+        // }
 
         // Event listeners for makeup requests.
 
@@ -2407,63 +2372,40 @@
             const badge = e.target.closest('.makeup-missed-date');
             if (!badge) return;
 
-            // De-select all and select clicked options
-            document.querySelectorAll('.makeup-missed-date').forEach(b => {
-                b.classList.remove('bg-primary');
-                b.classList.add('bg-secondary');
-            });
-            badge.classList.remove('bg-secondary');
-            badge.classList.add('bg-primary');
+            if (badge.classList.contains('bg-primary')) {
+                // Deselect
+                badge.classList.remove('bg-primary');
+                badge.classList.add('bg-secondary');
+                makeupState.missedDates = makeupState.missedDates.filter(d => d !== badge.dataset.date);
+            } else {
+                // Select
+                badge.classList.remove('bg-secondary');
+                badge.classList.add('bg-primary');
+                makeupState.missedDates.push(badge.dataset.date);
+            }
 
-            makeupState.missedDate = badge.dataset.date;
-            document.getElementById('makeupNextBtn').disabled = false;
+            // Enable submit if at least one date selected
+            document.getElementById('makeupSubmitBtn').disabled = makeupState.missedDates.length === 0;
         });
 
-        document.getElementById('makeupNextBtn').addEventListener('click', () => {
-            document.getElementById('confirmedMissedDate').textContent = makeupState.missedDate;
 
-            document.getElementById('makeupStage1').style.display = 'none';
-            document.getElementById('makeupStage2').style.display = 'block';
-            document.getElementById('makeupStage1Footer').style.display = 'none';
-            document.getElementById('makeupStage2Footer').style.display = 'flex';
-            document.getElementById('makeupNextBtn').style.display = 'none';
+        // document.getElementById('makeupClassOptions').addEventListener('click', (e) => {
+        //     const badge = e.target.closest('.makeup-date-option');
+        //     if (!badge) return;
 
-            setMakeupStep(2);
-            renderMakeupOptions();
-        })
+        //     document.querySelectorAll('.makeup-date-option').forEach(b => {
+        //         b.classList.remove('bg-primary');
+        //         b.classList.add('bg-secondary');
+        //     });
 
-        document.getElementById('makeupBackBtn').addEventListener('click', () => {
-            document.getElementById('makeupStage1').style.display = 'block';
-            document.getElementById('makeupStage2').style.display = 'none';
-            document.getElementById('makeupStage1Footer').style.display = 'flex';
-            document.getElementById('makeupStage2Footer').style.display = 'none';
-            document.getElementById('makeupNextBtn').style.display = 'block';
+        //     badge.classList.remove('bg-secondary');
+        //     badge.classList.add('bg-primary');
 
-
-            makeupState.makeupClassId = null;
-            makeupState.makeupDate = null;
-            document.getElementById('makeupSubmitBtn').disabled = true;
-            setMakeupStep(1);
-
-        })
-
-        document.getElementById('makeupClassOptions').addEventListener('click', (e) => {
-            const badge = e.target.closest('.makeup-date-option');
-            if (!badge) return;
-
-            document.querySelectorAll('.makeup-date-option').forEach(b => {
-                b.classList.remove('bg-primary');
-                b.classList.add('bg-secondary');
-            });
-
-            badge.classList.remove('bg-secondary');
-            badge.classList.add('bg-primary');
-
-            // TODO- Remove parseInt when I convert to UUID
-            makeupState.makeupClassId = parseInt(badge.dataset.classId);
-            makeupState.makeupDate = badge.dataset.date;
-            document.getElementById('makeupSubmitBtn').disabled = false;
-        });
+        //     // TODO- Remove parseInt when I convert to UUID
+        //     makeupState.makeupClassId = parseInt(badge.dataset.classId);
+        //     makeupState.makeupDate = badge.dataset.date;
+        //     document.getElementById('makeupSubmitBtn').disabled = false;
+        // });
 
 
         // Event listener for Schedule Approval Buttons
