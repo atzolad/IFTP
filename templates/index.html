@@ -2342,7 +2342,39 @@
             });
         }
 
+        function buildMakeupClassCard(eligibleClass) {
+            const col = document.createElement('div');
+            col.className = 'col-md-6';
 
+            col.innerHTML = `
+             <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title makeupClassName"></h6>
+                    <p class="text-muted mb-1"><i class="bi bi-person"></i> <span class="makeupTeacher"></span></p>
+                    <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="makeupSchedule></span></p>
+                    <strong class="d-block mb-2">Available Dates:</strong>
+                    <div class="d-flex flex-wrap gap-2 makeupDateOptions"></div>
+                </div>
+            </div>
+            `;
+
+            col.querySelector('.makeupClassName').textContent = eligibleClass.name;
+            col.querySelector('.makeupTeacher').textContent = eligibleClass.teacher;
+            col.querySelector('.makeupSchedule').textContent = `${eligibleClass.day_of_week} at ${eligibleClass.time}`;
+
+            const datesContainer = col.querySelector('.makeupDateOptions');
+            eligibleClass.eligible_dates.forEach(date => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary text-light p-2 makeup-date-option';
+                badge.stye.cursor = 'pointer';
+                badge.dataset.date = date;
+                badge.dataset.classId = eligibleClass.id;
+                badge.textContent = date;
+                datesContainer.appendChild(badge);
+            });
+
+            return col
+        }
 
         // Event listener for makeup requests.
 
