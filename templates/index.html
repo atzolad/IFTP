@@ -2275,6 +2275,54 @@
 
         }
 
+        //  Handle the makeup request modal
+
+        // Makeup modal state
+        let makeupState = {
+            enrolledClass: null,
+            missedDate: null,
+            makeupClassId: null,
+            makeupDate: null,
+        }
+
+        function openMakeupModal(selectedClass) {
+            // Reset state
+            makeupState = {
+                enrolledClass: selectedClass,
+                missedDate: null,
+                makeupClassId: null,
+                makeupDate: null,
+            }
+
+            // Reset UI to Stage 1
+            document.getElementById('makeupStage1').style.display = 'block';
+            document.getElementById('makeupStage2').style.display = 'none';
+            document.getElementById('makeupStage1Footer').style.display = 'flex';
+            document.getElementById('makeupStage2Footer').style.display = 'none';
+            document.getElementById('makeupNextBtn').disabled = true;
+            document.getElementById('makeupSubmitBtn').disabled = true;
+
+            // Populate class name in Stage 1 alert
+            document.getElementById('makeupClassName').textContent = selectedClass.name;
+
+            // Render selectable date badges
+            const missedDateOptions = document.getElementById('missedDateOptions');
+            missedDateOptions.innerHTML = '';
+
+            selectedClass.session_dates.forEach(date => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary text-light me-1 p-2 makeup-missed-date';
+                badge.style.cursor = 'pointer';
+                badge.dataset.date = date;
+                badge.textContent = date;
+                missedDateOptions.appendChild(badge);
+            });
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('makeupRequestModal'));
+            modal.show();
+        }
+
         // Event listeneer for makeup requests.
 
         document.getElementById('enrolledClassesContainer').addEventListener('click', (e) => {
