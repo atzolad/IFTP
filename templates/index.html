@@ -918,65 +918,56 @@
 
                 <!-- Header -->
                 <div class="modal-header">
-                    <div>
+                    <div class="d-flex flex-column">
                         <h5 class="modal-title" id="makeupRequestModalLabel">Request a Makeup Class</h5>
-                        <small class="text-muted">Note- Makeup classes are not guaranteed and depend on class
-                            availability. </small>
-                        <small class="text-muted" id="makeupModalSubtext">Select the session you need to miss</small>
+                        <div class="d-flex gap-2 mt-1">
+                            <span class="badge rounded-pill bg-primary" id="makeupStep1Pill">1 · Select missed
+                                session</span>
+                            <span class="badge rounded-pill bg-secondary" id="makeupStep2Pill">2 · Choose makeup</span>
+                        </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <!-- Body -->
                 <div class="modal-body">
-
-                    <!-- Stage 1: Pick missed session -->
+                    <!-- Pick missed session -->
                     <div id="makeupStage1">
                         <div class="alert alert-light border mb-4">
                             <strong id="makeupClassName"></strong>
                             <span class="text-muted"> — select the date you need to miss</span>
                         </div>
-                        <div class="d-flex flex-wrap gap-2" id="missedDateOptions">
-                            <!-- Selectable date badges injected here -->
-                        </div>
+                        <div class="d-flex flex-wrap gap-2" id="missedDateOptions"></div>
                     </div>
 
-                    <!-- Stage 2: Pick makeup session -->
+                    <!-- Pick makeup session -->
                     <div id="makeupStage2" style="display: none;">
                         <div class="alert alert-light border mb-4">
-                            <span class="text-muted">Finding makeup options </span>
+                            <span class="text-muted">Finding makeups for your missed </span>
                             <strong id="confirmedMissedDate"></strong>
                             <span class="text-muted"> session</span>
                         </div>
-                        <div class="row g-3" id="makeupClassOptions">
-                            <!-- Filtered class cards injected here -->
-                        </div>
+                        <div class="row g-3" id="makeupClassOptions"></div>
                     </div>
-
                 </div>
 
                 <!-- Footer -->
                 <div class="modal-footer">
                     <!-- Stage 1 footer -->
                     <div id="makeupStage1Footer" class="w-100 d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-primary" id="makeupNextBtn" disabled>
                             Next <i class="bi bi-arrow-right"></i>
                         </button>
                     </div>
 
                     <!-- Stage 2 footer -->
-                    <div id="makeupStage2Footer" class="w-100 d-flex justify-content-between"
-                        style="display: none !important;">
+                    <div id="makeupStage2Footer" class="w-100 justify-content-between" style="display: none;">
                         <button type="button" class="btn btn-outline-secondary" id="makeupBackBtn">
                             <i class="bi bi-arrow-left"></i> Back
                         </button>
-                        <div>
-                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="makeupSubmitBtn" disabled>
-                                <i class="bi bi-send"></i> Submit Request
-                            </button>
-                        </div>
+                        <button type="button" class="btn btn-primary" id="makeupSubmitBtn" disabled>
+                            <i class="bi bi-send"></i> Submit Request
+                        </button>
                     </div>
                 </div>
 
@@ -2298,6 +2289,7 @@
                 makeupClassId: null,
                 makeupDate: null,
             }
+            setMakeupStep(1);
 
             // Reset UI
             document.getElementById('makeupStage1').style.display = 'block';
@@ -2325,6 +2317,19 @@
             // Show the modal
             const modal = new bootstrap.Modal(document.getElementById('makeupRequestModal'));
             modal.show();
+        }
+
+        function setMakeupStep(step) {
+            const step1Pill = document.getElementById('makeupStep1Pill');
+            const step2Pill = document.getElementById('makeupStep2Pill');
+
+            if (step === 1) {
+                step1Pill.classList.replace('bg-secondary', 'bg-primary');
+                step2Pill.classList.replace('bg-primary', 'bg-secondary');
+            } else {
+                step1Pill.classList.replace('bg-primary', 'bg-secondary');
+                step2Pill.classList.replace('bg-secondary', 'bg-primary');
+            }
         }
 
         function renderMakeupOptions() {
@@ -2357,6 +2362,7 @@
                     <h6 class="card-title makeupClassName"></h6>
                     <p class="text-muted mb-1"><i class="bi bi-person"></i> <span class="makeupTeacher"></span></p>
                     <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="makeupSchedule"></span></p>
+                    <p class="text-muted mb-2"><i class="bi bi-people"></i> <span class="makeup-capacity"></span></p>
                     <strong class="d-block mb-2">Available Dates:</strong>
                     <div class="d-flex flex-wrap gap-2 makeupDateOptions"></div>
                 </div>
@@ -2366,9 +2372,10 @@
             col.querySelector('.makeupClassName').textContent = eligibleClass.name;
             col.querySelector('.makeupTeacher').textContent = eligibleClass.teacher;
             col.querySelector('.makeupSchedule').textContent = `${eligibleClass.day_of_week} at ${eligibleClass.time}`;
+            col.querySelector('.makeup-capacity').textContent = `${eligibleClass.enrolledCount} / ${eligibleClass.capacity} enrolled`;
 
             const datesContainer = col.querySelector('.makeupDateOptions');
-            eligibleClass.eligible_dates.forEach(date => {
+            eligibleClass.eligible_dates.filter(isFutureDate).forEach(date => {
                 const badge = document.createElement('span');
                 badge.className = 'badge bg-secondary text-light p-2 makeup-date-option';
                 badge.style.cursor = 'pointer';
@@ -2415,22 +2422,27 @@
             document.getElementById('confirmedMissedDate').textContent = makeupState.missedDate;
 
             document.getElementById('makeupStage1').style.display = 'none';
-            document.getElementById('makeupStage2.').style.display = 'block';
+            document.getElementById('makeupStage2').style.display = 'block';
             document.getElementById('makeupStage1Footer').style.display = 'none';
             document.getElementById('makeupStage2Footer').style.display = 'flex';
+            document.getElementById('makeupNextBtn').style.display = 'none';
 
+            setMakeupStep(2);
             renderMakeupOptions();
         })
 
         document.getElementById('makeupBackBtn').addEventListener('click', () => {
             document.getElementById('makeupStage1').style.display = 'block';
-            document.getElementById('makeupSatge2.').style.display = 'none';
+            document.getElementById('makeupStage2').style.display = 'none';
             document.getElementById('makeupStage1Footer').style.display = 'flex';
             document.getElementById('makeupStage2Footer').style.display = 'none';
+            document.getElementById('makeupNextBtn').style.display = 'block';
+
 
             makeupState.makeupClassId = null;
             makeupState.makeupDate = null;
             document.getElementById('makeupSubmitBtn').disabled = true;
+            setMakeupStep(1);
 
         })
 
@@ -3364,6 +3376,12 @@
         function getCurrentMonth() {
             const now = new Date();
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        }
+
+        function isFutureDate(dateStr) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return new Date(dateStr) > today;
         }
 
 
