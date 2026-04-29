@@ -80,6 +80,25 @@ type EnrollmentRequestInput struct {
 	Month            *time.Time `json:"month"`
 }
 
+type MakeupRequestInput struct {
+	RequestedClassID   int      `json:"requested_class_id"`
+	MissedSessionDates []string `json:"missed_session_dates"`
+	Reason             string   `json:"reason"`
+}
+
+type MakeupRequest struct {
+	ID           string      `db:"id" json:"id"`
+	StudentID    int         `db:"student_id" json:"student_id"`
+	StudentName  string      `db:"name" json:"name"`
+	StudentEmail string      `db:"email" json:"email"`
+	ClassID      int         `db:"class_id" json:"class_id"`
+	ClassName    string      `db:"class_name" json:"class_name"`
+	MissedDates  []time.Time `db:"missed_session_dates" json:"missed_session_dates"`
+	Reason       string      `db:"reason" json:"reason"`
+	Status       string      `db:"status" json:"status"`
+	RequestedAt  time.Time   `db:"requested_at" json:"requested_at"`
+}
+
 // GetRoster responds with the overall enrolled class lists
 func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
