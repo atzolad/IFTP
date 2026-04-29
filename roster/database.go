@@ -194,12 +194,25 @@ func dbEnrollStudent(ctx context.Context, tx pgx.Tx, studentId int, classId int,
 }
 
 func dbInsertMakeupRequest(ctx context.Context, tx pgx.Tx, studentId int, input *MakeupRequestInput, parsedDates []time.Time) error {
-	_, err := tx.Exec(ctx, `
-	INSERT INTO makeup_requests (student_id, class_id, missed_session_dates, reason)
-	VALUES ($1, $2, $3, $4)
-	`, studentId, input.ClassID, parsedDates, input.Reason)
+	var requestId string
+	err := tx.QueryRow(ctx, `
+	INSERT INTO makeup_requests (student_id, class_id, reason)
+	VALUES ($1, $2, $3)
+	`, studentId, input.ClassID, input.Reason).Scan(&requestId)
+	if err != nil {
+		return err
+	}
 
-	return err
+	for _, date := range parsedDates {
+		_, err := tx.Exec(ctx, `
+		INSERT INTO makeup_request_dates (makeup_request_id, missed_date)
+		VALUES ($1, $2)
+		`, requestId, date)
+		if err != nil {
+			return fmt.Errorf("Error inserting missed date %v: %w", date, err)
+		}
+	}
+	return nil
 }
 
 func dbGetMakeupRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRequest, error) {
@@ -210,14 +223,16 @@ func dbGetMakeupRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRequ
 	s.email,
 	mr.class_id, 
 	c.name as class_name,
-	mr.missed_session_dates,
+	ARRAY_AGG(mrd.missed_date ORDER BY mrd.missed_date) AS missed_session_dates,
 	mr.reason,
 	mr.status,
 	mr.requested_at
 	FROM makeup_requests mr
 	JOIN students s ON s.id = mr.student_id
 	JOIN classes c on c.id = mr.class_id
+	JOIN makeup_request_dates mrd ON mrd.makeup_request_id = mr.id
 	WHERE mr.status = 'Pending'
+	GROUP BY mr.id, mr.student_id, s.name, s.email, mr.class_id, c.name, mr.reason, mr.status, mr.requested_at
 	ORDER BY mr.requested_at ASC
 	`)
 
@@ -235,20 +250,45 @@ func dbGetMakeupRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRequ
 func dbUpdateMakeupRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) error {
 	var studentId int
 	var classId int
-	var missedDates []time.Time
 
 	err := tx.QueryRow(ctx, `
 	UPDATE makeup_requests
 	SET status = $1
 	WHERE id = $2
-	RETURNING student_id, class_id, missed_session_dates
-	`, status, requestId).Scan(&studentId, &classId, &missedDates)
+	RETURNING student_id, class_id
+	`, status, requestId).Scan(&studentId, &classId)
 
 	if err != nil {
 		return err
 	}
 
 	if status == "Approved" {
+		rows, err := tx.Query(ctx, `
+		SELECT missed_date FROM makeup_request_dates
+		WHERE makeup_request_id = $1
+		`, requestId)
+
+		if err != nil {
+			return fmt.Errorf("Error fetching missed dates: %w", err)
+		}
+		defer rows.Close()
+
+		var missedDates []time.Time
+		for rows.Next() {
+			var date time.Time
+			if err := rows.Scan(&date); err != nil {
+				return err
+			}
+			missedDates = append(missedDates, date)
+		}
+		if err := rows.Err(); err != nil {
+			return fmt.Errorf("Errr iterating missed dates: %w", err)
+		}
+
+		if len(missedDates) == 0 {
+			return fmt.Errorf("no missed dates found for request %v", requestId)
+		}
+
 		for _, date := range missedDates {
 			_, err := tx.Exec(ctx, `
 			UPDATE roster
@@ -262,12 +302,12 @@ func dbUpdateMakeupRequestStatus(ctx context.Context, tx pgx.Tx, requestId strin
 			}
 		}
 
-		_, err := tx.Exec(ctx, `
+		_, err = tx.Exec(ctx, `
 			UPDATE students
 			SET makeup_credits = makeup_credits + $1
 			WHERE id = $2`, len(missedDates), studentId)
 		if err != nil {
-			return fmt.Errorf("Error updating makeup credits: %v", err)
+			return fmt.Errorf("Error updating makeup credits: %w", err)
 		}
 	}
 
