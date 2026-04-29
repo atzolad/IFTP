@@ -636,7 +636,23 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-func 
+func GetMakeupRequests(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		requests, err := dbGetMakeupRequests(ctx, myDb)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error fetching makeup requests",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error fetching makeup requests: %v", err)
+			return
+		}
+		utils.WriteJSONResponse(w, http.StatusOK, requests)
+	}
+}
 
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students

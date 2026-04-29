@@ -201,6 +201,37 @@ func dbInsertMakeupRequest(ctx context.Context, tx pgx.Tx, studentId int, input 
 	return err
 }
 
+func dbGetMakeupRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRequest, error) {
+	rows, err := myDb.Pool.Query(ctx, `
+	SELECT mr.id,
+	mr.student_id, 
+	s.name, 
+	s.email,
+	mr.class_id, 
+	c.name as class_name,
+	mr.missed_session_dates,
+	mr.reason,
+	mr.status,
+	mr.requested_at
+	FROM makeup_requests mr
+	JOIN students s ON s.id = mr.student_id
+	JOIN classes c on c.id = mr.class_id
+	WHERE mr.status = 'Pending'
+	ORDER BY mr.requested_at ASC
+	`)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	requests, err := pgx.CollectRows(rows, pgx.RowToStructByName[MakeupRequest])
+	if err != nil {
+		return nil, err
+	}
+	return requests, nil
+}
+
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
 
 // 	var rosterID int

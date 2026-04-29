@@ -138,6 +138,7 @@ func main() {
 	protectedMux.HandleFunc("PATCH /enrollment_requests/{request_id}", roster.UpdateEnrollmentRequest(myDb))
 
 	// Makeup Request Endpoints
+	protectedMux.HandleFunc("GET /makeup_requests", roster.GetMakeupRequests(myDb))
 	protectedMux.HandleFunc("POST /makeup_requests", roster.CreateMakeupRequest(myDb))
 
 	// Calendar Endpoints
