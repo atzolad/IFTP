@@ -3,6 +3,7 @@ package roster
 import (
 	"IFTP/db"
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -230,6 +231,48 @@ func dbGetMakeupRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRequ
 		return nil, err
 	}
 	return requests, nil
+}
+func dbUpdateMakeupRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) error {
+	var studentId int
+	var classId int
+	var missedDates []time.Time
+
+	err := tx.QueryRow(ctx, `
+	UPDATE makeup_requests
+	SET status = $1
+	WHERE id = $2
+	RETURNING student_id, class_id, missed_session_dates
+	`, status, requestId).Scan(&studentId, &classId, &missedDates)
+
+	if err != nil {
+		return err
+	}
+
+	if status == "Approved" {
+		for _, date := range missedDates {
+			_, err := tx.Exec(ctx, `
+			UPDATE roster
+			SET status = 'Away'
+			WHERE student_id = $1
+			AND class_id = $2
+			AND class_date = $3
+			`, studentId, classId, date)
+			if err != nil {
+				return fmt.Errorf("Error updating roster for date %v, %w", date, err)
+			}
+		}
+
+		_, err := tx.Exec(ctx, `
+			UPDATE students
+			SET makeup_credits = makeup_credits + $1
+			WHERE id = $2`, len(missedDates), studentId)
+		if err != nil {
+			return fmt.Errorf("Error updating makeup credits: %v", err)
+		}
+	}
+
+	return nil
+
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
