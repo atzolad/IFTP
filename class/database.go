@@ -22,7 +22,7 @@ func dbListClasses(ctx context.Context, myDb *db.MyDatabase) ([]Class, error) {
 		COUNT(DISTINCT r.student_id) AS enrolled_count
 		FROM classes AS c
 		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id
-		LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date
+		LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date AND r.status = 'Enrolled'
 		WHERE active = True
 		GROUP BY cs.month, c.id
 		ORDER  BY cs.month DESC`)
@@ -61,7 +61,7 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 	}
 
 	query.WriteString(` 
-			LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date
+			LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date AND r.status = 'Enrolled'
 			WHERE c.active = True`)
 
 	if studentId != nil {
@@ -107,18 +107,25 @@ func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, mont
 	var query strings.Builder
 	var args []any
 
-	query.WriteString(`
+	var studentJoin string
+	if studentId != nil {
+		args = append(args, *studentId)
+		studentJoin = fmt.Sprintf("LEFT JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date AND r_student.student_id = $%d", len(args))
+	} else {
+		studentJoin = "LEFT JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date"
+	}
+
+	query.WriteString(fmt.Sprintf(`
 	SELECT c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity, cs.month, ARRAY_AGG(DISTINCT cs.session_date ORDER BY cs.session_date) AS session_dates, COUNT(DISTINCT r_all.student_id) AS enrolled_count
 	FROM classes c
 	JOIN class_schedule cs ON cs.class_id = c.id
-	JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date
-	LEFT JOIN roster r_all ON r_all.class_id = c.id AND r_all.class_date = cs.session_date
+	%s
+	LEFT JOIN roster r_all ON r_all.class_id = c.id AND r_all.class_date = cs.session_date AND r_all.status = 'Enrolled'
 	WHERE c.active = true 
-	`)
+	`, studentJoin))
 
 	if studentId != nil {
-		args = append(args, *studentId)
-		fmt.Fprintf(&query, " AND r_student.student_id = $%d ", len(args))
+		query.WriteString(" AND r_student.student_id IS NOT NULL ")
 	}
 
 	if month != "" {
@@ -134,22 +141,11 @@ func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, mont
 	}
 	defer rows.Close()
 
-	// var classes []Class
-
 	classes, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[Class])
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving student enrolled classes from db: %v", err)
 	}
 
-	// for rows.Next() {
-
-	// 	var class Class
-	// 	if err := rows.Scan(&class.ID, &class.Name, &class.Teacher, &class.DayOfWeek, &class.Time,
-	// 		&class.Description, &class.Capacity, &class.Month, (*pq.StringArray)(&class.SessionDates), &class.EnrolledCount); err != nil {
-	// 		return nil, err
-	// 	}
-	// 	classes = append(classes, class)
-	// }
 	return classes, nil
 }
 
