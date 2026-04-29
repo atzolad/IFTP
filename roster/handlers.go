@@ -2,6 +2,7 @@ package roster
 
 import (
 	"IFTP/db"
+	"IFTP/timeutils"
 	"IFTP/utils"
 	"encoding/json"
 	"fmt"
@@ -81,7 +82,7 @@ type EnrollmentRequestInput struct {
 }
 
 type MakeupRequestInput struct {
-	ClassID            int      `json:"requested_class_id"`
+	ClassID            int      `json:"class_id"`
 	MissedSessionDates []string `json:"missed_session_dates"`
 	Reason             string   `json:"reason"`
 }
@@ -338,7 +339,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created enrollment request")
-		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v", studentId, newEnrollmentRequest.ClassID)
+		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v", studentId, newEnrollmentRequest.RequestedClassID)
 
 	}
 }
@@ -554,7 +555,7 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&makeupRequest); err != nil {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
-				Message: "Error Decoding Request: %v",
+				Message: "Error Decoding Request",
 				Code:    http.StatusBadRequest,
 			})
 			myDb.Logger.Printf("Error decoding Request: %v,", err)
@@ -567,7 +568,6 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Class ID is required",
 				Code:    http.StatusBadRequest,
 			})
-			myDb.Logger.Printf("Class ID not sent with makeup request: %v,", err)
 			return
 		}
 
@@ -577,13 +577,12 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 				Message: "Must provide at least one session date",
 				Code:    http.StatusBadRequest,
 			})
-			myDb.Logger.Printf("Session dates not sent with makeup request: %v,", err)
 			return
 		}
 
 		parsedDates := make([]time.Time, 0, len(makeupRequest.MissedSessionDates))
 		for _, dateStr := range makeupRequest.MissedSessionDates {
-			date, err := time.Parse("2006-01-02", dateStr)
+			date, err := timeutils.ParseDate(dateStr)
 			if err != nil {
 				utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 					Status:  "error",
@@ -609,7 +608,7 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 
 		defer tx.Rollback(ctx)
 
-		if err := dbInsertMakeupRequest(ctx, tx, &makeupRequest, parsedDates); err != nil {
+		if err := dbInsertMakeupRequest(ctx, tx, studentId, &makeupRequest, parsedDates); err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
 				Message: "Error creating makeup request",
@@ -636,6 +635,8 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		myDb.Logger.Printf("Successfully created makeup request for student id %v in class id %v", studentId, makeupRequest.ClassID)
 	}
 }
+
+func 
 
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students

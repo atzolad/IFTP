@@ -132,10 +132,13 @@ func main() {
 	protectedMux.HandleFunc("GET /roster/enrollment/{student_id}", roster.GetStudentEnrollment(myDb))
 	protectedMux.HandleFunc("POST /roster/{class_id}/enroll", roster.EnrollStudent(myDb))
 
-	//Enrollment Request Endpoints
+	// Enrollment Request Endpoints
 	protectedMux.HandleFunc("POST /enrollment_requests", roster.CreateEnrollmentRequest(myDb))
 	protectedMux.HandleFunc("GET /enrollment_requests", roster.GetEnrollmentRequests(myDb))
 	protectedMux.HandleFunc("PATCH /enrollment_requests/{request_id}", roster.UpdateEnrollmentRequest(myDb))
+
+	// Makeup Request Endpoints
+	protectedMux.HandleFunc("POST /makeup_requests", roster.CreateMakeupRequest(myDb))
 
 	// Calendar Endpoints
 	protectedMux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))

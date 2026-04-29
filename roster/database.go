@@ -192,12 +192,15 @@ func dbEnrollStudent(ctx context.Context, tx pgx.Tx, studentId int, classId int,
 	return err
 }
 
-// func dbInsertMakeupREquest(ctx context.Context, tx pgx.Tx, request *MakeupRequestInput, studentId int) error {
-// 	_, err := tx.Exec(ctx, `
-// 	INSERT INTO makeup_requests (student_id, class_id, missed_session_dates, reason)
+func dbInsertMakeupRequest(ctx context.Context, tx pgx.Tx, studentId int, input *MakeupRequestInput, parsedDates []time.Time) error {
+	_, err := tx.Exec(ctx, `
+	INSERT INTO makeup_requests (student_id, class_id, missed_session_dates, reason)
+	VALUES ($1, $2, $3, $4)
+	`, studentId, input.ClassID, parsedDates, input.Reason)
 
-// 	`)
-// }
+	return err
+}
+
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
 
 // 	var rosterID int
