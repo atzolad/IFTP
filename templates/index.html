@@ -541,6 +541,12 @@
                     <div id="studentEnrollmentRequestContainer">
                         <!-- Insert enrollment requests here -->
                     </div>
+                    <h4 class="mb-3 mt-4">Student Missed Class Requests</h4>
+                    <p class="text-muted">Review and approve student requests to makeup classes. Approving will give
+                        student a makeup credit</p>
+                    <div id="studentMakeupRequestContainer">
+                        <!-- Insert makeup requests here -->
+                    </div>
             </main>
         </div>
     </div>
@@ -1272,6 +1278,33 @@
             }
         }
 
+        async function renderMakeupRequests() {
+            const apiEndpoint = `${baseUrl}/makeup_requests`;
+            const container = document.getElementById('studentMakeupRequestContainer');
+
+            try {
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) throw new Error('Failed to fetch makeup requests');
+
+                const requests = await response.json();
+                console.log(requests)
+
+                container.innerHTML = '';
+
+                if (!requests || requests.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No pending makeup requests.</p>';
+                    return;
+                }
+
+                requests.forEach(request => renderMakeupRequestCard(request, container));
+
+            } catch (err) {
+                console.error('Error fetching makeup requests', err);
+                container.innterHTML = '<p class="text-danger">Failed to load makeup requests.</p>';
+            }
+        }
+
+
         function renderRequestCard(request, container) {
             const card = document.createElement('div');
             card.className = 'card mb-3';
@@ -1345,6 +1378,106 @@
                 }
             }
         });
+
+        function renderMakeupRequestCard(request, container) {
+            const card = document.createElement('div');
+            card.className = 'card mb-3';
+
+            card.innerHTML = `
+            <div class="card-header bg-white text-black">
+            <h5 class="mb-0">Makeup Request - <span class="makeup_req_student_name"></span></h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Student:</strong> <span class="makeup_req_student_name"></span></p>
+                        <p><strong>Email:</strong> <span class="makeup_req_student_email"></span></p>
+                        <p><strong>Request Date:</strong> <span class="makeup_req_date"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Class:</strong> <span class="makeup_req_class_name"></span></p>
+                        <p><strong>Missed Dates:</strong></p>
+                        <div class="makeup_req_missed_dates mb-2"></div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <p><strong>Reason:</strong></p>
+                    <p class="makeup_req_reason text-muted"></p>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary me-2 makeupReqApproveBtn">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                    <button class="btn btn-secondary makeupReqDenyBtn">
+                        <i class="bi bi-x-circle"></i> Deny
+                    </button>
+                </div>
+            </div>`;
+
+            card.querySelectorAll('.makeup_req_student_name').forEach(element => element.textContent = ` ${request.name}`);
+            card.querySelector('.makeup_req_student_email').textContent = request.email;
+            card.querySelector('.makeup_req_date').textContent = new Date(request.requested_at).toISOString().split('T')[0];
+            card.querySelector('.makeup_req_class_name').textContent = request.class_name;
+            card.querySelector('.makeup_req_reason').textContent = request.reason || 'No reason given';
+
+            const datesContainer = card.querySelector('.makeup_req_missed_dates');
+            request.missed_session_dates.forEach(date => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary me-1';
+                badge.textContent = new Date(date).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', timeZone: 'UTC'
+                });
+                datesContainer.appendChild(badge)
+            })
+
+            card.querySelector('.makeupReqApproveBtn').dataset.requestId = request.id;
+            card.querySelector('.makeupReqDenyBtn').dataset.requestId = request.id;
+
+            container.appendChild(card);
+
+        }
+
+        async function handleMakeupRequest(requestId, status) {
+            try {
+                const response = await fetch(`${baseUrl}/makeup_request/${requestId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+
+                if (!repsonse.ok) {
+                    alert('Error handling makeup request. Please try again');
+                    return;
+                }
+                //  Re-render makeup requests after processing
+                renderMakeupRequests();
+
+            } catch (err) {
+                console.error('Error handling makeup request:', err)
+            }
+        }
+
+        // Event listener for makeup request card buttons
+        const makeupRequestContainer = document.getElementById('studentMakeupRequestContainer');
+        makeupRequestContainer.addEventListener('click', (event) => {
+            const approveBtn = event.target.closest('.makeupReqApproveBtn');
+
+            if (approveBtn) {
+                if (confirm('Approve this makeup request?')) {
+                    const requestId = approveBtn.dataset.requestId;
+                    handleMakeupRequest(requestId, 'Approved')
+                    return
+                }
+            }
+
+            if (denyBtn) {
+                if (confirm('Deny this makeup request?')) {
+                    const requestId = denyBtn.dataset.requestId;
+                    handleMakeupRequest(requestId, 'Denied')
+                }
+            }
+        });
+
 
         // TODO when splitting up the admin login- populate that info from the session as well. 
 
@@ -1853,7 +1986,10 @@
             window.ManageStudentsInitialized = true;
 
             renderEnrollmentRequests();
-            window.ManageEnrollmentRequstsInitialized = true;
+            window.EnrollmentRequstsInitialized = true;
+
+            renderMakeupRequests();
+            window.MakeupRequestsInitialized = true;
 
             renderScheduleApprovals();
             window.ScheduleApprovalsInitialized = true;
