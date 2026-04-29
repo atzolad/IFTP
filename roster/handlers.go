@@ -81,7 +81,7 @@ type EnrollmentRequestInput struct {
 }
 
 type MakeupRequestInput struct {
-	RequestedClassID   int      `json:"requested_class_id"`
+	ClassID            int      `json:"requested_class_id"`
 	MissedSessionDates []string `json:"missed_session_dates"`
 	Reason             string   `json:"reason"`
 }
@@ -338,7 +338,7 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		utils.WriteJSONResponse(w, http.StatusOK, "Successfully created enrollment request")
-		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v", studentId, newEnrollmentRequest.RequestedClassID)
+		myDb.Logger.Printf("Successfully created enrollment request for student id : %v and class id: %v", studentId, newEnrollmentRequest.ClassID)
 
 	}
 }
@@ -531,6 +531,109 @@ func EnrollStudent(myDb *db.MyDatabase) http.HandlerFunc {
 			Message: "Student successfully enrolled",
 			Code:    http.StatusOK,
 		})
+	}
+}
+
+func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+
+		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
+		if !ok || studentId == 0 {
+			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
+				Status:  "error",
+				Message: "Unauthorized",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
+
+		var makeupRequest MakeupRequestInput
+
+		if err := json.NewDecoder(r.Body).Decode(&makeupRequest); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Decoding Request: %v",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Error decoding Request: %v,", err)
+			return
+		}
+
+		if makeupRequest.ClassID == 0 {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Class ID is required",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Class ID not sent with makeup request: %v,", err)
+			return
+		}
+
+		if len(makeupRequest.MissedSessionDates) == 0 {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Must provide at least one session date",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Session dates not sent with makeup request: %v,", err)
+			return
+		}
+
+		parsedDates := make([]time.Time, 0, len(makeupRequest.MissedSessionDates))
+		for _, dateStr := range makeupRequest.MissedSessionDates {
+			date, err := time.Parse("2006-01-02", dateStr)
+			if err != nil {
+				utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+					Status:  "error",
+					Message: "Error parsing missed session dates",
+					Code:    http.StatusBadRequest,
+				})
+				myDb.Logger.Printf("Error parsing missed session dates: %v,", err)
+				return
+			}
+			parsedDates = append(parsedDates, date)
+		}
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Begining transcation",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error Begining transcation: %v", err)
+			return
+		}
+
+		defer tx.Rollback(ctx)
+
+		if err := dbInsertMakeupRequest(ctx, tx, &makeupRequest, parsedDates); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error creating makeup request",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error inserting makeup request: %v", err)
+			return
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Failed to commit makeup database transaction",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, utils.ResponseData{
+			Status:  "success",
+			Message: "Makeup Request submitted successfully",
+			Code:    http.StatusOK,
+		})
+		myDb.Logger.Printf("Successfully created makeup request for student id %v in class id %v", studentId, makeupRequest.ClassID)
 	}
 }
 
