@@ -394,11 +394,13 @@ func dbUpdateMakeupRedemptionRequestStatus(ctx context.Context, tx pgx.Tx, reque
 			return fmt.Errorf("Failed to deduct makeup credits: student has 0 credits or does not exist")
 		}
 
-		scheduleMonth := time.Date(requestedDate.Year(), requestedDate.Month(), 1, 0, 0, 0, 0, requestedDate.Location())
-
-		err = dbEnrollStudent(ctx, tx, studentId, classId, scheduleMonth)
+		_, err = tx.Exec(ctx, `
+		INSERT INTO roster (student_id, class_id, class_date, registration_date, status)
+		VALUES ($1, $2, $3, NOW(), 'Enrolled')`,
+			studentId, classId, requestedDate,
+		)
 		if err != nil {
-			return fmt.Errorf("error enrolling student into redemption class: %w", err)
+			return fmt.Errorf("Error inserting into roster for makeup redemption: %w", err)
 		}
 
 	}
