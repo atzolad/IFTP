@@ -2673,7 +2673,7 @@
             console.log('Submitting makeup redemption request:', requestBody)
 
             try {
-                const resp = await fetch(`/makeup_redemption`, {
+                const resp = await fetch(`/makeup_redemptions`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody)

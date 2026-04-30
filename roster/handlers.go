@@ -100,6 +100,24 @@ type MakeupRequest struct {
 	RequestedAt  time.Time   `db:"requested_at" json:"requested_at"`
 }
 
+type MakeupRedemptionReq struct {
+	RequestedClassID int    `json:"requested_class_id"`
+	RequestedDate    string `json:"requested_date"`
+	Note             string `json:"note"`
+}
+
+type MakeupRedemption struct {
+	ID               string    `db:"id" json:"id"`
+	StudentID        int       `db:"student_id" json:"student_id"`
+	StudentName      string    `db:"name" json:"name"`
+	StudentEmail     string    `db:"email" json:"email"`
+	RequestedClassID int       `db:"requested_class_id" json:"requested_class_id"`
+	RequestedDate    time.Time `db:"requested_date" json:"requested_date"`
+	Note             string    `db:"note" json:"note"`
+	Status           string    `db:"status" json:"status"`
+	RequestedAt      time.Time `db:"requested_at" json:"requested_at"`
+}
+
 // GetRoster responds with the overall enrolled class lists
 func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -720,6 +738,95 @@ func UpdateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 			Code:    http.StatusOK,
 		})
 		myDb.Logger.Printf("Successfully updated makeup request with id %v to %v", requestId, input.Status)
+	}
+}
+
+func CreateMakeupRedemptionRequest(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+
+		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
+		if !ok || studentId == 0 {
+			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
+				Status:  "error",
+				Message: "Unauthorized",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
+
+		var redemptionRequest MakeupRedemptionReq
+
+		if err := json.NewDecoder(r.Body).Decode(&redemptionRequest); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Decoding Request",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Error decoding Request: %v,", err)
+			return
+		}
+
+		if redemptionRequest.RequestedClassID == 0 || redemptionRequest.RequestedDate == "" {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Class ID and class date are required",
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		parsedDate, err := timeutils.ParseDate(redemptionRequest.RequestedDate)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error parsing requested session date",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Error parsing missed session dates: %v,", err)
+			return
+		}
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Begining transcation",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error Begining transcation: %v", err)
+			return
+		}
+
+		defer tx.Rollback(ctx)
+
+		if err := dbInsertMakeupRedemptionRequest(ctx, tx, studentId, &redemptionRequest, parsedDate); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error creating makeup redemption request",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error inserting makeup redemption request: %v", err)
+			return
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Failed to commit makeup database transaction",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, utils.ResponseData{
+			Status:  "success",
+			Message: "Makeup Request submitted successfully",
+			Code:    http.StatusOK,
+		})
+		myDb.Logger.Printf("Successfully created makeup redemption request for student id %v in class id %v", studentId, redemptionRequest.RequestedClassID)
+
 	}
 }
 

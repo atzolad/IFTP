@@ -242,12 +242,13 @@ func dbGetMakeupRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRequ
 	}
 	defer rows.Close()
 
-	requests, err := pgx.CollectRows(rows, pgx.RowToStructByName[MakeupRequest])
+	requests, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[MakeupRequest])
 	if err != nil {
 		return nil, err
 	}
 	return requests, nil
 }
+
 func dbUpdateMakeupRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) error {
 	var studentId int
 	var classId int
@@ -314,6 +315,58 @@ func dbUpdateMakeupRequestStatus(ctx context.Context, tx pgx.Tx, requestId strin
 
 	return nil
 
+}
+
+func dbInsertMakeupRedemptionRequest(ctx context.Context, tx pgx.Tx, studentId int, input *MakeupRedemptionReq, parsedDate time.Time) error {
+	var redemptionId string
+	err := tx.QueryRow(ctx, `
+	INSERT INTO makeup_redemptions (student_id, requested_class_id, requested_date, note)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id
+	`, studentId, input.RequestedClassID, parsedDate, input.Note).Scan(&redemptionId)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, `
+	UPDATE students
+	SET makeup_credits = makeup_credits - 1
+	WHERE id = $1 AND makeup_credits > 0`, studentId)
+	if err != nil {
+		return fmt.Errorf("Error updating makeup credits: %w", err)
+	}
+	return nil
+}
+
+func dbGetMakeupRedemptionRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRedemption, error) {
+	rows, err := myDb.Pool.Query(ctx, `
+	SELECT mr.id,
+	mr.student_id, 
+	s.name, 
+	s.email,
+	mr.requested_class_id, 
+	c.name as class_name,
+	mr.requested_date,
+	mr.note,
+	mr.status,
+	mr.requested_at
+	FROM makeup_redemptions mr
+	JOIN students s ON s.id = mr.student_id
+	JOIN classes c on c.id = mr.requested_class_id
+	WHERE mr.status = 'Pending'
+	ORDER BY mr.requested_at ASC
+	`)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	requests, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[MakeupRedemption])
+	if err != nil {
+		return nil, err
+	}
+	return requests, nil
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {
