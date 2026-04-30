@@ -37,6 +37,7 @@ type StudentLogin struct {
 	Name          string `db:"name" json:"name"`
 	Email         string `db:"email" json:"email"`
 	MakeupCredits int    `db:"makeup_credits" json:"makeup_credits"`
+	IsAdmin       bool   `json:"is_admin"`
 }
 
 type GoogleUserEmail struct {
@@ -221,6 +222,7 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 		session.Values["email"] = user.Email
 		session.Values["name"] = student.Name
 		session.Values["makeup_credits"] = student.MakeupCredits
+		session.Values["is_admin"] = student.IsAdmin
 
 		// save the user session
 		if err = session.Save(r, w); err != nil {
@@ -269,6 +271,7 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 		userName, _ := session.Values["name"].(string)
 		userEmail, _ := session.Values["email"].(string)
 		makeupCredits, _ := session.Values["makeup_credits"].(int)
+		isAdmin, _ := session.Values["is_admin"].(bool)
 
 		if userName == "" || userEmail == "" {
 
@@ -281,6 +284,7 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 			Name:          userName,
 			Email:         userEmail,
 			MakeupCredits: makeupCredits,
+			IsAdmin:       isAdmin,
 		}
 
 		WriteJSONResponse(w, http.StatusOK, userData)
@@ -357,6 +361,32 @@ func RequireAuth(next http.Handler) http.HandlerFunc {
 	}
 }
 
+func RequireAdmin(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, err := gothic.Store.Get(r, "goth_session")
+
+		// Check if is_admin is true in the session
+		isAdmin, _ := session.Values["is_admin"].(bool)
+
+		if err != nil || !isAdmin {
+			// If they are trying to access an API, return JSON
+			if r.Header.Get("Accept") == "application/json" {
+				WriteJSONResponse(w, http.StatusForbidden, ResponseData{
+					Status:  "error",
+					Message: "Admin privileges required",
+					Code:    http.StatusForbidden,
+				})
+				return
+			}
+			// Otherwise, kick them back to index or an unauthorized page
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
 func HandleLogout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Logout handler!")
@@ -417,7 +447,7 @@ func dbAddStudentOrRetreiveId(ctx context.Context, myDb *db.MyDatabase, s *Stude
 	INSERT INTO students (name, email)
 	VALUES ($1, $2)
 	ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
-	RETURNING id, name, email, makeup_credits`, s.Name, s.Email).Scan(&s.ID, &s.Name, &s.Email, &s.MakeupCredits)
+	RETURNING id, name, email, makeup_credits, is_admin`, s.Name, s.Email).Scan(&s.ID, &s.Name, &s.Email, &s.MakeupCredits, &s.IsAdmin)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error adding or retrieving student from db for login: %v", err)

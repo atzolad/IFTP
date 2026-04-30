@@ -121,39 +121,39 @@ func main() {
 	protectedMux.HandleFunc("GET /classes/all", class.ListClasses(myDb))
 	protectedMux.HandleFunc("GET /classes", class.ListClassesByMonth(myDb))
 	protectedMux.HandleFunc("GET /classes/{student_id}", class.ListClassesByMonth(myDb))
-	protectedMux.HandleFunc("PATCH /classes/{class_id}", class.UpdateClass(myDb))
-	protectedMux.HandleFunc("POST /classes", class.CreateClass(myDb))
-	protectedMux.HandleFunc("POST /classes/schedule_approval/generate", class.TriggerScheduleApprovals(myDb))
-	protectedMux.HandleFunc("GET /classes/schedule_approval", class.GetPendingScheduleApprovals(myDb))
+	protectedMux.HandleFunc("PATCH /classes/{class_id}", utils.RequireAdmin(class.UpdateClass(myDb)))
+	protectedMux.HandleFunc("POST /classes", utils.RequireAdmin(class.CreateClass(myDb)))
+	protectedMux.HandleFunc("POST /classes/schedule_approval/generate", utils.RequireAdmin(class.TriggerScheduleApprovals(myDb)))
+	protectedMux.HandleFunc("GET /classes/schedule_approval", utils.RequireAdmin(class.GetPendingScheduleApprovals(myDb)))
 	protectedMux.HandleFunc("PATCH /classes/schedule_approval/confirm/{approval_id}", class.ConfirmScheduleApproval(myDb))
 
 	// Roster Endpoints
-	protectedMux.HandleFunc("GET /roster/{class_id}", roster.GetRoster(myDb))
-	protectedMux.HandleFunc("GET /roster/enrollment/{student_id}", roster.GetStudentEnrollment(myDb))
+	protectedMux.HandleFunc("GET /roster/{class_id}", utils.RequireAdmin(roster.GetRoster(myDb)))
+	protectedMux.HandleFunc("GET /roster/enrollment/{student_id}", utils.RequireAdmin(roster.GetStudentEnrollment(myDb)))
 	protectedMux.HandleFunc("POST /roster/{class_id}/enroll", roster.EnrollStudent(myDb))
 
 	// Enrollment Request Endpoints
 	protectedMux.HandleFunc("POST /enrollment_requests", roster.CreateEnrollmentRequest(myDb))
-	protectedMux.HandleFunc("GET /enrollment_requests", roster.GetEnrollmentRequests(myDb))
-	protectedMux.HandleFunc("PATCH /enrollment_requests/{request_id}", roster.UpdateEnrollmentRequest(myDb))
+	protectedMux.HandleFunc("GET /enrollment_requests", utils.RequireAdmin(roster.GetEnrollmentRequests(myDb)))
+	protectedMux.HandleFunc("PATCH /enrollment_requests/{request_id}", utils.RequireAdmin(roster.UpdateEnrollmentRequest(myDb)))
 
 	// Makeup Request Endpoints
-	protectedMux.HandleFunc("GET /makeup_requests", roster.GetMakeupRequests(myDb))
+	protectedMux.HandleFunc("GET /makeup_requests", utils.RequireAdmin(roster.GetMakeupRequests(myDb)))
 	protectedMux.HandleFunc("POST /makeup_requests", roster.CreateMakeupRequest(myDb))
-	protectedMux.HandleFunc("PATCH /makeup_request/{request_id}", roster.UpdateMakeupRequest(myDb))
-	protectedMux.HandleFunc("GET /makeup_redemptions", roster.GetMakeupRedemptionRequests(myDb))
-	protectedMux.HandleFunc("POST /makeup_redemptions", roster.CreateMakeupRedemptionRequest(myDb))
-	protectedMux.HandleFunc("PATCH /makeup_redemptions/{request_id}", roster.UpdateMakeupRedemptionRequest(myDb))
+	protectedMux.HandleFunc("PATCH /makeup_request/{request_id}", utils.RequireAdmin(roster.UpdateMakeupRequest(myDb)))
+	protectedMux.HandleFunc("GET /makeup_redemptions", utils.RequireAdmin(roster.GetMakeupRedemptionRequests(myDb)))
+	// protectedMux.HandleFunc("POST /makeup_redemptions", roster.CreateMakeupRedemptionRequest(myDb))
+	protectedMux.HandleFunc("PATCH /makeup_redemptions/{request_id}", utils.RequireAdmin(roster.UpdateMakeupRedemptionRequest(myDb)))
 
 	// Calendar Endpoints
-	protectedMux.HandleFunc("GET /calendarEvents", class.GetCalendarEvents(myDb))
+	protectedMux.HandleFunc("GET /calendarEvents", utils.RequireAdmin(class.GetCalendarEvents(myDb)))
 	protectedMux.HandleFunc("GET /calendarEvents/{student_id}", class.GetCalendarEventsByStudent(myDb))
 
 	// Student Endpoints
-	protectedMux.HandleFunc("GET /students", students.GetStudents(myDb))
-	protectedMux.HandleFunc("GET /students/enrollment", students.GetStudentsWithEnrollment(myDb))
-	protectedMux.HandleFunc("POST /students", students.AddStudent(myDb))
-	protectedMux.HandleFunc("PATCH /students/{student_id}", students.UpdateStudent(myDb))
+	protectedMux.HandleFunc("GET /students", utils.RequireAdmin(students.GetStudents(myDb)))
+	protectedMux.HandleFunc("GET /students/enrollment", utils.RequireAdmin(students.GetStudentsWithEnrollment(myDb)))
+	protectedMux.HandleFunc("POST /students", utils.RequireAdmin(students.AddStudent(myDb)))
+	protectedMux.HandleFunc("PATCH /students/{student_id}", utils.RequireAdmin(students.UpdateStudent(myDb)))
 
 	myDb.Logger.Printf("Server starting on :%v", port)
 	if err := http.ListenAndServe(":"+port, wrappedMux); err != nil {

@@ -1111,11 +1111,11 @@
     </div>
 
     <!-- View Toggle Button (for demo purposes) -->
-    <div class="view-toggle">
+    <!-- <div class="view-toggle">
         <button class="btn btn-dark btn-lg rounded-circle" onclick="toggleView()" title="Toggle Admin/Student View">
             <i class="bi bi-arrow-left-right"></i>
         </button>
-    </div>
+    </div> -->
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1128,31 +1128,31 @@
 
 
 
-        function toggleView() {
-            isAdminView = !isAdminView;
-            const studentView = document.getElementById('studentView');
-            const adminView = document.getElementById('adminView');
-            // const userName = document.getElementById('userName');
+        // function toggleView() {
+        //     isAdminView = !isAdminView;
+        //     const studentView = document.getElementById('studentView');
+        //     const adminView = document.getElementById('adminView');
+        //     // const userName = document.getElementById('userName');
 
-            if (isAdminView) {
-                studentView.classList.add('d-none');
-                adminView.classList.remove('d-none');
-                if (adminCalendar) {
-                    setTimeout(() => {
-                        adminCalendar.updateSize();
-                    }, 50);
-                }
-            } else {
-                studentView.classList.remove('d-none');
-                adminView.classList.add('d-none');
-                // userName.textContent = 'Student Name';
-                if (studentCalendar) {
-                    setTimeout(() => {
-                        studentCalendar.updateSize();
-                    }, 50);
-                }
-            }
-        }
+        //     if (isAdminView) {
+        //         studentView.classList.add('d-none');
+        //         adminView.classList.remove('d-none');
+        //         if (adminCalendar) {
+        //             setTimeout(() => {
+        //                 adminCalendar.updateSize();
+        //             }, 50);
+        //         }
+        //     } else {
+        //         studentView.classList.remove('d-none');
+        //         adminView.classList.add('d-none');
+        //         // userName.textContent = 'Student Name';
+        //         if (studentCalendar) {
+        //             setTimeout(() => {
+        //                 studentCalendar.updateSize();
+        //             }, 50);
+        //         }
+        //     }
+        // }
 
         function showAdminSection(section) {
             // Hide all sections
@@ -2138,8 +2138,8 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
 
-            const userInfo = await getUserAuth();
 
+            const userInfo = await getUserAuth();
             console.log('Userinfo:', userInfo)
 
             // if (!userInfo) {
@@ -2155,61 +2155,126 @@
 
             console.log('Auth User:', authUser)
 
-            const monthFilter = document.getElementById('monthFilter');
-            populateMonthDropdown('monthFilter');
-            currentMonth = document.getElementById('monthFilter').value
-            selectedMonth = currentMonth;
-            const nextMonth = new Date(currentMonth);
-            nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
-            nextMonthStr = nextMonth.toISOString().substring(0, 10);
+            const studentView = document.getElementById('studentView');
+            const adminView = document.getElementById('adminView');
 
-            //TODO- Need to remove this hardcoded student id and replace with the logged in students id.
+            if (userInfo.is_admin) {
+                // ADMIN VIEW 
+                if (adminView) adminView.classList.remove('d-none');
+                if (studentView) studentView.classList.add('d-none');
 
-            const RefreshClasses = async (month) => {
-                await renderEnrolledClasses(month, authUser.id);
-                console.log("Enrolled classses:", currentEnrolledClasses)
-                await renderClasses(month);
+                // Initialize Admin-specific functions
+                renderAdminCalendar();
+                window.AdminCalendarInitialized = true;
+
+                renderManageStudentsTable();
+                window.ManageStudentsInitialized = true;
+
                 RenderManageClassesTable();
-                populateMonthDropdown('classModalMonthSelect');
+                window.ManageClassesTableInitialized = true;
+
+                renderEnrollmentRequests();
+                window.EnrollmentRequstsInitialized = true;
+
+                renderMakeupRequests();
+                window.MakeupRequestsInitialized = true;
+
+                renderMakeupRedemptionRequests();
+                window.MakeupRedemptionRequestsInitialized = true;
+
+                renderScheduleApprovals();
+                window.ScheduleApprovalsInitialized = true;
+            } else {
+
+                //  STUDENT VIEW 
+                if (studentView) studentView.classList.remove('d-none');
+                if (adminView) adminView.classList.add('d-none');
+
+                // Initialize Student-specific functions and data
+                const monthFilter = document.getElementById('monthFilter');
+                populateMonthDropdown('monthFilter');
+                currentMonth = document.getElementById('monthFilter').value;
+                selectedMonth = currentMonth;
+                const nextMonth = new Date(currentMonth);
+                nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+                nextMonthStr = nextMonth.toISOString().substring(0, 10);
+
+                const RefreshClasses = async (month) => {
+                    await renderEnrolledClasses(month, authUser.id);
+                    console.log("Enrolled classes:", currentEnrolledClasses);
+                    await renderClasses(month);
+                    populateMonthDropdown('classModalMonthSelect');
+                };
+
+                RefreshClasses(selectedMonth);
+
+                monthFilter.addEventListener('change', (event) => {
+                    selectedMonth = event.target.value;
+                    RefreshClasses(selectedMonth);
+                    console.log('Selected Month:', selectedMonth);
+                });
+
+                renderStudentCalendar(authUser.id);
+                window.studentCalendarInitialized = true;
+
             }
 
-            RefreshClasses(selectedMonth);
-            //TODO need to separate the admin and student views- no need to populate the admin view for a student login. Should probably completely separate the two.
+
+            // const monthFilter = document.getElementById('monthFilter');
+            // populateMonthDropdown('monthFilter');
+            // currentMonth = document.getElementById('monthFilter').value
+            // selectedMonth = currentMonth;
+            // const nextMonth = new Date(currentMonth);
+            // nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+            // nextMonthStr = nextMonth.toISOString().substring(0, 10);
+
+            // //TODO- Need to remove this hardcoded student id and replace with the logged in students id.
+
+            // const RefreshClasses = async (month) => {
+            //     await renderEnrolledClasses(month, authUser.id);
+            //     console.log("Enrolled classses:", currentEnrolledClasses)
+            //     await renderClasses(month);
+            //     RenderManageClassesTable();
+            //     populateMonthDropdown('classModalMonthSelect');
+            // }
+
+            // RefreshClasses(selectedMonth);
+            // //TODO need to separate the admin and student views- no need to populate the admin view for a student login. Should probably completely separate the two.
 
 
-            // Re-render the classes when changing the month. 
-            monthFilter.addEventListener('change', (event) => {
-                // This function will execute when a new option is selected
-                selectedMonth = event.target.value;
-                RefreshClasses(selectedMonth)
-                console.log('Selected Month:', selectedMonth);
+            // // Re-render the classes when changing the month. 
+            // monthFilter.addEventListener('change', (event) => {
+            //     // This function will execute when a new option is selected
+            //     selectedMonth = event.target.value;
+            //     RefreshClasses(selectedMonth)
+            //     console.log('Selected Month:', selectedMonth);
 
-            });
+            // });
 
-            // TODO replace this with actual logged in student's id. Also handle this state management with the initialized. 
-            renderStudentCalendar(authUser.id);
-            window.studentCalendarInitialized = true;
+            // // TODO replace this with actual logged in student's id. Also handle this state management with the initialized. 
+            // renderStudentCalendar(authUser.id);
+            // window.studentCalendarInitialized = true;
 
-            renderAdminCalendar();
-            window.AdminCalendarInitialized = true;
+            // renderAdminCalendar();
+            // window.AdminCalendarInitialized = true;
 
-            renderManageStudentsTable();
-            window.ManageStudentsInitialized = true;
+            // renderManageStudentsTable();
+            // window.ManageStudentsInitialized = true;
 
-            renderEnrollmentRequests();
-            window.EnrollmentRequstsInitialized = true;
+            // renderEnrollmentRequests();
+            // window.EnrollmentRequstsInitialized = true;
 
-            renderMakeupRequests();
-            window.MakeupRequestsInitialized = true;
+            // renderMakeupRequests();
+            // window.MakeupRequestsInitialized = true;
 
-            renderMakeupRedemptionRequests();
-            window.MakeupRedemptionRequestsInitialized = true;
+            // renderMakeupRedemptionRequests();
+            // window.MakeupRedemptionRequestsInitialized = true;
 
-            renderScheduleApprovals();
-            window.ScheduleApprovalsInitialized = true;
+            // renderScheduleApprovals();
+            // window.ScheduleApprovalsInitialized = true;
 
 
-            // Call March 2026
+            // // Call March 2026
             // generateCalendar(2026, 2);
 
 
@@ -2683,6 +2748,8 @@
 
             const enrolledIds = currentEnrolledClasses.map(c => c.id);
 
+            // Removed the filter to not show enrolled classes here b/c if a student enrolled in a single makeup, they couldn't see any.
+            // TODO- I should probably change the visual for classes a student is enrolled in so they don't accidentally re-enroll.
             const eligibleClasses = availableClasses.map(c => ({
                 ...c, eligible_dates: c.session_dates
                     .filter(d => isFutureDate(d))
