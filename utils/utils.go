@@ -33,9 +33,10 @@ type ResponseData struct {
 }
 
 type StudentLogin struct {
-	ID    int    `db:"id" json:"id"`
-	Name  string `db:"name" json:"name"`
-	Email string `db:"email" json:"email"`
+	ID            int    `db:"id" json:"id"`
+	Name          string `db:"name" json:"name"`
+	Email         string `db:"email" json:"email"`
+	MakeupCredits int    `db:"makeup_credits" json:"makeup_credits"`
 }
 
 type GoogleUserEmail struct {
@@ -219,6 +220,7 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 		session.Values["userId"] = student.ID
 		session.Values["email"] = user.Email
 		session.Values["name"] = student.Name
+		session.Values["makeup_credits"] = student.MakeupCredits
 
 		// save the user session
 		if err = session.Save(r, w); err != nil {
@@ -266,6 +268,7 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 
 		userName, _ := session.Values["name"].(string)
 		userEmail, _ := session.Values["email"].(string)
+		makeupCredits, _ := session.Values["makeup_credits"].(int)
 
 		if userName == "" || userEmail == "" {
 
@@ -274,9 +277,10 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		userData := StudentLogin{
-			ID:    userId,
-			Name:  userName,
-			Email: userEmail,
+			ID:            userId,
+			Name:          userName,
+			Email:         userEmail,
+			MakeupCredits: makeupCredits,
 		}
 
 		WriteJSONResponse(w, http.StatusOK, userData)
@@ -413,7 +417,7 @@ func dbAddStudentOrRetreiveId(ctx context.Context, myDb *db.MyDatabase, s *Stude
 	INSERT INTO students (name, email)
 	VALUES ($1, $2)
 	ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
-	RETURNING id, name, email`, s.Name, s.Email).Scan(&s.ID, &s.Name, &s.Email)
+	RETURNING id, name, email, makeup_credits`, s.Name, s.Email).Scan(&s.ID, &s.Name, &s.Email, &s.MakeupCredits)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error adding or retrieving student from db for login: %v", err)

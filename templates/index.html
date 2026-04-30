@@ -1926,15 +1926,20 @@
         let selectedMonth = null;
         let nextMonthStr = '';
 
+        // Initialize an authorized user struct to store the user info after login.
         let authUser = {
             id: null,
             name: null,
-            role: 'Student'
+            email: null,
+            role: 'Student',
+            makeupCredits: 0
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
 
             const userInfo = await getUserAuth();
+
+            console.log('Userinfo:', userInfo)
 
             // if (!userInfo) {
             //     window.location.href = '/auth/google';
@@ -1943,6 +1948,10 @@
 
             authUser.id = userInfo.id;
             authUser.name = userInfo.name;
+            authUser.email = userInfo.email;
+            authUser.makeupCredits = userInfo.makeup_credits ?? 0;
+
+            console.log('Auth User:', authUser)
 
             const monthFilter = document.getElementById('monthFilter');
             populateMonthDropdown('monthFilter');
