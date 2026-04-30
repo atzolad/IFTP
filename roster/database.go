@@ -327,14 +327,6 @@ func dbInsertMakeupRedemptionRequest(ctx context.Context, tx pgx.Tx, studentId i
 	if err != nil {
 		return err
 	}
-
-	_, err = tx.Exec(ctx, `
-	UPDATE students
-	SET makeup_credits = makeup_credits - 1
-	WHERE id = $1 AND makeup_credits > 0`, studentId)
-	if err != nil {
-		return fmt.Errorf("Error updating makeup credits: %w", err)
-	}
 	return nil
 }
 
@@ -367,6 +359,49 @@ func dbGetMakeupRedemptionRequests(ctx context.Context, myDb *db.MyDatabase) ([]
 		return nil, err
 	}
 	return requests, nil
+}
+
+func dbUpdateMakeupRedemptionRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) error {
+	var studentId int
+	var classId int
+	var requestedDate time.Time
+
+	err := tx.QueryRow(ctx, `
+	UPDATE makeup_redemptions
+	SET status = $1
+	WHERE id = $2
+	RETURNING student_id, requested_class_id, requested_date
+	`, status, requestId).Scan(&studentId, &classId, &requestedDate)
+
+	if err != nil {
+		return err
+	}
+
+	if status == "Approved" {
+
+		res, err := tx.Exec(ctx, `
+			UPDATE students
+			SET makeup_credits = makeup_credits - 1
+			WHERE id = $1 AND makeup_credits > 0`, studentId)
+		if err != nil {
+			return fmt.Errorf("Error updating makeup credits: %w", err)
+		}
+
+		if rowsAffected := res.RowsAffected(); rowsAffected == 0 {
+			return fmt.Errorf("Failed to deduct makeup credits: student has 0 credits or does not exist")
+		}
+
+		scheduleMonth := time.Date(requestedDate.Year(), requestedDate.Month(), 1, 0, 0, 0, 0, requestedDate.Location())
+
+		err = dbEnrollStudent(ctx, tx, studentId, classId, scheduleMonth)
+		if err != nil {
+			return fmt.Errorf("error enrolling student into redemption class: %w", err)
+		}
+
+	}
+
+	return nil
+
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {

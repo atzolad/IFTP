@@ -848,6 +848,75 @@ func GetMakeupRedemptionRequests(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
+func UpdateMakeupRedemptionRequest(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		requestId := r.PathValue("request_id")
+
+		var input struct {
+			Status string `json:"status"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Error decoding makeup request body",
+				Code:    http.StatusBadRequest,
+			})
+			myDb.Logger.Printf("Error decoding makeup request body: %v", err)
+			return
+		}
+
+		if input.Status != "Approved" && input.Status != "Denied" {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "Makeup approval status must be Approved or Denied",
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		tx, err := myDb.Pool.Begin(ctx)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error Begining transcation",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error Begining transcation: %v", err)
+			return
+		}
+
+		defer tx.Rollback(ctx)
+
+		if err := dbUpdateMakeupRedemptionRequestStatus(ctx, tx, requestId, input.Status); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error updating makeup redemption request",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error updating makeup redemption request: %v", err)
+			return
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Failed to commit makeup redemption database transaction",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+		utils.WriteJSONResponse(w, http.StatusOK, utils.ResponseData{
+			Status:  "success",
+			Message: "Makeup Redemption Request status updated successfully",
+			Code:    http.StatusOK,
+		})
+		myDb.Logger.Printf("Successfully updated makeup redemption request with id %v to %v", requestId, input.Status)
+	}
+}
+
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students
 // func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
