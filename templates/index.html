@@ -364,7 +364,7 @@
                         role="alert">
                         <span>You have <strong id="makeupCreditsCount">0</strong> <span id="makeupCreditsAvail">makeup
                                 credit(s) available.</span>
-                            <a href="#" id="redeemCreditsLink" class="alert-link ms-1">Request a makeup class →</a>
+                            <a href="#" id="redeemMakeupCredit" class="alert-link ms-1">Request a makeup class →</a>
                         </span>
                     </div>
 
@@ -2453,8 +2453,9 @@
         let makeupState = {
             enrolledClass: null,
             missedDates: [],
-            // makeupClassId: null,
-            // makeupDate: null,
+            makeupClassId: null,
+            makeupDate: null,
+            note: null,
         }
 
         function openMakeupModal(selectedClass) {
@@ -2465,8 +2466,9 @@
             makeupState = {
                 enrolledClass: selectedClass,
                 missedDates: [],
-                // makeupClassId: null,
-                // makeupDate: null,
+                makeupClassId: null,
+                makeupDate: null,
+                note: null,
             }
 
             document.getElementById('makeupSubmitBtn').disabled = true;
@@ -2500,61 +2502,90 @@
             modal.show();
         }
 
-        // function renderMakeupOptions() {
-        //     const container = document.getElementById('makeupClassOptions');
-        //     container.innerHTML = '';
+        function openMakeupRedemptionModal(e) {
+            if (e) e.preventDefault();
 
-        //     const eligibleClasses = availableClasses.filter(c => c.id !== makeupState.enrolledClass.id)
-        //         .map(c => ({
-        //             ...c, eligible_dates: c.session_dates
-        //                 .filter(d => d !== makeupState.missedDate)
-        //         })).filter(c => c.eligible_dates.length > 0);
 
-        //     if (eligibleClasses.length === 0) {
-        //         container.innerHTML = '<div class="col-12"><p class="text-muted">No available makeup sessions for this date.</p></div>'
-        //         return;
-        //     }
+            if (!authUser || authUser.makeupCredits <= 0) {
+                alert("You do not have any makeup credits available to redeem.");
+                return;
+            }
 
-        //     eligibleClasses.forEach(c => {
-        //         container.appendChild(buildMakeupClassCard(c));
-        //     });
-        // }
+            makeupState = {
+                enrolledClass: null,
+                missedDates: [],
+                selectedClassId: null,
+                selectedDate: null,
+                note: null
+            };
 
-        // function buildMakeupClassCard(eligibleClass) {
-        //     const col = document.createElement('div');
-        //     col.className = 'col-md-6';
+            document.getElementById('modalMakeupCredits').textContent = authUser.makeupCredits;
+            document.getElementById('makeupRedemptionSubmitBtn').disabled = true;
+            document.getElementById('makeupRedemptionNote').value = '';
 
-        //     col.innerHTML = `
-        //      <div class="card h-100">
-        //         <div class="card-body">
-        //             <h6 class="card-title makeupClassName"></h6>
-        //             <p class="text-muted mb-1"><i class="bi bi-person"></i> <span class="makeupTeacher"></span></p>
-        //             <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="makeupSchedule"></span></p>
-        //             <p class="text-muted mb-2"><i class="bi bi-people"></i> <span class="makeup-capacity"></span></p>
-        //             <strong class="d-block mb-2">Available Dates:</strong>
-        //             <div class="d-flex flex-wrap gap-2 makeupDateOptions"></div>
-        //         </div>
-        //     </div>
-        //     `;
+            renderMakeupOptions();
 
-        //     col.querySelector('.makeupClassName').textContent = eligibleClass.name;
-        //     col.querySelector('.makeupTeacher').textContent = eligibleClass.teacher;
-        //     col.querySelector('.makeupSchedule').textContent = `${eligibleClass.day_of_week} at ${eligibleClass.time}`;
-        //     col.querySelector('.makeup-capacity').textContent = `${eligibleClass.enrolledCount} / ${eligibleClass.capacity} enrolled`;
+            const modal = new bootstrap.Modal(document.getElementById('makeupRedemptionModal'));
+            modal.show();
+        }
 
-        //     const datesContainer = col.querySelector('.makeupDateOptions');
-        //     eligibleClass.eligible_dates.filter(isFutureDate).forEach(date => {
-        //         const badge = document.createElement('span');
-        //         badge.className = 'badge bg-secondary text-light p-2 makeup-date-option';
-        //         badge.style.cursor = 'pointer';
-        //         badge.dataset.date = date;
-        //         badge.dataset.classId = eligibleClass.id;
-        //         badge.textContent = date;
-        //         datesContainer.appendChild(badge);
-        //     });
+        function renderMakeupOptions() {
+            const container = document.getElementById('makeupRedemptionOptions');
+            container.innerHTML = '';
 
-        //     return col
-        // }
+            const enrolledIds = currentEnrolledClasses.map(c => c.id);
+
+            const eligibleClasses = availableClasses.filter(c => !enrolledIds.includes(c.id))
+                .map(c => ({
+                    ...c, eligible_dates: c.session_dates
+                        .filter(d => isFutureDate(d))
+                })).filter(c => c.eligible_dates.length > 0);
+
+            if (eligibleClasses.length === 0) {
+                container.innerHTML = '<div class="col-12"><p class="text-bold">No makeup sessions available.</p></div>'
+                return;
+            }
+
+            eligibleClasses.forEach(c => {
+                container.appendChild(buildMakeupClassCard(c));
+            });
+        }
+
+        function buildMakeupClassCard(eligibleClass) {
+            const col = document.createElement('div');
+            col.className = 'col-md-6';
+
+            col.innerHTML = `
+             <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title redemptionClassName"></h6>
+                    <p class="text-muted mb-1"><i class="bi bi-person"></i> <span class="redemptionTeacher"></span></p>
+                    <p class="text-muted mb-2"><i class="bi bi-clock"></i> <span class="redemptionSchedule"></span></p>
+                    <p class="text-muted mb-2"><i class="bi bi-people"></i> <span class="redemption-capacity"></span></p>
+                    <strong class="d-block mb-2">Available Dates:</strong>
+                    <div class="d-flex flex-wrap gap-2 redemptionDateOptions"></div>
+                </div>
+            </div>
+            `;
+
+            col.querySelector('.redemptionClassName').textContent = eligibleClass.name;
+            col.querySelector('.redemptionTeacher').textContent = eligibleClass.teacher;
+            col.querySelector('.redemptionSchedule').textContent = `${eligibleClass.day_of_week} at ${eligibleClass.time}`;
+            col.querySelector('.redemption-capacity').textContent = `${eligibleClass.enrolledCount} / ${eligibleClass.capacity} enrolled`;
+
+            const datesContainer = col.querySelector('.redemptionDateOptions');
+            eligibleClass.eligible_dates.filter(isFutureDate).forEach(date => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary text-light p-2 redemption-date-option';
+                badge.style.cursor = 'pointer';
+                badge.dataset.date = date;
+                badge.dataset.classId = eligibleClass.id;
+                badge.textContent = date;
+                datesContainer.appendChild(badge);
+            });
+
+            return col
+        }
 
         // Event listeners for makeup requests.
 
@@ -2629,24 +2660,71 @@
 
         document.getElementById('makeupSubmitBtn').addEventListener('click', submitMakeupRequest);
 
+        async function submitMakeupRedemption() {
+            const note = document.getElementById('makeupRedemptionNote').value.trim();
 
-        // document.getElementById('makeupClassOptions').addEventListener('click', (e) => {
-        //     const badge = e.target.closest('.makeup-date-option');
-        //     if (!badge) return;
 
-        //     document.querySelectorAll('.makeup-date-option').forEach(b => {
-        //         b.classList.remove('bg-primary');
-        //         b.classList.add('bg-secondary');
-        //     });
+            const requestBody = {
+                requested_class_id: makeupState.makeupClassId,
+                requested_date: makeupState.makeupDate,
+                note: note || null,
+            };
 
-        //     badge.classList.remove('bg-secondary');
-        //     badge.classList.add('bg-primary');
+            console.log('Submitting makeup redemption request:', requestBody)
 
-        //     // TODO- Remove parseInt when I convert to UUID
-        //     makeupState.makeupClassId = parseInt(badge.dataset.classId);
-        //     makeupState.makeupDate = badge.dataset.date;
-        //     document.getElementById('makeupSubmitBtn').disabled = false;
-        // });
+            try {
+                const resp = await fetch(`/makeup_redemption`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (resp.ok) {
+                    alert('Your makeup redemption request has been submitted!');
+
+                    if (typeof authUser !== 'undefined') {
+                        authUser.makeupCredits -= 1;
+                        const banner = document.getElementById('makeupCreditsBanner');
+                        if (banner) banner.textContent = `Makeup Credits: ${authUser.makeupCredits}`;
+                    }
+
+                    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('makeupRedemptionModal'));
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+                } else {
+                    const responseData = await resp.json();
+                    alert(responseData.message || 'Error submitting request');
+                }
+            } catch (err) {
+                console.error('Network error:', err);
+                alert('Could not submit makeup redemption request');
+            }
+        }
+
+        // Event listeners for makeup class redemption modal
+
+        document.getElementById('redeemMakeupCredit').addEventListener('click', openMakeupRedemptionModal);
+
+        document.getElementById('makeupRedemptionSubmitBtn').addEventListener('click', submitMakeupRedemption);
+
+        document.getElementById('makeupRedemptionOptions').addEventListener('click', (e) => {
+            const badge = e.target.closest('.redemption-date-option');
+            if (!badge) return;
+
+            document.querySelectorAll('.redemption-date-option').forEach(b => {
+                b.classList.remove('bg-primary');
+                b.classList.add('bg-secondary');
+            });
+
+            badge.classList.remove('bg-secondary');
+            badge.classList.add('bg-primary');
+
+            // TODO- Remove parseInt when I convert to UUID
+            makeupState.makeupClassId = parseInt(badge.dataset.classId);
+            makeupState.makeupDate = badge.dataset.date;
+            document.getElementById('makeupRedemptionSubmitBtn').disabled = false;
+        });
 
 
         // Event listener for Schedule Approval Buttons
