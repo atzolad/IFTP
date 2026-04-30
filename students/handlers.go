@@ -15,6 +15,7 @@ type Student struct {
 	Name            string   `db:"name" json:"name"`
 	Email           string   `db:"email" json:"email"`
 	Notes           string   `db:"notes" json:"notes"`
+	MakeupCredits   int      `db:"makeup_credits" json:"makeup_credits"`
 	Active          bool     `db:"active" json:"active"`
 	EnrolledClasses []string `db:"enrolled_classes" json:"enrolledClasses"`
 }

@@ -526,6 +526,7 @@
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Enrolled Classes</th>
+                                        <th>Makeup Credits</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -3049,6 +3050,10 @@
                         const studentClassesRow = document.createElement('td');
                         studentClassesRow.textContent = studentClasses;
                         row.appendChild(studentClassesRow);
+
+                        const studentMakeupRow = document.createElement('td');
+                        studentMakeupRow.textContent = student.makeup_credits ?? 0;
+                        row.appendChild(studentMakeupRow)
 
                         const studentStatusCell = document.createElement('td');
                         const badgeColor = studentStatus === 'Active' ? 'bg-success' : 'bg-danger text-white';
