@@ -338,10 +338,13 @@ func dbGetMakeupRedemptionRequests(ctx context.Context, myDb *db.MyDatabase) ([]
 	s.email,
 	mr.requested_class_id, 
 	c.name as class_name,
+	c.teacher,
 	mr.requested_date,
 	mr.note,
 	mr.status,
-	mr.requested_at
+	mr.requested_at,
+	(SELECT COUNT(*) FROM roster WHERE class_id = mr.requested_class_id AND class_date = mr.requested_date) AS currently_enrolled,
+	COALESCE(c.capacity, 16) - (SELECT COUNT(*) FROM roster WHERE class_id = mr.requested_class_id AND class_date = mr.requested_date) AS available_spots
 	FROM makeup_redemptions mr
 	JOIN students s ON s.id = mr.student_id
 	JOIN classes c on c.id = mr.requested_class_id

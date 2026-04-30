@@ -107,16 +107,19 @@ type MakeupRedemptionReq struct {
 }
 
 type MakeupRedemption struct {
-	ID               string    `db:"id" json:"id"`
-	StudentID        int       `db:"student_id" json:"student_id"`
-	StudentName      string    `db:"name" json:"name"`
-	StudentEmail     string    `db:"email" json:"email"`
-	RequestedClassID int       `db:"requested_class_id" json:"requested_class_id"`
-	ClassName        string    `db:"class_name" json:"class_name"`
-	RequestedDate    time.Time `db:"requested_date" json:"requested_date"`
-	Note             string    `db:"note" json:"note"`
-	Status           string    `db:"status" json:"status"`
-	RequestedAt      time.Time `db:"requested_at" json:"requested_at"`
+	ID                string    `db:"id" json:"id"`
+	StudentID         int       `db:"student_id" json:"student_id"`
+	StudentName       string    `db:"name" json:"name"`
+	StudentEmail      string    `db:"email" json:"email"`
+	RequestedClassID  int       `db:"requested_class_id" json:"requested_class_id"`
+	ClassName         string    `db:"class_name" json:"class_name"`
+	Teacher           string    `db:"teacher" json:"teacher"`
+	RequestedDate     time.Time `db:"requested_date" json:"requested_date"`
+	Note              string    `db:"note" json:"note"`
+	Status            string    `db:"status" json:"status"`
+	RequestedAt       time.Time `db:"requested_at" json:"requested_at"`
+	CurrentlyEnrolled int       `db:"currently_enrolled" json:"currently_enrolled"`
+	AvailableSpots    int       `db:"available_spots" json:"available_spots"`
 }
 
 // GetRoster responds with the overall enrolled class lists
