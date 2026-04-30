@@ -2683,11 +2683,10 @@
 
             const enrolledIds = currentEnrolledClasses.map(c => c.id);
 
-            const eligibleClasses = availableClasses.filter(c => !enrolledIds.includes(c.id))
-                .map(c => ({
-                    ...c, eligible_dates: c.session_dates
-                        .filter(d => isFutureDate(d))
-                })).filter(c => c.eligible_dates.length > 0);
+            const eligibleClasses = availableClasses.map(c => ({
+                ...c, eligible_dates: c.session_dates
+                    .filter(d => isFutureDate(d))
+            })).filter(c => c.eligible_dates.length > 0);
 
             if (eligibleClasses.length === 0) {
                 container.innerHTML = '<div class="col-12"><p class="text-bold">No makeup sessions available.</p></div>'
