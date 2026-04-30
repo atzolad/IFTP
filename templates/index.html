@@ -558,6 +558,11 @@
                     <div id="studentMakeupRequestContainer">
                         <!-- Insert makeup requests here -->
                     </div>
+                    <h3 class="mt-5">Pending Redemption Requests</h3>
+                    <hr>
+                    <div id="makeupRedemptionContainer">
+                        <!-- Insert makeup redemption requests here -->
+                    </div>
             </main>
         </div>
     </div>
@@ -1345,6 +1350,32 @@
             }
         }
 
+        async function renderMakeupRedemptionRequests() {
+            const apiEndpoint = `${baseUrl}/makeup_redemptions`;
+            const container = document.getElementById('makeupRedemptionContainer');
+
+            try {
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) throw new Error('Failed to fetch makeup redemption requests');
+
+                const redemptions = await response.json();
+                console.log(redemptions)
+
+                container.innerHTML = '';
+
+                if (!redemptions || redemptions.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No pending makeup redemption requests.</p>';
+                    return;
+                }
+
+                redemptions.forEach(redemption => renderRedemptionCard(redemption, container));
+
+            } catch (err) {
+                console.error('Error fetching makeup redemption requests', err);
+                container.innterHTML = '<p class="text-danger">Failed to load makeup redemption requests.</p>';
+            }
+        }
+
         function renderMakeupCreditsBanner(credits) {
             const banner = document.getElementById('makeupCreditsBanner');
             const count = document.getElementById('makeupCreditsCount');
@@ -1493,6 +1524,57 @@
 
         }
 
+        function renderRedemptionCard(redemption, container) {
+            const card = document.createElement('div');
+            card.className = 'card mb-3';
+
+            card.innerHTML = `
+            <div class="card-header bg-white text-black">
+                <h5 class="mb-0">Redemption Request - <span class="req_student_name"></span></h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Student:</strong> <span class="red_student_name"></span></p>
+                        <p><strong>Email:</strong> <span class="red_student_email"></span></p>
+                        <p><strong>Requested Class Date:</strong> <span class="red_date"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Target Class ID:</strong> <span class="red_class_id"></span></p>
+                        <p><strong>Note:</strong></p>
+                        <p class="red_note text-muted"></p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary me-2 redeemApproveBtn">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                    <button class="btn btn-secondary redeemDenyBtn">
+                        <i class="bi bi-x-circle"></i> Deny
+                    </button>
+                </div>
+            </div>`;
+
+
+            card.querySelectorAll('.red_student_name').forEach(element => element.textContent = ` ${redemption.name || redemption.student_name}`);
+            card.querySelector('.red_student_email').textContent = redemption.email || redemption.student_email;
+            card.querySelector('.red_date').textContent = new Date(redemption.requested_date).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC'
+            });
+
+            card.querySelector('.red_class_id').textContent = redemption.requested_class_id || redemption.class_id;
+            card.querySelector('.red_note').textContent = redemption.note || 'No note provided';
+
+            const approveBtn = card.querySelector('.redeemApproveBtn');
+            const denyBtn = card.querySelector('.redeemDenyBtn');
+
+            approveBtn.dataset.requestId = redemption.id;
+            denyBtn.dataset.requestId = redemption.id;
+
+
+            container.appendChild(card);
+        }
+
         async function handleMakeupRequest(requestId, status) {
             try {
                 const response = await fetch(`${baseUrl}/makeup_request/${requestId}`, {
@@ -1510,13 +1592,37 @@
 
             } catch (err) {
                 console.error('Error handling makeup request:', err)
+                alert(`Failed to update makeup request: ${err.message}`);
             }
+        }
+
+        async function handleMakeupRedemptionRequest(requestId, status) {
+            try {
+                const response = await fetch(`${baseUrl}/makeup_redemptions/${requestId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+
+                if (!repsonse.ok) {
+                    alert('Error handling makeup redemption request. Please try again');
+                    return;
+                }
+
+                renderMakeupRedemptionRequests();
+
+            } catch (err) {
+                console.error('Error updating makeup redemption status', err);
+                alert(`Failed to update redemption request: ${err.message}`);
+            }
+
         }
 
         // Event listener for makeup request card buttons
         const makeupRequestContainer = document.getElementById('studentMakeupRequestContainer');
         makeupRequestContainer.addEventListener('click', (event) => {
             const approveBtn = event.target.closest('.makeupReqApproveBtn');
+            const denyBtn = event.target.closest('.makeupReqDenyBtn');
 
             if (approveBtn) {
                 if (confirm('Approve this makeup request?')) {
@@ -1533,6 +1639,31 @@
                 }
             }
         });
+
+
+        // Event listener for makeup request card buttons
+        const makeupRedemptionContainer = document.getElementById('makeupRedemptionContainer');
+        makeupRequestContainer.addEventListener('click', (event) => {
+            const approveBtn = event.target.closest('.redeemApproveBtn');
+            const denyBtn = event.target.closest('.redeemDenyBtn');
+
+            if (approveBtn) {
+                if (confirm('Approve this makeup redemption request?')) {
+                    const requestId = approveBtn.dataset.requestId;
+                    handleMakeupRedemptionRequest(requestId, 'Approved')
+                    return
+                }
+            }
+
+            if (denyBtn) {
+                if (confirm('Deny this makeup redemption request?')) {
+                    const requestId = denyBtn.dataset.requestId;
+                    handleMakeupRedemptionRequest(requestId, 'Denied')
+                    return
+                }
+            }
+        });
+
 
 
         // TODO when splitting up the admin login- populate that info from the session as well. 
@@ -2056,6 +2187,9 @@
 
             renderMakeupRequests();
             window.MakeupRequestsInitialized = true;
+
+            renderMakeupRedemptionRequests();
+            window.MakeupRedemptionRequestsInitialized = true;
 
             renderScheduleApprovals();
             window.ScheduleApprovalsInitialized = true;
