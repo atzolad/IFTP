@@ -244,6 +244,20 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 
 func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Handle dev mode override
+		if os.Getenv("DEV_MODE") == "true" {
+			userData := StudentLogin{
+				ID:            1,
+				Name:          "Dev Admin",
+				Email:         "atzolad@gmail.com",
+				MakeupCredits: 5,
+				IsAdmin:       true,
+			}
+			WriteJSONResponse(w, http.StatusOK, userData)
+			return
+		}
+
 		// Retrieve the session
 		session, err := gothic.Store.Get(r, "goth_session")
 		if err != nil {
@@ -315,6 +329,18 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 func RequireAuth(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		// Check for local dev environment override
+		if os.Getenv("DEV_MODE") == "true" {
+			// Bypass OAuth and inject a fake Admin session into the context
+			ctx := context.WithValue(r.Context(), CtxUserID, 1) // Fake User ID
+			ctx = context.WithValue(ctx, CtxUserEmail, "atzolad@gmail.com")
+			ctx = context.WithValue(ctx, CtxUserName, "Dev Admin")
+			ctx = context.WithValue(ctx, "isAdmin", true)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
 		apiKey := r.Header.Get("X-API-Key")
 		if apiKey != "" {
 			if apiKey == os.Getenv("API_KEY") {
@@ -363,9 +389,15 @@ func RequireAuth(next http.Handler) http.HandlerFunc {
 
 func RequireAdmin(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := gothic.Store.Get(r, "goth_session")
 
-		// Check if is_admin is true in the session
+		// Check if the request was authenticated via API Key
+		if authType, _ := r.Context().Value("auth_type").(string); authType == "api_key" {
+			// API key is valid; bypass session role checks
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		session, err := gothic.Store.Get(r, "goth_session")
 		isAdmin, _ := session.Values["is_admin"].(bool)
 
 		if err != nil || !isAdmin {
