@@ -1655,25 +1655,25 @@
         });
 
 
-        // Event listener for makeup request card buttons
+        // Event listener for makeup redemption card buttons
         const makeupRedemptionContainer = document.getElementById('makeupRedemptionContainer');
-        makeupRequestContainer.addEventListener('click', (event) => {
+        makeupRedemptionContainer.addEventListener('click', (event) => {
             const approveBtn = event.target.closest('.redeemApproveBtn');
             const denyBtn = event.target.closest('.redeemDenyBtn');
 
             if (approveBtn) {
                 if (confirm('Approve this makeup redemption request?')) {
                     const requestId = approveBtn.dataset.requestId;
-                    handleMakeupRedemptionRequest(requestId, 'Approved')
-                    return
+                    handleMakeupRedemptionRequest(requestId, 'Approved');
+                    return;
                 }
             }
 
             if (denyBtn) {
                 if (confirm('Deny this makeup redemption request?')) {
                     const requestId = denyBtn.dataset.requestId;
-                    handleMakeupRedemptionRequest(requestId, 'Denied')
-                    return
+                    handleMakeupRedemptionRequest(requestId, 'Denied');
+                    return;
                 }
             }
         });
