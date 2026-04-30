@@ -830,7 +830,7 @@ func CreateMakeupRedemptionRequest(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-func getMakeupRedemptionRequests(myDb *db.MyDatabase) http.HandlerFunc {
+func GetMakeupRedemptionRequests(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
