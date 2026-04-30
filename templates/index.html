@@ -2544,6 +2544,7 @@
 
                 if (resp.ok) {
                     alert('Your makeup request has been submitted!');
+                    renderMakeupRequests();
                     const modalInstance = bootstrap.Modal.getInstance(document.getElementById('makeupRequestModal'));
                     if (modalInstance) {
                         modalInstance.hide();
