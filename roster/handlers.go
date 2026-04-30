@@ -112,6 +112,7 @@ type MakeupRedemption struct {
 	StudentName      string    `db:"name" json:"name"`
 	StudentEmail     string    `db:"email" json:"email"`
 	RequestedClassID int       `db:"requested_class_id" json:"requested_class_id"`
+	ClassName        string    `db:"class_name" json:"class_name"`
 	RequestedDate    time.Time `db:"requested_date" json:"requested_date"`
 	Note             string    `db:"note" json:"note"`
 	Status           string    `db:"status" json:"status"`
