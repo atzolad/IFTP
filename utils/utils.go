@@ -33,7 +33,7 @@ type ResponseData struct {
 }
 
 type StudentLogin struct {
-	ID            int    `db:"id" json:"id"`
+	ID            string `db:"id" json:"id"`
 	Name          string `db:"name" json:"name"`
 	Email         string `db:"email" json:"email"`
 	MakeupCredits int    `db:"makeup_credits" json:"makeup_credits"`
@@ -245,18 +245,18 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Handle dev mode override
-		if os.Getenv("DEV_MODE") == "true" {
-			userData := StudentLogin{
-				ID:            1,
-				Name:          "Dev Admin",
-				Email:         "atzolad@gmail.com",
-				MakeupCredits: 5,
-				IsAdmin:       true,
-			}
-			WriteJSONResponse(w, http.StatusOK, userData)
-			return
-		}
+		// // Handle dev mode override
+		// if os.Getenv("DEV_MODE") == "true" {
+		// 	userData := StudentLogin{
+		// 		ID:            1,
+		// 		Name:          "Dev Admin",
+		// 		Email:         "atzolad@gmail.com",
+		// 		MakeupCredits: 5,
+		// 		IsAdmin:       true,
+		// 	}
+		// 	WriteJSONResponse(w, http.StatusOK, userData)
+		// 	return
+		// }
 
 		// Retrieve the session
 		session, err := gothic.Store.Get(r, "goth_session")
@@ -271,8 +271,8 @@ func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		// Get user data from session
-		userId, ok := session.Values["userId"].(int)
-		if !ok || userId == 0 {
+		userId, ok := session.Values["userId"].(string)
+		if !ok || userId == "" {
 			myDb.Logger.Printf("Error: no authenticated user found: %v", err)
 			WriteJSONResponse(w, http.StatusUnauthorized, ResponseData{
 				Status:  "error",
