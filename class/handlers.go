@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -40,7 +39,7 @@ const (
 )
 
 type Class struct {
-	ID            int         `db:"id" json:"id"`
+	ID            string      `db:"id" json:"id"`
 	Name          string      `db:"name" json:"name"`
 	Teacher       string      `db:"teacher" json:"teacher"`
 	DayOfWeek     DayOfWeek   `db:"day_of_week" json:"day_of_week"`
@@ -99,7 +98,7 @@ func formatTime(time string) string {
 }
 
 type ClassSchedule struct {
-	Id          int                 `json:"id"`
+	Id          string              `json:"id"`
 	ClassId     string              `json:"classId"`
 	SessionDate time.Time           `json:"sessionDate"`
 	Month       time.Time           `json:"month"`
@@ -111,13 +110,13 @@ type CalendarEventsResponse struct {
 }
 
 type ActiveClass struct {
-	ID        int    `db:"id"`
+	ID        string `db:"id"`
 	DayOfWeek string `db:"day_of_week"`
 }
 
 type MonthlyClassScheduleApproval struct {
 	ID           string      `db:"id" json:"id"`
-	ClassID      int         `db:"class_id" json:"class_id"`
+	ClassID      string      `db:"class_id" json:"class_id"`
 	ClassName    string      `db:"class_name" json:"class_name"`
 	Teacher      string      `db:"teacher" json:"teacher"`
 	DayOfWeek    DayOfWeek   `db:"day_of_week" json:"day_of_week"`
@@ -159,18 +158,18 @@ func ListClassesByMonth(myDb *db.MyDatabase) http.HandlerFunc {
 		ctx := r.Context()
 		month := r.FormValue("month")
 		studentId := strings.TrimSpace(r.PathValue("student_id"))
-		var studentIntegerId *int
+		// var studentIntegerId *int
 
-		if studentId != "" {
-			val, err := strconv.Atoi(studentId)
-			if err != nil {
-				utils.WriteJSONResponse(w, http.StatusBadRequest, err)
-				return
-			}
-			studentIntegerId = &val
-		}
+		// if studentId != "" {
+		// 	val, err := strconv.Atoi(studentId)
+		// 	if err != nil {
+		// 		utils.WriteJSONResponse(w, http.StatusBadRequest, err)
+		// 		return
+		// 	}
+		// 	studentIntegerId = &val
+		// }
 
-		classes, err := dbListClassesByMonth(ctx, myDb, month, studentIntegerId)
+		classes, err := dbListClassesByMonth(ctx, myDb, month, studentId)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
@@ -233,7 +232,7 @@ func GenerateScheduleApprovals(ctx context.Context, myDb *db.MyDatabase) error {
 	return nil
 }
 
-func generateClassApproval(ctx context.Context, myDb *db.MyDatabase, classId int, dayOfWeek string, month time.Time) error {
+func generateClassApproval(ctx context.Context, myDb *db.MyDatabase, classId string, dayOfWeek string, month time.Time) error {
 	tx, err := myDb.Pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -350,21 +349,21 @@ func GetCalendarEventsByStudent(myDb *db.MyDatabase) http.HandlerFunc {
 		ctx := r.Context()
 		studentId := strings.TrimSpace(r.PathValue("student_id"))
 		fmt.Printf("studentId: %v", studentId)
-		var studentIntegerId *int
+		// var studentIntegerId *int
 
-		if studentId != "" {
-			val, err := strconv.Atoi(studentId)
-			if err != nil {
-				utils.WriteJSONResponse(w, http.StatusBadRequest, err)
-				return
-			}
-			studentIntegerId = &val
-		}
+		// if studentId != "" {
+		// 	val, err := strconv.Atoi(studentId)
+		// 	if err != nil {
+		// 		utils.WriteJSONResponse(w, http.StatusBadRequest, err)
+		// 		return
+		// 	}
+		// 	studentIntegerId = &val
+		// }
 
 		//TODO: If this endpoint gets really slow, add month
 		// month := r.PathValue("month")
 
-		classes, err := dbListStudentEnrolledClasses(ctx, myDb, "", studentIntegerId)
+		classes, err := dbListStudentEnrolledClasses(ctx, myDb, "", studentId)
 		if err != nil {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
 				Status:  "error",
@@ -476,16 +475,16 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 		ctx := r.Context()
 
 		id := r.PathValue("class_id")
-		integerID, err := strconv.Atoi(id)
-		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
-				Status:  "error",
-				Message: fmt.Sprintf("Invalid Class id- must be an integer: %v", err),
-				Code:    http.StatusBadRequest,
-			})
-			myDb.Logger.Printf("Invalid Class id- must be an integer: %v", err)
-			return
-		}
+		// integerID, err := strconv.Atoi(id)
+		// if err != nil {
+		// 	utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+		// 		Status:  "error",
+		// 		Message: fmt.Sprintf("Invalid Class id- must be an integer: %v", err),
+		// 		Code:    http.StatusBadRequest,
+		// 	})
+		// 	myDb.Logger.Printf("Invalid Class id- must be an integer: %v", err)
+		// 	return
+		// }
 
 		var updateRequest Class
 
@@ -499,7 +498,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		updateRequest.ID = integerID
+		updateRequest.ID = id
 
 		// Validate that the time provided is in the correct format
 		if updateRequest.Time != "" {
@@ -534,7 +533,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 
 		defer tx.Rollback(ctx)
 
-		returnedClass, err := dbUpdateClass(ctx, tx, integerID, &updateRequest)
+		returnedClass, err := dbUpdateClass(ctx, tx, id, &updateRequest)
 		if returnedClass == nil {
 
 		}

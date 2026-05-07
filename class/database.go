@@ -40,7 +40,7 @@ func dbListClasses(ctx context.Context, myDb *db.MyDatabase) ([]Class, error) {
 	return classes, nil
 }
 
-func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
+func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string, studentId string) ([]Class, error) {
 
 	var query strings.Builder
 	var args []any
@@ -64,9 +64,9 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 			LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date AND r.status = 'Enrolled'
 			WHERE c.active = True`)
 
-	if studentId != nil {
-		fmt.Printf("student id: %v ", *studentId)
-		args = append(args, *studentId)
+	if studentId != "" {
+		fmt.Printf("student id: %v ", studentId)
+		args = append(args, studentId)
 		fmt.Fprintf(&query, " AND r.student_id = $%d ", len(args))
 	}
 
@@ -103,13 +103,13 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 
 }
 
-func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, month string, studentId *int) ([]Class, error) {
+func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, month string, studentId string) ([]Class, error) {
 	var query strings.Builder
 	var args []any
 
 	var studentJoin string
-	if studentId != nil {
-		args = append(args, *studentId)
+	if studentId != "" {
+		args = append(args, studentId)
 		studentJoin = fmt.Sprintf("LEFT JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date AND r_student.student_id = $%d", len(args))
 	} else {
 		studentJoin = "LEFT JOIN roster r_student ON r_student.class_id = c.id AND r_student.class_date = cs.session_date"
@@ -124,7 +124,7 @@ func dbListStudentEnrolledClasses(ctx context.Context, myDb *db.MyDatabase, mont
 	WHERE c.active = true 
 	`, studentJoin))
 
-	if studentId != nil {
+	if studentId != "" {
 		query.WriteString(" AND r_student.student_id IS NOT NULL ")
 	}
 
@@ -157,7 +157,7 @@ func dbCreateClass(ctx context.Context, tx pgx.Tx, c *Class) error {
 	return err
 }
 
-func dbInsertClassScheduleRows(ctx context.Context, tx pgx.Tx, classId int, month time.Time, dates []time.Time) error {
+func dbInsertClassScheduleRows(ctx context.Context, tx pgx.Tx, classId string, month time.Time, dates []time.Time) error {
 	for _, date := range dates {
 		_, err := tx.Exec(ctx,
 			`INSERT INTO class_schedule (class_id, session_date, month, status) 
@@ -170,7 +170,7 @@ func dbInsertClassScheduleRows(ctx context.Context, tx pgx.Tx, classId int, mont
 	return nil
 }
 
-func dbUpdateClass(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, error) {
+func dbUpdateClass(ctx context.Context, tx pgx.Tx, id string, c *Class) (*Class, error) {
 
 	// month is intentionally excluded — it belongs to class_schedule, not classes
 
@@ -236,12 +236,12 @@ func dbUpdateClass(ctx context.Context, tx pgx.Tx, id int, c *Class) (*Class, er
 	return &updated, nil
 }
 
-func dbDeleteFromClassSchedule(ctx context.Context, tx pgx.Tx, id int) error {
+func dbDeleteFromClassSchedule(ctx context.Context, tx pgx.Tx, id string) error {
 	_, err := tx.Exec(ctx, "DELETE FROM class_schedule WHERE class_id = $1", id)
 	return err
 }
 
-func dbInsertScheduleApproval(ctx context.Context, tx pgx.Tx, classId int, month time.Time) (approvalId string, err error) {
+func dbInsertScheduleApproval(ctx context.Context, tx pgx.Tx, classId string, month time.Time) (approvalId string, err error) {
 	err = tx.QueryRow(ctx, `
 	INSERT INTO schedule_approvals (class_id, month)
 	VALUES ($1, $2)
@@ -289,7 +289,7 @@ func dbGetPendingScheduleApprovals(ctx context.Context, myDb *db.MyDatabase) (ap
 	return approvals, nil
 }
 
-func dbUpdateScheduleApprovalStatus(ctx context.Context, tx pgx.Tx, approvalId string, status string) (classId int, month time.Time, err error) {
+func dbUpdateScheduleApprovalStatus(ctx context.Context, tx pgx.Tx, approvalId string, status string) (classId string, month time.Time, err error) {
 	err = tx.QueryRow(ctx, `
 	UPDATE schedule_approvals
 	SET status = $1, reviewed_at = NOW()
