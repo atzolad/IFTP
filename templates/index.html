@@ -2745,18 +2745,34 @@
             modal.show();
         }
 
-        function renderMakeupOptions() {
+        async function renderMakeupOptions() {
             const container = document.getElementById('makeupRedemptionOptions');
+            container.innerHTML = '<p class="text-muted">Loading available sessions...</p>';
+
+
+            // Get all classes that have at least one available date for this student
+            const classesWithDates = await Promise.all(
+                availableClasses.map(async (c) => {
+                    const resp = await fetch(`/makeup_redemptions/available_dates/${c.id}`);
+                    if (!resp.ok) return null;
+                    const dates = await resp.json();
+                    return dates && dates.length > 0 ? { ...c, eligible_dates: dates } : null;
+                })
+            );
+
+            const eligibleClasses = classesWithDates.filter(Boolean);
+
             container.innerHTML = '';
 
-            const enrolledIds = currentEnrolledClasses.map(c => c.id);
+            // const enrolledIds = currentEnrolledClasses.map(c => c.id);
 
             // Removed the filter to not show enrolled classes here b/c if a student enrolled in a single makeup, they couldn't see any.
             // TODO- I should probably change the visual for classes a student is enrolled in so they don't accidentally re-enroll.
-            const eligibleClasses = availableClasses.map(c => ({
-                ...c, eligible_dates: c.session_dates
-                    .filter(d => isFutureDate(d))
-            })).filter(c => c.eligible_dates.length > 0);
+            // const eligibleClasses = availableClasses.map(c => ({
+            //     ...c, eligible_dates: c.session_dates
+            //         .filter(d => isFutureDate(d))
+            // })).filter(c => c.eligible_dates.length > 0);
+
 
             if (eligibleClasses.length === 0) {
                 container.innerHTML = '<div class="col-12"><p class="text-bold">No makeup sessions available.</p></div>'

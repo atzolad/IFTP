@@ -396,7 +396,8 @@ func dbUpdateMakeupRedemptionRequestStatus(ctx context.Context, tx pgx.Tx, reque
 
 		_, err = tx.Exec(ctx, `
 		INSERT INTO roster (student_id, class_id, class_date, registration_date, status)
-		VALUES ($1, $2, $3, NOW(), 'Enrolled')`,
+		VALUES ($1, $2, $3, NOW(), 'Enrolled')
+		ON CONFLICT ON CONSTRAINT roster_student_class_date_unique DO NOTHING`,
 			studentId, classId, requestedDate,
 		)
 		if err != nil {
@@ -407,6 +408,47 @@ func dbUpdateMakeupRedemptionRequestStatus(ctx context.Context, tx pgx.Tx, reque
 
 	return nil
 
+}
+
+// In your makeup database.go
+
+func dbGetAvailableRedemptionDates(ctx context.Context, myDb *db.MyDatabase, studentId string, classId string) ([]string, error) {
+	rows, err := myDb.Pool.Query(ctx, `
+        SELECT cs.session_date
+        FROM class_schedule cs
+        WHERE cs.class_id = $1
+        AND cs.session_date >= CURRENT_DATE
+        AND NOT EXISTS (
+            SELECT 1 FROM roster r
+            WHERE r.student_id = $2
+            AND r.class_id = cs.class_id
+            AND r.class_date = cs.session_date
+            AND r.status = 'Enrolled'
+        )
+        AND NOT EXISTS (
+            SELECT 1 FROM makeup_redemptions mr
+            WHERE mr.student_id = $2
+            AND mr.requested_class_id = cs.class_id
+            AND mr.requested_date = cs.session_date
+            AND mr.status = 'Pending'
+        )
+        ORDER BY cs.session_date ASC
+    `, classId, studentId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var dates []string
+	for rows.Next() {
+		var d time.Time
+		if err := rows.Scan(&d); err != nil {
+			return nil, err
+		}
+		dates = append(dates, d.Format("2006-01-02"))
+	}
+
+	return dates, rows.Err()
 }
 
 // func dbEnroll(ctx context.Context, myDb *db.MyDatabase, classID int, classDate time.Time, studentID int) error {

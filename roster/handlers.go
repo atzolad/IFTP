@@ -912,6 +912,47 @@ func UpdateMakeupRedemptionRequest(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
+// In your makeup handlers.go
+
+func GetAvailableRedemptionDates(myDb *db.MyDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		studentId, ok := r.Context().Value(utils.CtxUserID).(string)
+		if !ok || studentId == "" {
+			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
+				Status:  "error",
+				Message: "Unauthorized",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
+
+		classId := r.PathValue("class_id")
+		if classId == "" {
+			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+				Status:  "error",
+				Message: "class_id is required",
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+
+		dates, err := dbGetAvailableRedemptionDates(ctx, myDb, studentId, classId)
+		if err != nil {
+			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+				Status:  "error",
+				Message: "Error fetching available dates",
+				Code:    http.StatusInternalServerError,
+			})
+			myDb.Logger.Printf("Error fetching available redemption dates: %v", err)
+			return
+		}
+
+		utils.WriteJSONResponse(w, http.StatusOK, dates)
+	}
+}
+
 // Enroll adds the student info in the body of the request to the class from the url.
 // TODO(): figure out how we want to require full month of classes for students
 // func Enroll(myDb *db.MyDatabase) gin.HandlerFunc {
