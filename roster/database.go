@@ -397,7 +397,7 @@ func dbUpdateMakeupRedemptionRequestStatus(ctx context.Context, tx pgx.Tx, reque
 		_, err = tx.Exec(ctx, `
 		INSERT INTO roster (student_id, class_id, class_date, registration_date, status)
 		VALUES ($1, $2, $3, NOW(), 'Enrolled')
-		ON CONFLICT ON CONSTRAINT roster_student_class_date_unique DO NOTHING`,
+		ON CONFLICT ON CONSTRAINT roster_student_class_date_unique DO UPDATE SET status = 'Enrolled'`,
 			studentId, classId, requestedDate,
 		)
 		if err != nil {
@@ -409,8 +409,6 @@ func dbUpdateMakeupRedemptionRequestStatus(ctx context.Context, tx pgx.Tx, reque
 	return nil
 
 }
-
-// In your makeup database.go
 
 func dbGetAvailableRedemptionDates(ctx context.Context, myDb *db.MyDatabase, studentId string, classId string) ([]string, error) {
 	rows, err := myDb.Pool.Query(ctx, `

@@ -912,8 +912,6 @@ func UpdateMakeupRedemptionRequest(myDb *db.MyDatabase) http.HandlerFunc {
 	}
 }
 
-// In your makeup handlers.go
-
 func GetAvailableRedemptionDates(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
