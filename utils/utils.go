@@ -245,18 +245,18 @@ func HandleGoogleOauth(myDb *db.MyDatabase) http.HandlerFunc {
 func GetUserAuth(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// // Handle dev mode override
-		// if os.Getenv("DEV_MODE") == "true" {
-		// 	userData := StudentLogin{
-		// 		ID:            1,
-		// 		Name:          "Dev Admin",
-		// 		Email:         "atzolad@gmail.com",
-		// 		MakeupCredits: 5,
-		// 		IsAdmin:       true,
-		// 	}
-		// 	WriteJSONResponse(w, http.StatusOK, userData)
-		// 	return
-		// }
+		// Handle dev mode override
+		if os.Getenv("DEV_MODE") == "true" {
+			userData := StudentLogin{
+				ID:            "019e0465-5c9d-77aa-b5bc-f38df8feb542",
+				Name:          "Dev Admin",
+				Email:         "atzolad@gmail.com",
+				MakeupCredits: 5,
+				IsAdmin:       true,
+			}
+			WriteJSONResponse(w, http.StatusOK, userData)
+			return
+		}
 
 		// Retrieve the session
 		session, err := gothic.Store.Get(r, "goth_session")

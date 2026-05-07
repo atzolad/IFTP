@@ -1381,7 +1381,7 @@
             const count = document.getElementById('makeupCreditsCount');
             const availCreditTxt = document.getElementById('makeupCreditsAvail');
 
-            if (credits > 0) {
+            if (credits >= 0) {
                 availCreditTxt.textContent = "makeup credits available."
             } else {
                 availCreditTxt.textContent = "makeup credit available."
@@ -2184,6 +2184,9 @@
 
                 renderScheduleApprovals();
                 window.ScheduleApprovalsInitialized = true;
+
+                populateMonthDropdown('classModalMonthSelect');
+
             } else {
 
                 //  STUDENT VIEW 
@@ -3596,6 +3599,8 @@
 
             const monthSelect = document.getElementById('classModalMonthSelect').value
 
+            let formattedMonth = null;
+
             if (monthSelect) {
                 const monthAsDate = new Date(monthSelect);
                 formattedMonth = monthAsDate.toISOString();
@@ -3612,7 +3617,7 @@
                 capacity: document.getElementById('classModalCapacity').valueAsNumber,
                 session_dates: sessionDates,
             }
-            endDate = document.getElementById('classModalEndDate').valueAsDate
+            const endDate = document.getElementById('classModalEndDate').valueAsDate
             if (endDate) {
                 newClass.endDate = endDate
             }
