@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func dbGetRoster(ctx context.Context, myDb *db.MyDatabase, classId int, month time.Time, class_date time.Time) (GetRosterRequest, error) {
+func dbGetRoster(ctx context.Context, myDb *db.MyDatabase, classId string, month time.Time, class_date time.Time) (GetRosterRequest, error) {
 
 	var roster GetRosterRequest
 
@@ -49,7 +49,7 @@ func dbGetRoster(ctx context.Context, myDb *db.MyDatabase, classId int, month ti
 	return roster, err
 }
 
-func dbGetStudentEnrollment(ctx context.Context, myDb *db.MyDatabase, studentId int, month time.Time) ([]StudentEnrollment, error) {
+func dbGetStudentEnrollment(ctx context.Context, myDb *db.MyDatabase, studentId string, month time.Time) ([]StudentEnrollment, error) {
 
 	rows, err := myDb.Pool.Query(ctx, `
 	SELECT c.name as class_name, r.class_date, cs.month
@@ -73,7 +73,7 @@ func dbGetStudentEnrollment(ctx context.Context, myDb *db.MyDatabase, studentId 
 	return requestedStudentEnrollment, nil
 }
 
-func dbGetStudentInfo(ctx context.Context, myDb *db.MyDatabase, request *EnrollmentRequestApproval, studentId int) error {
+func dbGetStudentInfo(ctx context.Context, myDb *db.MyDatabase, request *EnrollmentRequestApproval, studentId string) error {
 	err := myDb.Pool.QueryRow(ctx,
 		`SELECT s.name, s.email, COALESCE(ARRAY_AGG(DISTINCT c.name ORDER BY c.name) FILTER (WHERE c.name IS NOT NULL), '{}') AS currently_enrolled FROM students AS s
 	LEFT JOIN roster AS r on r.student_id = s.id
@@ -98,7 +98,7 @@ func dbGetClassInfo(ctx context.Context, myDb *db.MyDatabase, request *Enrollmen
 	return err
 }
 
-func dbEnrollmentReqExists(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId int) (bool, error) {
+func dbEnrollmentReqExists(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId string) (bool, error) {
 	var exists bool
 
 	err := tx.QueryRow(ctx, `
@@ -112,7 +112,7 @@ func dbEnrollmentReqExists(ctx context.Context, tx pgx.Tx, request *EnrollmentRe
 	return exists, err
 }
 
-func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId int) (bool, error) {
+func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId string) (bool, error) {
 	var enrolled bool
 
 	err := tx.QueryRow(ctx, `
@@ -130,7 +130,7 @@ func dbStudentAlreadyEnrolled(ctx context.Context, tx pgx.Tx, request *Enrollmen
 
 }
 
-func dbInsertEnrollmentRequest(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId int) error {
+func dbInsertEnrollmentRequest(ctx context.Context, tx pgx.Tx, request *EnrollmentRequestApproval, studentId string) error {
 	_, err := tx.Exec(ctx, `
 	INSERT INTO enrollment_requests (student_id, requested_class_id, reason, month)
 	VALUES ($1, $2, $3, $4)
@@ -173,7 +173,7 @@ func dbGetEnrollmentRequests(ctx context.Context, myDb *db.MyDatabase) ([]Enroll
 	return requests, nil
 }
 
-func dbUpdateRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) (studentId int, classId int, month time.Time, err error) {
+func dbUpdateRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) (studentId string, classId string, month time.Time, err error) {
 	err = tx.QueryRow(ctx, `
 	UPDATE enrollment_requests
 	SET status = $1
@@ -183,7 +183,7 @@ func dbUpdateRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, sta
 	return
 }
 
-func dbEnrollStudent(ctx context.Context, tx pgx.Tx, studentId int, classId int, month time.Time) error {
+func dbEnrollStudent(ctx context.Context, tx pgx.Tx, studentId string, classId string, month time.Time) error {
 	_, err := tx.Exec(ctx, `
 		INSERT INTO roster (student_id, class_id, class_date, registration_date, status)
 		SELECT $1, class_id, session_date, NOW(), 'Enrolled'
@@ -193,7 +193,7 @@ func dbEnrollStudent(ctx context.Context, tx pgx.Tx, studentId int, classId int,
 	return err
 }
 
-func dbInsertMakeupRequest(ctx context.Context, tx pgx.Tx, studentId int, input *MakeupRequestInput, parsedDates []time.Time) error {
+func dbInsertMakeupRequest(ctx context.Context, tx pgx.Tx, studentId string, input *MakeupRequestInput, parsedDates []time.Time) error {
 	var requestId string
 	err := tx.QueryRow(ctx, `
 	INSERT INTO makeup_requests (student_id, class_id, reason)
@@ -317,7 +317,7 @@ func dbUpdateMakeupRequestStatus(ctx context.Context, tx pgx.Tx, requestId strin
 
 }
 
-func dbInsertMakeupRedemptionRequest(ctx context.Context, tx pgx.Tx, studentId int, input *MakeupRedemptionReq, parsedDate time.Time) error {
+func dbInsertMakeupRedemptionRequest(ctx context.Context, tx pgx.Tx, studentId string, input *MakeupRedemptionReq, parsedDate time.Time) error {
 	var redemptionId string
 	err := tx.QueryRow(ctx, `
 	INSERT INTO makeup_redemptions (student_id, requested_class_id, requested_date, note)

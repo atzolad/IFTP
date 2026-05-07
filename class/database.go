@@ -228,7 +228,7 @@ func dbUpdateClass(ctx context.Context, tx pgx.Tx, id string, c *Class) (*Class,
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, fmt.Errorf("class with id %d not found", id)
+			return nil, fmt.Errorf("class with id %v not found", id)
 		}
 		return nil, err
 	}

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -22,7 +21,7 @@ import (
 //	}
 
 type StudentRoster struct {
-	ID     int          `db:"id" json:"id"`
+	ID     string       `db:"id" json:"id"`
 	Name   string       `db:"name" json:"name"`
 	Email  string       `db:"email" json:"email"`
 	Status RosterStatus `db:"status" json:"status"`
@@ -43,14 +42,14 @@ type GetRosterRequest struct {
 }
 
 type RosterRequest struct {
-	ClassID   int       `json:"class_id"`
+	ClassID   string    `json:"class_id"`
 	Month     time.Time `json:"month"`
 	ClassDate time.Time `json:"class_date"`
 }
 
 type EnrollmentRequest struct {
-	StudentID  int      `json:"student_id"`
-	ClassID    int      `json:"class_id"`
+	StudentID  string   `json:"student_id"`
+	ClassID    string   `json:"class_id"`
 	ClassDates []string `json:"class_dates"`
 }
 
@@ -65,7 +64,7 @@ type EnrollmentRequestApproval struct {
 	StudentName        string     `db:"name" json:"name"`
 	StudentEmail       string     `db:"email" json:"email"`
 	CurrentlyEnrolled  []string   `db:"currently_enrolled" json:"currently_enrolled"`
-	RequestedClassID   int        `db:"requested_class_id" json:"requested_class_id"`
+	RequestedClassID   string     `db:"requested_class_id" json:"requested_class_id"`
 	RequestedClassName string     `db:"class_name" json:"requested_class_name"`
 	Month              *time.Time `db:"month" json:"month"`
 	Teacher            string     `db:"teacher" json:"teacher"`
@@ -76,23 +75,23 @@ type EnrollmentRequestApproval struct {
 }
 
 type EnrollmentRequestInput struct {
-	RequestedClassID int        `json:"requested_class_id"`
+	RequestedClassID string     `json:"requested_class_id"`
 	Reason           string     `json:"reason"`
 	Month            *time.Time `json:"month"`
 }
 
 type MakeupRequestInput struct {
-	ClassID            int      `json:"class_id"`
+	ClassID            string   `json:"class_id"`
 	MissedSessionDates []string `json:"missed_session_dates"`
 	Reason             string   `json:"reason"`
 }
 
 type MakeupRequest struct {
 	ID           string      `db:"id" json:"id"`
-	StudentID    int         `db:"student_id" json:"student_id"`
+	StudentID    string      `db:"student_id" json:"student_id"`
 	StudentName  string      `db:"name" json:"name"`
 	StudentEmail string      `db:"email" json:"email"`
-	ClassID      int         `db:"class_id" json:"class_id"`
+	ClassID      string      `db:"class_id" json:"class_id"`
 	ClassName    string      `db:"class_name" json:"class_name"`
 	MissedDates  []time.Time `db:"missed_session_dates" json:"missed_session_dates"`
 	Reason       string      `db:"reason" json:"reason"`
@@ -101,17 +100,17 @@ type MakeupRequest struct {
 }
 
 type MakeupRedemptionReq struct {
-	RequestedClassID int    `json:"requested_class_id"`
+	RequestedClassID string `json:"requested_class_id"`
 	RequestedDate    string `json:"requested_date"`
 	Note             string `json:"note"`
 }
 
 type MakeupRedemption struct {
 	ID                string    `db:"id" json:"id"`
-	StudentID         int       `db:"student_id" json:"student_id"`
+	StudentID         string    `db:"student_id" json:"student_id"`
 	StudentName       string    `db:"name" json:"name"`
 	StudentEmail      string    `db:"email" json:"email"`
-	RequestedClassID  int       `db:"requested_class_id" json:"requested_class_id"`
+	RequestedClassID  string    `db:"requested_class_id" json:"requested_class_id"`
 	ClassName         string    `db:"class_name" json:"class_name"`
 	Teacher           string    `db:"teacher" json:"teacher"`
 	RequestedDate     time.Time `db:"requested_date" json:"requested_date"`
@@ -130,19 +129,9 @@ func GetRoster(myDb *db.MyDatabase) http.HandlerFunc {
 
 		monthStr := r.FormValue("month")
 		classDateStr := r.FormValue("class_date")
-		classIdStr := r.PathValue("class_id")
+		classId := r.PathValue("class_id")
 
-		myDb.Logger.Printf("month: %v, class_date: %v, class_id: %v", monthStr, classDateStr, classIdStr)
-
-		classId, err := strconv.Atoi(classIdStr)
-		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
-				Status:  "error",
-				Message: "Error: Class id required",
-				Code:    http.StatusBadRequest,
-			})
-			return
-		}
+		myDb.Logger.Printf("month: %v, class_date: %v, class_id: %v", monthStr, classDateStr, classId)
 
 		month, err := time.Parse("2006-01-02", monthStr)
 		if err != nil {
@@ -186,19 +175,19 @@ func GetStudentEnrollment(myDb *db.MyDatabase) http.HandlerFunc {
 		ctx := r.Context()
 
 		monthStr := r.FormValue("month")
-		studentIdStr := r.PathValue("student_id")
+		studentId := r.PathValue("student_id")
 
-		myDb.Logger.Printf("Get student enrollment request- month: %v, student_id: %v", monthStr, studentIdStr)
+		myDb.Logger.Printf("Get student enrollment request- month: %v, student_id: %v", monthStr, studentId)
 
-		studentId, err := strconv.Atoi(studentIdStr)
-		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
-				Status:  "error",
-				Message: "Error: Student id required",
-				Code:    http.StatusBadRequest,
-			})
-			return
-		}
+		// studentId, err := strconv.Atoi(studentIdStr)
+		// if err != nil {
+		// 	utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+		// 		Status:  "error",
+		// 		Message: "Error: Student id required",
+		// 		Code:    http.StatusBadRequest,
+		// 	})
+		// 	return
+		// }
 
 		month, err := time.Parse("2006-01-02", monthStr)
 		if err != nil {
@@ -232,8 +221,8 @@ func CreateEnrollmentRequest(myDb *db.MyDatabase) http.HandlerFunc {
 
 		// TODO get student id from the session- will hardcode it here for now.
 
-		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
-		if !ok || studentId == 0 {
+		studentId, ok := r.Context().Value(utils.CtxUserID).(string)
+		if !ok || studentId == "" {
 			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
 				Status:  "error",
 				Message: "Unauthorized",
@@ -470,20 +459,22 @@ func EnrollStudent(myDb *db.MyDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		classId, err := strconv.Atoi(strings.TrimSpace(r.PathValue("class_id")))
-		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
-				Status:  "error",
-				Message: "Invalid class ID",
-				Code:    http.StatusBadRequest,
-			})
-			return
-		}
+		classId := strings.TrimSpace(r.PathValue("class_id"))
+
+		// classId, err := strconv.Atoi(strings.TrimSpace(r.PathValue("class_id")))
+		// if err != nil {
+		// 	utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
+		// 		Status:  "error",
+		// 		Message: "Invalid class ID",
+		// 		Code:    http.StatusBadRequest,
+		// 	})
+		// 	return
+		// }
 
 		// TODO: replace with student ID from session
 
-		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
-		if !ok || studentId == 0 {
+		studentId, ok := r.Context().Value(utils.CtxUserID).(string)
+		if !ok || studentId == "" {
 			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
 				Status:  "error",
 				Message: "Unauthorized",
@@ -562,8 +553,8 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 
 		ctx := r.Context()
 
-		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
-		if !ok || studentId == 0 {
+		studentId, ok := r.Context().Value(utils.CtxUserID).(string)
+		if !ok || studentId == "" {
 			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
 				Status:  "error",
 				Message: "Unauthorized",
@@ -584,7 +575,7 @@ func CreateMakeupRequest(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		if makeupRequest.ClassID == 0 {
+		if makeupRequest.ClassID == "" {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
 				Message: "Class ID is required",
@@ -750,8 +741,8 @@ func CreateMakeupRedemptionRequest(myDb *db.MyDatabase) http.HandlerFunc {
 
 		ctx := r.Context()
 
-		studentId, ok := r.Context().Value(utils.CtxUserID).(int)
-		if !ok || studentId == 0 {
+		studentId, ok := r.Context().Value(utils.CtxUserID).(string)
+		if !ok || studentId == "" {
 			utils.WriteJSONResponse(w, http.StatusUnauthorized, utils.ResponseData{
 				Status:  "error",
 				Message: "Unauthorized",
@@ -772,7 +763,7 @@ func CreateMakeupRedemptionRequest(myDb *db.MyDatabase) http.HandlerFunc {
 			return
 		}
 
-		if redemptionRequest.RequestedClassID == 0 || redemptionRequest.RequestedDate == "" {
+		if redemptionRequest.RequestedClassID == "" || redemptionRequest.RequestedDate == "" {
 			utils.WriteJSONResponse(w, http.StatusBadRequest, utils.ResponseData{
 				Status:  "error",
 				Message: "Class ID and class date are required",
