@@ -90,7 +90,7 @@ func dbGetClassInfo(ctx context.Context, myDb *db.MyDatabase, request *Enrollmen
 		c.capacity - COUNT(DISTINCT r.student_id) as available_spots
 		FROM classes AS c
 		LEFT JOIN class_schedule AS cs ON cs.class_id = c.id
-		LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date r.status = 'Enrolled'
+		LEFT JOIN roster AS r ON r.class_id = c.id AND r.class_date = cs.session_date AND r.status = 'Enrolled'
 		WHERE c.id = $1 AND cs.month = $2 AND c.active = True
 		GROUP BY cs.month, c.id
 		ORDER  BY cs.month DESC`, request.RequestedClassID, request.Month).Scan(&request.RequestedClassID, &request.RequestedClassName, &request.Teacher, &request.AvailableSpots)

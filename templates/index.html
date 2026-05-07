@@ -444,7 +444,7 @@
                         <h5 class="page-title" id="pageTitle">IFTP</h5>
                     </div>
                     <div class="input-group search-bar ms-auto" style="max-width: 300px;">
-                        <input type="text" class="form-control" placeholder="Search...">
+                        <!-- <input type="text" class="form-control" placeholder="Search..."> -->
                         <button class="btn btn-outline-secondary" type="button">
                             <i class="bi bi-search"></i>
                         </button>
@@ -459,8 +459,8 @@
                             </div>
                         </button>
                         <ul class="dropdown-menu dropdown-menu" aria-labelledby="dropdownMenuUser">
-                            <li><a class="dropdown-item" href="#">Settings</a></li>
-                            <li><a class="dropdown-item" href="#">Logout</a></li>
+                            <!-- <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><a class="dropdown-item" href="#">Logout</a></li> -->
                         </ul>
                     </div>
                 </div>
@@ -1597,7 +1597,7 @@
                     body: JSON.stringify({ status })
                 });
 
-                if (!repsonse.ok) {
+                if (!response.ok) {
                     alert('Error handling makeup request. Please try again');
                     return;
                 }
