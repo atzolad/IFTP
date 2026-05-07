@@ -1210,7 +1210,7 @@
         document.getElementById('enrollModalConfirmBtn').addEventListener('click', (event) => {
             const classId = event.currentTarget.dataset.class_id;
             // TODO- Remove parseInt when I convert to UUID
-            const selectedClass = availableClasses.find(c => c.id === parseInt(classId));
+            const selectedClass = availableClasses.find(c => c.id === classId);
 
             bootstrap.Modal.getInstance(document.getElementById('enrollModal')).hide();
 
@@ -1833,7 +1833,7 @@
 
         async function enrollStudent(classId) {
             // TODO- Remove parseInt when I convert to UUID
-            const selectedClass = availableClasses.find(c => c.id === parseInt(classId));
+            const selectedClass = availableClasses.find(c => c.id === classId);
 
             if (!selectedClass) {
                 console.error('Class not found:', classId);
@@ -2808,7 +2808,7 @@
             if (!makeupBtn) return;
 
             // TODO- Remove parseInt when I convert to UUID
-            const classId = parseInt(makeupBtn.dataset.classId);
+            const classId = makeupBtn.dataset.classId;
             const selectedClass = currentEnrolledClasses.find(c => c.id === classId);
             console.log('Original selected class:')
             console.log(selectedClass)
@@ -2935,7 +2935,7 @@
             badge.classList.add('bg-primary');
 
             // TODO- Remove parseInt when I convert to UUID
-            makeupState.makeupClassId = parseInt(badge.dataset.classId);
+            makeupState.makeupClassId = badge.dataset.classId;
             makeupState.makeupDate = badge.dataset.date;
             document.getElementById('makeupRedemptionSubmitBtn').disabled = false;
         });
@@ -3012,7 +3012,7 @@
             const requestBtn = e.target.closest('.request-enrollment-btn');
             if (requestBtn) {
                 // TODO Will need to change this if I change to UUID
-                const classId = parseInt(requestBtn.dataset.classId);
+                const classId = requestBtn.dataset.classId;
                 console.log(`clicked request button! for classid: ${classId}`)
                 const selectedClass = availableClasses.find(c => c.id === classId);
                 if (selectedClass) showRequestApprovalModal(selectedClass);
@@ -3022,7 +3022,7 @@
             const enrollBtn = e.target.closest('.enroll-btn');
             if (enrollBtn) {
                 //TODO Will need to change this if I change to UUID
-                const classId = parseInt(enrollBtn.dataset.classId);
+                const classId = enrollBtn.dataset.classId;
                 console.log(`clicked enroll button! for classid: ${classId}`)
                 showEnrollModal(classId);
             }
