@@ -250,8 +250,8 @@ func dbGetMakeupRequests(ctx context.Context, myDb *db.MyDatabase) ([]MakeupRequ
 }
 
 func dbUpdateMakeupRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) error {
-	var studentId int
-	var classId int
+	var studentId string
+	var classId string
 
 	err := tx.QueryRow(ctx, `
 	UPDATE makeup_requests
@@ -365,8 +365,8 @@ func dbGetMakeupRedemptionRequests(ctx context.Context, myDb *db.MyDatabase) ([]
 }
 
 func dbUpdateMakeupRedemptionRequestStatus(ctx context.Context, tx pgx.Tx, requestId string, status string) error {
-	var studentId int
-	var classId int
+	var studentId string
+	var classId string
 	var requestedDate time.Time
 
 	err := tx.QueryRow(ctx, `
