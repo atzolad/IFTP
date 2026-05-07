@@ -6,12 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
 type Student struct {
-	ID              int      `db:"id" json:"id"`
+	ID              string   `db:"id" json:"id"`
 	Name            string   `db:"name" json:"name"`
 	Email           string   `db:"email" json:"email"`
 	Notes           string   `db:"notes" json:"notes"`
@@ -98,16 +97,16 @@ func UpdateStudent(myDb *db.MyDatabase) http.HandlerFunc {
 
 		id := r.PathValue("student_id")
 
-		integerID, err := strconv.Atoi(id)
-		if err != nil {
-			utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
-				Status:  "error",
-				Message: "Invalid student id- must be an integer:",
-				Code:    http.StatusInternalServerError,
-			})
-			myDb.Logger.Printf("Error converting student id to int: %v", err)
-			return
-		}
+		// integerID, err := strconv.Atoi(id)
+		// if err != nil {
+		// 	utils.WriteJSONResponse(w, http.StatusInternalServerError, utils.ResponseData{
+		// 		Status:  "error",
+		// 		Message: "Invalid student id- must be an integer:",
+		// 		Code:    http.StatusInternalServerError,
+		// 	})
+		// 	myDb.Logger.Printf("Error converting student id to int: %v", err)
+		// 	return
+		// }
 
 		var updateStudentReq Student
 
@@ -122,7 +121,7 @@ func UpdateStudent(myDb *db.MyDatabase) http.HandlerFunc {
 		}
 
 		updateStudentReq.Sanitize()
-		updateStudentReq.ID = integerID
+		updateStudentReq.ID = id
 
 		updatedStudent, err := dbUpdateStudent(ctx, myDb, &updateStudentReq)
 		if err != nil {

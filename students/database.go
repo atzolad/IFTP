@@ -92,7 +92,7 @@ func dbUpdateStudent(ctx context.Context, myDb *db.MyDatabase, s *Student) (*Stu
 	updatedStudent, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[Student])
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, fmt.Errorf("active student with id %d not found", s.ID)
+			return nil, fmt.Errorf("active student with id %v not found", s.ID)
 		}
 		return nil, err
 	}
