@@ -103,7 +103,7 @@ func main() {
 		log.Fatal("Session Secret env variable missing")
 	}
 	maxAge := 86400 * 30 // 30 days
-	isProd := false      // Set to true when serving over https
+	isProd := os.Getenv("RAILWAY_PUBLIC_DOMAIN") != ""
 	store := sessions.NewCookieStore([]byte(key))
 	store.MaxAge(maxAge)
 	store.Options.Path = "/"
