@@ -34,13 +34,32 @@ func main() {
 		port = "8080" // Railway typically uses this as default
 	}
 
-	connStr := os.Getenv("CONN_STR")
+	publicDomain := os.Getenv("RAILWAY_PUBLIC_DOMAIN")
+	var baseUrl string
+
+	if publicDomain != "" {
+		baseUrl = "https://" + publicDomain
+	} else {
+		baseUrl = "http://localhost:8080"
+	}
+
+	// connStr := os.Getenv("CONN_STR")
+	// fmt.Println("Connecting with:", connStr)
+
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		connStr = os.Getenv("CONN_STR")
+	}
+
+	if connStr == "" {
+		log.Fatal("DATABASE_URL and CONN_STR are both empty. Cannot connect to DB.")
+	}
+
 	fmt.Println("Connecting with:", connStr)
 
 	clientKey := os.Getenv("GOOGLE_KEY")
 	clientSecret := os.Getenv("GOOGLE_SECRET")
 	scopes := os.Getenv("GOOGLE_SCOPES")
-	baseUrl := "http://localhost:8080"
 	callBackUrl := fmt.Sprintf("%v/auth/google/callback", baseUrl)
 
 	gp := googleProvider.New(clientKey, clientSecret, callBackUrl, scopes)
