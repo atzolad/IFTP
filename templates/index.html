@@ -3054,7 +3054,6 @@
 
         async function renderEnrolledClasses(month, student_id) {
             const containerWrapper = document.getElementById('enrolledClassesContainer');
-            const baseUrl = 'http://localhost:8080'
             //TODO replace this student_id with the logged in student's id
             const apiEndpoint = baseUrl + '/classes' + '/' + student_id + '?' + 'month=' + month
 
