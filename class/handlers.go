@@ -581,7 +581,7 @@ func UpdateClass(myDb *db.MyDatabase) http.HandlerFunc {
 					batch.Queue(
 						`INSERT INTO class_schedule (class_id, session_date, month, status)
 					VALUES ($1, $2, $3, $4)`,
-						updateRequest.ID, sessionDate, updateRequest.Month, "scheduled")
+						updateRequest.ID, sessionDate, updateRequest.Month, "Scheduled")
 				}
 
 				br := tx.SendBatch(ctx, batch)
