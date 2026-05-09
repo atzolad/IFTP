@@ -71,7 +71,7 @@ func dbListClassesByMonth(ctx context.Context, myDb *db.MyDatabase, month string
 	}
 
 	query.WriteString(" GROUP BY cs.month, c.id, c.name, c.teacher, c.day_of_week, c.time, c.description, c.capacity")
-	query.WriteString(" ORDER BY cs.month DESC")
+	query.WriteString(" ORDER BY c.name, cs.month DESC")
 
 	rows, err := myDb.Pool.Query(ctx, query.String(), args...)
 
