@@ -3070,8 +3070,10 @@
 
         async function submitScheduleApproval(approvalId, status, dates) {
 
+            console.log(dates)
+
             // TODO - getting an invalid time value error. Need to go back and fix this.
-            const isoDates = dates.map(d => new Date(d + 'T00:00:00Z').toISOString());
+            const isoDates = dates.map(d => new Date(d).toISOString());
 
             try {
                 const resp = await fetch(`/classes/schedule_approval/confirm/${approvalId}`, {

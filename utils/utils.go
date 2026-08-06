@@ -33,11 +33,13 @@ type ResponseData struct {
 }
 
 type StudentLogin struct {
-	ID            string `db:"id" json:"id"`
-	Name          string `db:"name" json:"name"`
-	Email         string `db:"email" json:"email"`
-	MakeupCredits int    `db:"makeup_credits" json:"makeup_credits"`
-	IsAdmin       bool   `json:"is_admin"`
+	ID                    string `db:"id" json:"id"`
+	Name                  string `db:"name" json:"name"`
+	Email                 string `db:"email" json:"email"`
+	MakeupCredits         int    `db:"makeup_credits" json:"makeup_credits"`
+	IsAdmin               bool   `json:"is_admin"`
+	PendingEnrollments    int    `db:"pending_enrollments" json:"pending_enrollments"`
+	PendingMakeupRequests int    `db:"pending_makeup_requests" json:"pending_makeup_requests"`
 }
 
 type GoogleUserEmail struct {
